@@ -341,7 +341,7 @@ body::before {
 </main>
 
 <script>
-const API_URL ="https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec" ; // ← הכנס את ה-URL של Apps Script
+const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec";
 
 async function handleLogin(e) {
   e.preventDefault();
@@ -349,53 +349,31 @@ async function handleLogin(e) {
   const phone = document.getElementById('phone').value.trim();
   const name  = document.getElementById('name').value.trim();
 
-  // ניקוי הודעות קודמות
   hideAlerts();
 
-  // ולידציה בסיסית
-  if (!phone) {
-    showError('נא להזין מספר טלפון');
-    document.getElementById('phone').focus();
-    return;
-  }
-  if (!name) {
-    showError('נא להזין שם מלא');
-    document.getElementById('name').focus();
-    return;
-  }
+  if (!phone) { showError('נא להזין מספר טלפון'); document.getElementById('phone').focus(); return; }
+  if (!name)  { showError('נא להזין שם מלא');     document.getElementById('name').focus();  return; }
 
-  // loading state
   const btn = document.getElementById('loginBtn');
   btn.classList.add('loading');
   btn.disabled = true;
   btn.setAttribute('aria-label', 'מתחבר...');
 
   try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'login', phone, name })
+    const params = new URLSearchParams({
+      action: 'login',
+      data: JSON.stringify({ phone, name })
     });
-
+    const res  = await fetch(`${API_URL}?${params}`);
     const data = await res.json();
 
-    if (!data.success) {
-      showError(data.error || 'פרטי הכניסה שגויים');
-      return;
-    }
+    if (!data.success) { showError(data.error || 'פרטי הכניסה שגויים'); return; }
 
     const user = data.data;
-
-    // שמירת פרטי המשתמש ב-sessionStorage
     sessionStorage.setItem('user', JSON.stringify(user));
 
-    // בדיקה — אם בדיקה פגה ואינו מנהל
-    if (!user.canRegister && !user.isAdmin) {
-      showBlocked();
-      return;
-    }
+    if (!user.canRegister && !user.isAdmin) { showBlocked(); return; }
 
-    // כולם מגיעים ל-rider.html — המנהל יראה שם כפתור ניהול
     window.location.href = 'rider.html';
 
   } catch (err) {
