@@ -3,36 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>לוח בקרה — מנהל מערכת</title>
+<title>כניסה למערכת — קבוצת אופניים</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-/* ═══════════════════════════════
-   VARIABLES & RESET
-═══════════════════════════════ */
 :root {
-  --bg:          #0f1117;
-  --surface:     #1a1d27;
-  --surface2:    #22263a;
-  --border:      #2e3350;
-  --accent:      #4f7cff;
-  --accent-glow: rgba(79,124,255,0.18);
-  --green:       #2dd4a0;
-  --red:         #ff5a5a;
-  --orange:      #ffb347;
-  --text:        #e8eaf6;
-  --text-muted:  #7b82a8;
-  --radius:      12px;
-  --radius-sm:   8px;
-  --shadow:      0 4px 24px rgba(0,0,0,0.4);
-  --font:        'Heebo', sans-serif;
-  --nav-w:       240px;
-  --transition:  0.2s ease;
+  --bg:        #0b0e18;
+  --surface:   #13172a;
+  --border:    #252a45;
+  --accent:    #4f7cff;
+  --accent2:   #7c5cff;
+  --green:     #2dd4a0;
+  --red:       #ff5a5a;
+  --text:      #e8eaf6;
+  --muted:     #6b728f;
+  --radius:    16px;
+  --font:      'Heebo', sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html { font-size: 16px; scroll-behavior: smooth; }
+html { font-size: 16px; }
 
 body {
   font-family: var(--font);
@@ -40,1759 +30,405 @@ body {
   color: var(--text);
   min-height: 100vh;
   display: flex;
-  overflow-x: hidden;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Focus visible — חובה לנגישות */
+/* רקע עם גרדיאנט עדין */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(79,124,255,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(124,92,255,0.1) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
 :focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 3px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
-/* ═══════════════════════════════
-   SKIP LINK (נגישות)
-═══════════════════════════════ */
-.skip-link {
-  position: absolute;
-  top: -100px;
-  right: 0;
-  background: var(--accent);
-  color: #fff;
-  padding: 12px 20px;
-  font-weight: 700;
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-  z-index: 9999;
-  text-decoration: none;
-  transition: top 0.2s;
-}
-.skip-link:focus { top: 0; }
-
-/* ═══════════════════════════════
-   SIDEBAR NAV
-═══════════════════════════════ */
-.sidebar {
-  width: var(--nav-w);
+/* ─── CARD ─────────────────────────────── */
+.card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
   background: var(--surface);
-  border-left: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  top: 0; right: 0; bottom: 0;
-  z-index: 100;
-  transition: transform var(--transition);
-  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px 36px 36px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
 }
 
-.sidebar-header {
-  padding: 28px 20px 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
+/* ─── LOGO ─────────────────────────────── */
+.logo-wrap {
+  text-align: center;
+  margin-bottom: 32px;
 }
 
 .logo-icon {
-  width: 38px; height: 38px;
-  background: var(--accent);
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px;
-  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 20px;
+  font-size: 2rem;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 24px rgba(79,124,255,0.35);
 }
 
-.logo-text {
-  font-size: 1.1rem;
+.logo-title {
+  font-size: 1.5rem;
   font-weight: 800;
-  color: var(--text);
+  letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
 .logo-sub {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  font-weight: 400;
-}
-
-.nav-section {
-  padding: 16px 12px 8px;
-}
-
-.nav-section-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  padding: 0 8px;
-  margin-bottom: 6px;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 12px;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.92rem;
-  font-weight: 500;
-  cursor: pointer;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: right;
-  transition: background var(--transition), color var(--transition);
-  position: relative;
-}
-
-.nav-item:hover, .nav-item:focus-visible {
-  background: var(--surface2);
-  color: var(--text);
-}
-
-.nav-item.active {
-  background: var(--accent-glow);
-  color: var(--accent);
-}
-
-.nav-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 20%; bottom: 20%;
-  width: 3px;
-  background: var(--accent);
-  border-radius: 2px;
-}
-
-.nav-icon { font-size: 1.1rem; width: 22px; text-align: center; flex-shrink: 0; }
-
-.badge {
-  margin-right: auto;
-  background: var(--red);
-  color: #fff;
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 20px;
-  min-width: 20px;
-  text-align: center;
-}
-
-.sidebar-footer {
-  margin-top: auto;
-  padding: 16px 12px;
-  border-top: 1px solid var(--border);
-}
-
-.user-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  background: var(--surface2);
-}
-
-.user-avatar {
-  width: 34px; height: 34px;
-  background: var(--accent);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700;
   font-size: 0.85rem;
-  flex-shrink: 0;
+  color: var(--muted);
+  margin-top: 4px;
 }
 
-.user-name { font-size: 0.85rem; font-weight: 600; }
-.user-role { font-size: 0.72rem; color: var(--text-muted); }
-
-/* Mobile toggle */
-.menu-toggle {
-  display: none;
-  position: fixed;
-  top: 14px; right: 14px;
-  z-index: 200;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  width: 44px; height: 44px;
-  border-radius: var(--radius-sm);
-  font-size: 1.3rem;
-  cursor: pointer;
-  align-items: center; justify-content: center;
+/* ─── FORM ─────────────────────────────── */
+.form-group {
+  margin-bottom: 18px;
 }
-
-.overlay {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: 99;
-}
-
-/* ═══════════════════════════════
-   MAIN CONTENT
-═══════════════════════════════ */
-.main {
-  flex: 1;
-  margin-left: 0;
-  margin-right: var(--nav-w);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.topbar {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 16px 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-}
-
-.page-title { font-size: 1.1rem; font-weight: 700; }
-.page-breadcrumb { font-size: 0.8rem; color: var(--text-muted); margin-top: 1px; }
-
-.topbar-actions { display: flex; gap: 10px; align-items: center; }
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 18px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font);
-  font-size: 0.88rem;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  text-decoration: none;
-  transition: all var(--transition);
-  min-height: 40px;
-  white-space: nowrap;
-}
-
-.btn-primary {
-  background: var(--accent);
-  color: #fff;
-}
-.btn-primary:hover { background: #3a67f0; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(79,124,255,0.4); }
-
-.btn-ghost {
-  background: transparent;
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-}
-.btn-ghost:hover { background: var(--surface2); color: var(--text); }
-
-.btn-danger {
-  background: transparent;
-  color: var(--red);
-  border: 1px solid var(--red);
-}
-.btn-danger:hover { background: rgba(255,90,90,0.12); }
-
-.btn-sm { padding: 6px 12px; font-size: 0.8rem; min-height: 34px; }
-
-.content { padding: 28px; flex: 1; }
-
-/* ═══════════════════════════════
-   STAT CARDS
-═══════════════════════════════ */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 28px;
-}
-
-.stat-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
-  transition: transform var(--transition), box-shadow var(--transition);
-}
-
-.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0; right: 0;
-  width: 4px; height: 100%;
-  border-radius: 0 var(--radius) var(--radius) 0;
-}
-
-.stat-card.blue::before   { background: var(--accent); }
-.stat-card.green::before  { background: var(--green); }
-.stat-card.red::before    { background: var(--red); }
-.stat-card.orange::before { background: var(--orange); }
-
-.stat-icon {
-  font-size: 1.6rem;
-  margin-bottom: 10px;
-  display: block;
-}
-
-.stat-value {
-  font-size: 2rem;
-  font-weight: 800;
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.stat-card.blue   .stat-value { color: var(--accent); }
-.stat-card.green  .stat-value { color: var(--green); }
-.stat-card.red    .stat-value { color: var(--red); }
-.stat-card.orange .stat-value { color: var(--orange); }
-
-.stat-label { font-size: 0.82rem; color: var(--text-muted); font-weight: 500; }
-
-/* ═══════════════════════════════
-   SECTIONS / PANELS
-═══════════════════════════════ */
-.panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin-bottom: 24px;
-  overflow: hidden;
-}
-
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 20px;
-  border-bottom: 1px solid var(--border);
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.panel-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.panel-body { padding: 0; }
-
-/* ═══════════════════════════════
-   TABLE
-═══════════════════════════════ */
-.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.88rem;
-}
-
-thead th {
-  background: var(--surface2);
-  color: var(--text-muted);
-  font-weight: 600;
-  font-size: 0.78rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  padding: 12px 16px;
-  text-align: right;
-  white-space: nowrap;
-  border-bottom: 1px solid var(--border);
-}
-
-tbody tr {
-  border-bottom: 1px solid var(--border);
-  transition: background var(--transition);
-}
-
-tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: var(--surface2); }
-
-tbody td {
-  padding: 13px 16px;
-  vertical-align: middle;
-  color: var(--text);
-}
-
-.td-name { font-weight: 600; }
-.td-sub  { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
-
-/* ═══════════════════════════════
-   BADGES / STATUS
-═══════════════════════════════ */
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.status::before {
-  content: '';
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.status-ok    { background: rgba(45,212,160,0.15); color: var(--green); }
-.status-ok::before    { background: var(--green); }
-.status-warn  { background: rgba(255,179,71,0.15); color: var(--orange); }
-.status-warn::before  { background: var(--orange); }
-.status-err   { background: rgba(255,90,90,0.15); color: var(--red); }
-.status-err::before   { background: var(--red); }
-.status-blue  { background: rgba(79,124,255,0.15); color: var(--accent); }
-.status-blue::before  { background: var(--accent); }
-
-.role-tag {
-  display: inline-block;
-  padding: 3px 9px;
-  border-radius: 6px;
-  font-size: 0.76rem;
-  font-weight: 600;
-  background: var(--surface2);
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-}
-
-/* ═══════════════════════════════
-   ROW ACTIONS
-═══════════════════════════════ */
-.row-actions {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.icon-btn {
-  width: 32px; height: 32px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.95rem;
-  transition: all var(--transition);
-}
-
-.icon-btn:hover { background: var(--surface2); color: var(--text); }
-.icon-btn.danger:hover { border-color: var(--red); color: var(--red); }
-
-/* ═══════════════════════════════
-   SEARCH / FILTER BAR
-═══════════════════════════════ */
-.filter-bar {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.search-wrap {
-  position: relative;
-  flex: 1;
-  min-width: 180px;
-}
-
-.search-icon {
-  position: absolute;
-  right: 12px; top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  pointer-events: none;
-  font-size: 0.95rem;
-}
-
-.input {
-  width: 100%;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-family: var(--font);
-  font-size: 0.88rem;
-  padding: 9px 14px 9px 36px;
-  transition: border-color var(--transition);
-  min-height: 40px;
-}
-
-.input:focus { outline: none; border-color: var(--accent); }
-.input::placeholder { color: var(--text-muted); }
-
-.select {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-family: var(--font);
-  font-size: 0.88rem;
-  padding: 9px 14px;
-  cursor: pointer;
-  min-height: 40px;
-  transition: border-color var(--transition);
-}
-
-.select:focus { outline: none; border-color: var(--accent); }
-
-/* ═══════════════════════════════
-   MODAL
-═══════════════════════════════ */
-.modal-backdrop {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.7);
-  z-index: 500;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-
-.modal-backdrop.open { display: flex; }
-
-.modal {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  width: 100%;
-  max-width: 480px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow);
-  animation: slideUp 0.22s ease;
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 20px 0;
-}
-
-.modal-title { font-size: 1rem; font-weight: 700; }
-
-.modal-close {
-  width: 34px; height: 34px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1rem;
-  transition: all var(--transition);
-}
-
-.modal-close:hover { background: var(--surface2); color: var(--text); }
-
-.modal-body { padding: 20px; }
-
-.form-group { margin-bottom: 16px; }
 
 .form-label {
   display: block;
   font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 6px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 7px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-.modal-footer {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  padding: 0 20px 20px;
+.input-wrap {
+  position: relative;
 }
 
-/* ═══════════════════════════════
-   ALERT / TOAST
-═══════════════════════════════ */
-.toast-area {
-  position: fixed;
-  bottom: 24px;
-  left: 24px;
-  z-index: 999;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.input-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.05rem;
   pointer-events: none;
+  color: var(--muted);
 }
 
-.toast {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 12px 16px;
-  font-size: 0.88rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: var(--shadow);
-  animation: toastIn 0.25s ease;
-  pointer-events: auto;
-  max-width: 320px;
-}
-
-@keyframes toastIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.toast.success { border-color: var(--green); }
-.toast.error   { border-color: var(--red); }
-
-/* ═══════════════════════════════
-   SECTION TABS
-═══════════════════════════════ */
-.tabs {
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid var(--border);
-  padding: 0 20px;
-  overflow-x: auto;
-}
-
-.tab-btn {
-  padding: 14px 16px;
-  border: none;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--text-muted);
-  font-family: var(--font);
-  font-size: 0.88rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all var(--transition);
-  margin-bottom: -1px;
-}
-
-.tab-btn:hover { color: var(--text); }
-.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
-
-/* ═══════════════════════════════
-   EXAM DATE INLINE INPUT
-═══════════════════════════════ */
-.exam-update {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.input-inline {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
+.input {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
   color: var(--text);
   font-family: var(--font);
-  font-size: 0.8rem;
-  padding: 5px 8px;
-  width: 120px;
+  font-size: 1rem;
+  padding: 13px 44px 13px 14px;
+  transition: border-color 0.2s, background 0.2s;
+  min-height: 52px;
+  -webkit-appearance: none;
 }
 
-.input-inline:focus { outline: none; border-color: var(--accent); }
-
-/* ═══════════════════════════════
-   RESPONSIVE
-═══════════════════════════════ */
-@media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(100%);
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-    box-shadow: -8px 0 32px rgba(0,0,0,0.5);
-  }
-
-  .overlay.open { display: block; }
-
-  .menu-toggle { display: flex; }
-
-  .main { margin-right: 0; }
-
-  .topbar { padding: 14px 16px 14px 56px; }
-
-  .content { padding: 16px; }
-
-  .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
-
-  .form-row { grid-template-columns: 1fr; }
-
-  .filter-bar { flex-direction: column; align-items: stretch; }
-
-  .panel-header { padding: 14px 16px; }
-
-  thead th, tbody td { padding: 10px 12px; }
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(79,124,255,0.06);
 }
 
-@media (max-width: 400px) {
-  .stats-grid { grid-template-columns: 1fr; }
+.input::placeholder { color: var(--muted); font-size: 0.9rem; }
+
+/* ─── BUTTON ────────────────────────────── */
+.btn-login {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(79,124,255,0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-login:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(79,124,255,0.5);
+}
+
+.btn-login:active { transform: translateY(0); }
+
+.btn-login:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-login .spinner {
+  display: none;
+  width: 20px; height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.btn-login.loading .spinner { display: block; }
+.btn-login.loading .btn-text { display: none; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── ERROR / SUCCESS ───────────────────── */
+.alert {
+  border-radius: 10px;
+  padding: 13px 16px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  display: none;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.alert.show { display: flex; }
+
+.alert-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+
+.alert-error {
+  background: rgba(255,90,90,0.12);
+  border: 1px solid rgba(255,90,90,0.35);
+  color: #ff8a8a;
+}
+
+.alert-blocked {
+  background: rgba(255,179,71,0.1);
+  border: 1px solid rgba(255,179,71,0.35);
+  color: #ffb347;
+}
+
+/* ─── DIVIDER ───────────────────────────── */
+.divider {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin: 24px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* ─── RESPONSIVE ────────────────────────── */
+@media (max-width: 480px) {
+  .card { padding: 32px 20px 28px; }
+  .logo-title { font-size: 1.3rem; }
 }
 </style>
 </head>
 <body>
 
-<!-- Skip link for screen readers -->
-<a href="#main-content" class="skip-link">דלג לתוכן הראשי</a>
+<main>
+  <div class="card" role="main">
 
-<!-- Mobile overlay -->
-<div class="overlay" id="overlay" aria-hidden="true" onclick="closeSidebar()"></div>
-
-<!-- Mobile menu toggle -->
-<button class="menu-toggle" id="menuToggle"
-        aria-label="פתח תפריט ניווט"
-        aria-expanded="false"
-        aria-controls="sidebar"
-        onclick="toggleSidebar()">☰</button>
-
-<!-- ═══════════════════════
-     SIDEBAR
-═══════════════════════════ -->
-<nav class="sidebar" id="sidebar" aria-label="תפריט ניווט ראשי">
-
-  <div class="sidebar-header">
-    <a href="#" class="logo" aria-label="ניהול קבוצת אופניים — דף הבית">
-      <div class="logo-icon" aria-hidden="true">🚴</div>
-      <div>
-        <div class="logo-text">קבוצת אופניים</div>
-        <div class="logo-sub">לוח מנהל</div>
-      </div>
-    </a>
-  </div>
-
-  <div class="nav-section">
-    <div class="nav-section-label" aria-hidden="true">ראשי</div>
-    <button class="nav-item active"
-            onclick="showSection('dashboard')"
-            aria-current="page"
-            aria-label="סקירה כללית">
-      <span class="nav-icon" aria-hidden="true">📊</span>
-      סקירה כללית
-    </button>
-    <button class="nav-item"
-            onclick="showSection('riders')"
-            aria-label="ניהול רוכבים">
-      <span class="nav-icon" aria-hidden="true">👥</span>
-      רוכבים
-    </button>
-    <button class="nav-item"
-            onclick="showSection('events')"
-            aria-label="ניהול אירועים">
-      <span class="nav-icon" aria-hidden="true">📅</span>
-      אירועים
-    </button>
-    <button class="nav-item"
-            onclick="showSection('assignments')"
-            aria-label="שיבוצים">
-      <span class="nav-icon" aria-hidden="true">🔗</span>
-      שיבוצים
-    </button>
-  </div>
-
-  <div class="nav-section">
-    <div class="nav-section-label" aria-hidden="true">ניהול</div>
-    <button class="nav-item"
-            onclick="showSection('bikes')"
-            aria-label="ניהול צי אופניים">
-      <span class="nav-icon" aria-hidden="true">🚲</span>
-      צי אופניים
-    </button>
-    <button class="nav-item"
-            onclick="showSection('exams')"
-            aria-label="בדיקות ארגומטריות">
-      <span class="nav-icon" aria-hidden="true">🩺</span>
-      בדיקות ארגומטריות
-      <span class="badge" aria-label="2 רוכבים דורשים תשומת לב">2</span>
-    </button>
-  </div>
-
-  <div class="nav-section">
-    <div class="nav-section-label" aria-hidden="true">מערכת</div>
-    <button class="nav-item" aria-label="הגדרות מערכת">
-      <span class="nav-icon" aria-hidden="true">⚙️</span>
-      הגדרות
-    </button>
-    <button class="nav-item btn-danger-nav" aria-label="התנתקות מהמערכת">
-      <span class="nav-icon" aria-hidden="true">🚪</span>
-      התנתקות
-    </button>
-  </div>
-
-  <div class="sidebar-footer">
-    <div class="user-card" role="status" aria-label="משתמש מחובר: יוסי כהן, מנהל מערכת">
-      <div class="user-avatar" aria-hidden="true">יכ</div>
-      <div>
-        <div class="user-name">יוסי כהן</div>
-        <div class="user-role">מנהל מערכת</div>
-      </div>
+    <!-- Logo -->
+    <div class="logo-wrap">
+      <div class="logo-icon" role="img" aria-label="לוגו קבוצת אופניים">🚴</div>
+      <h1 class="logo-title">קבוצת האופניים</h1>
+      <p class="logo-sub">כניסה לאזור האישי</p>
     </div>
-  </div>
-</nav>
 
-<!-- ═══════════════════════
-     MAIN
-═══════════════════════════ -->
-<div class="main" role="main">
-
-  <!-- Topbar -->
-  <header class="topbar">
-    <div>
-      <div class="page-title" id="pageTitle">סקירה כללית</div>
-      <div class="page-breadcrumb" id="pageBreadcrumb" aria-label="מיקום נוכחי">ניהול קבוצת אופניים / סקירה כללית</div>
+    <!-- שגיאה כללית -->
+    <div id="alertError"
+         class="alert alert-error"
+         role="alert"
+         aria-live="assertive"
+         aria-atomic="true">
+      <span class="alert-icon" aria-hidden="true">❌</span>
+      <span id="alertErrorText"></span>
     </div>
-    <div class="topbar-actions">
-      <button class="btn btn-ghost btn-sm" aria-label="רענן נתונים" onclick="showToast('הנתונים עודכנו','success')">
-        🔄 רענן
-      </button>
-      <button class="btn btn-primary" onclick="openModal('modalAddRider')" aria-label="הוסף רוכב חדש למערכת">
-        + הוסף רוכב
-      </button>
+
+    <!-- חסום — בדיקה פגה -->
+    <div id="alertBlocked"
+         class="alert alert-blocked"
+         role="alert"
+         aria-live="assertive"
+         aria-atomic="true">
+      <span class="alert-icon" aria-hidden="true">⚠️</span>
+      <span>אין לך בדיקה ארגומטרית בתוקף. אנא פנה למנהל המערכת לעדכון התאריך.</span>
     </div>
-  </header>
 
-  <!-- Content -->
-  <main class="content" id="main-content" tabindex="-1">
+    <!-- טופס -->
+    <form id="loginForm"
+          novalidate
+          aria-label="טופס כניסה למערכת"
+          onsubmit="handleLogin(event)">
 
-    <!-- ── DASHBOARD ── -->
-    <section id="section-dashboard" aria-labelledby="dash-heading">
-      <h1 id="dash-heading" class="sr-only">סקירה כללית</h1>
-
-      <!-- Stats -->
-      <div class="stats-grid" role="list" aria-label="נתוני סיכום">
-        <div class="stat-card blue" role="listitem">
-          <span class="stat-icon" aria-hidden="true">👥</span>
-          <div class="stat-value" aria-label="14 רוכבים פעילים">14</div>
-          <div class="stat-label">רוכבים פעילים</div>
-        </div>
-        <div class="stat-card green" role="listitem">
-          <span class="stat-icon" aria-hidden="true">📅</span>
-          <div class="stat-value" aria-label="3 אירועים קרובים">3</div>
-          <div class="stat-label">אירועים קרובים</div>
-        </div>
-        <div class="stat-card red" role="listitem">
-          <span class="stat-icon" aria-hidden="true">⚠️</span>
-          <div class="stat-value" aria-label="2 בדיקות שפגות תוקף">2</div>
-          <div class="stat-label">בדיקות שפגות תוקף</div>
-        </div>
-        <div class="stat-card orange" role="listitem">
-          <span class="stat-icon" aria-hidden="true">🚲</span>
-          <div class="stat-value" aria-label="4 אופניים זמינים">4</div>
-          <div class="stat-label">אופניים זמינים</div>
-        </div>
-      </div>
-
-      <!-- אירועים קרובים -->
-      <div class="panel">
-        <div class="panel-header">
-          <h2 class="panel-title"><span aria-hidden="true">📅</span> אירועים קרובים</h2>
-          <button class="btn btn-ghost btn-sm" onclick="showSection('events')" aria-label="הצג את כל האירועים">
-            הכל →
-          </button>
-        </div>
-        <div class="panel-body table-wrap">
-          <table aria-label="רשימת אירועים קרובים">
-            <thead>
-              <tr>
-                <th scope="col">תאריך</th>
-                <th scope="col">מסלול</th>
-                <th scope="col">ק"מ</th>
-                <th scope="col">נרשמו</th>
-                <th scope="col">סטטוס</th>
-                <th scope="col"><span class="sr-only">פעולות</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>05/04/25</strong></td>
-                <td>
-                  <div class="td-name">ירושלים–מצדה</div>
-                  <div class="td-sub">קפטן: יוסי כהן</div>
-                </td>
-                <td>45 ק"מ</td>
-                <td><span aria-label="8 מתוך 12 נרשמו">8/12</span></td>
-                <td><span class="status status-ok" role="status">פעיל</span></td>
-                <td>
-                  <div class="row-actions">
-                    <button class="icon-btn" aria-label="ערוך אירוע ירושלים מצדה" title="עריכה">✏️</button>
-                    <button class="icon-btn" aria-label="הצג הרשמות לאירוע ירושלים מצדה" title="הרשמות">👁️</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td><strong>12/04/25</strong></td>
-                <td>
-                  <div class="td-name">מסלול הכרמל</div>
-                  <div class="td-sub">קפטן: מרים אביב</div>
-                </td>
-                <td>30 ק"מ</td>
-                <td><span aria-label="5 מתוך 10 נרשמו">5/10</span></td>
-                <td><span class="status status-ok" role="status">פעיל</span></td>
-                <td>
-                  <div class="row-actions">
-                    <button class="icon-btn" aria-label="ערוך אירוע מסלול הכרמל" title="עריכה">✏️</button>
-                    <button class="icon-btn" aria-label="הצג הרשמות לאירוע מסלול הכרמל" title="הרשמות">👁️</button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- התראות בדיקות -->
-      <div class="panel">
-        <div class="panel-header">
-          <h2 class="panel-title"><span aria-hidden="true">🩺</span> התראות בדיקות ארגומטריות</h2>
-        </div>
-        <div class="panel-body table-wrap">
-          <table aria-label="רוכבים עם בדיקה שפגה תוקף או עומדת לפוג">
-            <thead>
-              <tr>
-                <th scope="col">שם רוכב</th>
-                <th scope="col">עיר</th>
-                <th scope="col">סטטוס בדיקה</th>
-                <th scope="col">עדכון תאריך</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="td-name">דוד מזרחי</td>
-                <td>ירושלים</td>
-                <td><span class="status status-err" role="status">❌ פג תוקף</span></td>
-                <td>
-                  <div class="exam-update">
-                    <label for="exam-david" class="sr-only">תאריך בדיקה חדש לדוד מזרחי</label>
-                    <input type="date" id="exam-david" class="input-inline" aria-label="תאריך בדיקה חדש לדוד מזרחי">
-                    <button class="btn btn-primary btn-sm"
-                            aria-label="שמור תאריך בדיקה חדש לדוד מזרחי"
-                            onclick="saveExamDate('david')">שמור</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td class="td-name">רחל לוי</td>
-                <td>חיפה</td>
-                <td><span class="status status-warn" role="status">⚠️ פג תוקף בעוד 12 יום</span></td>
-                <td>
-                  <div class="exam-update">
-                    <label for="exam-rachel" class="sr-only">תאריך בדיקה חדש לרחל לוי</label>
-                    <input type="date" id="exam-rachel" class="input-inline" aria-label="תאריך בדיקה חדש לרחל לוי">
-                    <button class="btn btn-primary btn-sm"
-                            aria-label="שמור תאריך בדיקה חדש לרחל לוי"
-                            onclick="saveExamDate('rachel')">שמור</button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── RIDERS ── -->
-    <section id="section-riders" aria-labelledby="riders-heading" hidden>
-      <h1 id="riders-heading" class="sr-only">ניהול רוכבים</h1>
-
-      <div class="panel">
-        <div class="panel-header">
-          <h2 class="panel-title"><span aria-hidden="true">👥</span> כל הרוכבים</h2>
-          <div class="filter-bar">
-            <div class="search-wrap">
-              <span class="search-icon" aria-hidden="true">🔍</span>
-              <input type="search"
-                     class="input"
-                     placeholder="חיפוש לפי שם, טלפון, עיר…"
-                     aria-label="חפש רוכב"
-                     oninput="filterRiders(this.value)">
-            </div>
-            <label for="filter-style" class="sr-only">סנן לפי סגנון רכיבה</label>
-            <select id="filter-style" class="select" aria-label="סנן לפי סגנון רכיבה">
-              <option value="">כל הסגנונות</option>
-              <option>קפטן</option>
-              <option>סטוקר</option>
-              <option>סינגל</option>
-            </select>
-            <label for="filter-exam" class="sr-only">סנן לפי סטטוס בדיקה</label>
-            <select id="filter-exam" class="select" aria-label="סנן לפי סטטוס בדיקה">
-              <option value="">כל הסטטוסים</option>
-              <option>תקין</option>
-              <option>פג תוקף</option>
-              <option>אין בדיקה</option>
-            </select>
-          </div>
-        </div>
-        <div class="panel-body table-wrap">
-          <table id="ridersTable" aria-label="טבלת רוכבים" aria-live="polite">
-            <thead>
-              <tr>
-                <th scope="col">שם</th>
-                <th scope="col">טלפון</th>
-                <th scope="col">עיר</th>
-                <th scope="col">גיל</th>
-                <th scope="col">סגנון</th>
-                <th scope="col">הרשאה</th>
-                <th scope="col">בדיקה ארגומטרית</th>
-                <th scope="col"><span class="sr-only">פעולות</span></th>
-              </tr>
-            </thead>
-            <tbody id="ridersBody">
-              <tr>
-                <td>
-                  <div class="td-name">יוסי כהן</div>
-                  <div class="td-sub">123456789</div>
-                </td>
-                <td>050-1234567</td>
-                <td>תל אביב</td>
-                <td>40</td>
-                <td><span class="role-tag">קפטן</span></td>
-                <td><span class="status status-blue">מנהל</span></td>
-                <td><span class="status status-ok">✅ תקין</span></td>
-                <td>
-                  <div class="row-actions">
-                    <button class="icon-btn" aria-label="ערוך פרטי רוכב יוסי כהן" title="עריכה">✏️</button>
-                    <button class="icon-btn danger" aria-label="מחק רוכב יוסי כהן" title="מחיקה">🗑️</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="td-name">רחל לוי</div>
-                  <div class="td-sub">987654321</div>
-                </td>
-                <td>052-7654321</td>
-                <td>חיפה</td>
-                <td>35</td>
-                <td><span class="role-tag">סטוקר</span></td>
-                <td><span class="status status-blue">משתמש</span></td>
-                <td><span class="status status-warn">⚠️ פג בעוד 12 יום</span></td>
-                <td>
-                  <div class="row-actions">
-                    <button class="icon-btn" aria-label="ערוך פרטי רוכב רחל לוי" title="עריכה">✏️</button>
-                    <button class="icon-btn danger" aria-label="מחק רוכב רחל לוי" title="מחיקה">🗑️</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="td-name">דוד מזרחי</div>
-                  <div class="td-sub">111222333</div>
-                </td>
-                <td>054-1112223</td>
-                <td>ירושלים</td>
-                <td>47</td>
-                <td><span class="role-tag">סינגל</span></td>
-                <td><span class="status status-blue">משתמש</span></td>
-                <td><span class="status status-err">❌ פג תוקף</span></td>
-                <td>
-                  <div class="row-actions">
-                    <button class="icon-btn" aria-label="ערוך פרטי רוכב דוד מזרחי" title="עריכה">✏️</button>
-                    <button class="icon-btn danger" aria-label="מחק רוכב דוד מזרחי" title="מחיקה">🗑️</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="td-name">מרים אביב</div>
-                  <div class="td-sub">444555666</div>
-                </td>
-                <td>055-4445556</td>
-                <td>באר שבע</td>
-                <td>30</td>
-                <td><span class="role-tag">קפטן</span></td>
-                <td><span class="status status-blue">משתמש</span></td>
-                <td><span class="status status-ok">✅ תקין</span></td>
-                <td>
-                  <div class="row-actions">
-                    <button class="icon-btn" aria-label="ערוך פרטי רוכב מרים אביב" title="עריכה">✏️</button>
-                    <button class="icon-btn danger" aria-label="מחק רוכב מרים אביב" title="מחיקה">🗑️</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="td-name">אמיר שלום</div>
-                  <div class="td-sub">777888999</div>
-                </td>
-                <td>050-7778889</td>
-                <td>נתניה</td>
-                <td>43</td>
-                <td><span class="role-tag">סטוקר</span></td>
-                <td><span class="status status-blue">משתמש</span></td>
-                <td><span class="status status-err">אין בדיקה</span></td>
-                <td>
-                  <div class="row-actions">
-                    <button class="icon-btn" aria-label="ערוך פרטי רוכב אמיר שלום" title="עריכה">✏️</button>
-                    <button class="icon-btn danger" aria-label="מחק רוכב אמיר שלום" title="מחיקה">🗑️</button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── EVENTS ── -->
-    <section id="section-events" aria-labelledby="events-heading" hidden>
-      <h1 id="events-heading" class="sr-only">ניהול אירועים</h1>
-      <div class="panel">
-        <div class="panel-header">
-          <h2 class="panel-title"><span aria-hidden="true">📅</span> כל האירועים</h2>
-          <button class="btn btn-primary" aria-label="צור אירוע חדש" onclick="showToast('פותח טופס אירוע...','success')">
-            + אירוע חדש
-          </button>
-        </div>
-        <div class="panel-body">
-          <div class="tabs" role="tablist" aria-label="סינון אירועים לפי סטטוס">
-            <button class="tab-btn active" role="tab" aria-selected="true"  id="tab-upcoming" aria-controls="tabp-upcoming" onclick="switchTab(this,'tabp-upcoming')">קרובים</button>
-            <button class="tab-btn"        role="tab" aria-selected="false" id="tab-past"     aria-controls="tabp-past"     onclick="switchTab(this,'tabp-past')">עברו</button>
-            <button class="tab-btn"        role="tab" aria-selected="false" id="tab-cancelled" aria-controls="tabp-cancelled" onclick="switchTab(this,'tabp-cancelled')">בוטלו</button>
-          </div>
-          <div id="tabp-upcoming" class="tab-panel active" role="tabpanel" aria-labelledby="tab-upcoming">
-            <div class="table-wrap">
-              <table aria-label="אירועים קרובים">
-                <thead>
-                  <tr>
-                    <th scope="col">תאריך</th>
-                    <th scope="col">מסלול</th>
-                    <th scope="col">ק"מ</th>
-                    <th scope="col">עליות</th>
-                    <th scope="col">נרשמו</th>
-                    <th scope="col">קפטן</th>
-                    <th scope="col"><span class="sr-only">פעולות</span></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>05/04/25</strong><div class="td-sub">06:00</div></td>
-                    <td><div class="td-name">ירושלים–מצדה</div><div class="td-sub">כניסה לירושלים</div></td>
-                    <td>45</td>
-                    <td>800 מ'</td>
-                    <td>8</td>
-                    <td>יוסי כהן</td>
-                    <td>
-                      <div class="row-actions">
-                        <button class="icon-btn" aria-label="ערוך אירוע ירושלים מצדה" title="עריכה">✏️</button>
-                        <button class="icon-btn" aria-label="הרשמות לאירוע ירושלים מצדה" title="הרשמות">👥</button>
-                        <button class="icon-btn danger" aria-label="בטל אירוע ירושלים מצדה" title="ביטול">🚫</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>12/04/25</strong><div class="td-sub">07:00</div></td>
-                    <td><div class="td-name">מסלול הכרמל</div><div class="td-sub">פארק הכרמל</div></td>
-                    <td>30</td>
-                    <td>550 מ'</td>
-                    <td>5</td>
-                    <td>מרים אביב</td>
-                    <td>
-                      <div class="row-actions">
-                        <button class="icon-btn" aria-label="ערוך אירוע מסלול הכרמל" title="עריכה">✏️</button>
-                        <button class="icon-btn" aria-label="הרשמות לאירוע מסלול הכרמל" title="הרשמות">👥</button>
-                        <button class="icon-btn danger" aria-label="בטל אירוע מסלול הכרמל" title="ביטול">🚫</button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div id="tabp-past" class="tab-panel" role="tabpanel" aria-labelledby="tab-past">
-            <div class="table-wrap">
-              <table aria-label="אירועים שעברו">
-                <thead>
-                  <tr>
-                    <th scope="col">תאריך</th>
-                    <th scope="col">מסלול</th>
-                    <th scope="col">השתתפו</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>15/03/25</td>
-                    <td>ים המלח–עין גדי</td>
-                    <td>6</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div id="tabp-cancelled" class="tab-panel" role="tabpanel" aria-labelledby="tab-cancelled">
-            <p style="padding:20px;color:var(--text-muted);text-align:center;">אין אירועים מבוטלים</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── ASSIGNMENTS ── -->
-    <section id="section-assignments" aria-labelledby="assign-heading" hidden>
-      <h1 id="assign-heading" class="sr-only">שיבוצים</h1>
-      <div class="panel">
-        <div class="panel-header">
-          <h2 class="panel-title"><span aria-hidden="true">🔗</span> שיבוץ רוכבים לאירוע</h2>
-          <div class="filter-bar">
-            <label for="event-select-assign" class="sr-only">בחר אירוע לשיבוץ</label>
-            <select id="event-select-assign" class="select" aria-label="בחר אירוע לשיבוץ">
-              <option>05/04/25 — ירושלים–מצדה</option>
-              <option>12/04/25 — מסלול הכרמל</option>
-            </select>
-          </div>
-        </div>
-        <div class="panel-body table-wrap">
-          <table aria-label="שיבוץ רוכבים לאירוע הנבחר">
-            <thead>
-              <tr>
-                <th scope="col">שם רוכב</th>
-                <th scope="col">סגנון</th>
-                <th scope="col">תפקיד שובץ</th>
-                <th scope="col">אופניים</th>
-                <th scope="col">רוכב שותף</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="td-name">יוסי כהן</td>
-                <td><span class="role-tag">קפטן</span></td>
-                <td>
-                  <label for="role-yossi" class="sr-only">תפקיד ליוסי כהן</label>
-                  <select id="role-yossi" class="select" style="min-width:100px" aria-label="תפקיד ליוסי כהן">
-                    <option selected>קפטן</option>
-                    <option>סטוקר</option>
-                    <option>סינגל</option>
-                  </select>
-                </td>
-                <td>
-                  <label for="bike-yossi" class="sr-only">אופניים ליוסי כהן</label>
-                  <select id="bike-yossi" class="select" style="min-width:130px" aria-label="אופניים ליוסי כהן">
-                    <option>הכחול (טנדם)</option>
-                    <option>האדום (טנדם)</option>
-                    <option>אופניים פרטיים</option>
-                  </select>
-                </td>
-                <td>
-                  <label for="partner-yossi" class="sr-only">רוכב שותף ליוסי כהן</label>
-                  <select id="partner-yossi" class="select" style="min-width:120px" aria-label="רוכב שותף ליוסי כהן">
-                    <option>— בחר —</option>
-                    <option selected>רחל לוי</option>
-                    <option>מרים אביב</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
-                <td class="td-name">רחל לוי</td>
-                <td><span class="role-tag">סטוקר</span></td>
-                <td>
-                  <label for="role-rachel" class="sr-only">תפקיד לרחל לוי</label>
-                  <select id="role-rachel" class="select" style="min-width:100px" aria-label="תפקיד לרחל לוי">
-                    <option>קפטן</option>
-                    <option selected>סטוקר</option>
-                    <option>סינגל</option>
-                  </select>
-                </td>
-                <td>
-                  <label for="bike-rachel" class="sr-only">אופניים לרחל לוי</label>
-                  <select id="bike-rachel" class="select" style="min-width:130px" aria-label="אופניים לרחל לוי">
-                    <option selected>הכחול (טנדם)</option>
-                    <option>האדום (טנדם)</option>
-                    <option>אופניים פרטיים</option>
-                  </select>
-                </td>
-                <td>
-                  <label for="partner-rachel" class="sr-only">רוכב שותף לרחל לוי</label>
-                  <select id="partner-rachel" class="select" style="min-width:120px" aria-label="רוכב שותף לרחל לוי">
-                    <option>— בחר —</option>
-                    <option selected>יוסי כהן</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
-                <td class="td-name">מרים אביב</td>
-                <td><span class="role-tag">קפטן</span></td>
-                <td>
-                  <label for="role-miriam" class="sr-only">תפקיד למרים אביב</label>
-                  <select id="role-miriam" class="select" style="min-width:100px" aria-label="תפקיד למרים אביב">
-                    <option selected>קפטן</option>
-                    <option>סטוקר</option>
-                    <option>סינגל</option>
-                  </select>
-                </td>
-                <td>
-                  <label for="bike-miriam" class="sr-only">אופניים למרים אביב</label>
-                  <select id="bike-miriam" class="select" style="min-width:130px" aria-label="אופניים למרים אביב">
-                    <option>הכחול (טנדם)</option>
-                    <option selected>הירוק (סינגל)</option>
-                    <option>אופניים פרטיים</option>
-                  </select>
-                </td>
-                <td><span style="color:var(--text-muted)">—</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div style="padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
-          <button class="btn btn-primary" aria-label="שמור שיבוצים לאירוע" onclick="showToast('השיבוצים נשמרו בהצלחה ✅','success')">
-            💾 שמור שיבוצים
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── BIKES ── -->
-    <section id="section-bikes" aria-labelledby="bikes-heading" hidden>
-      <h1 id="bikes-heading" class="sr-only">צי אופניים</h1>
-      <div class="panel">
-        <div class="panel-header">
-          <h2 class="panel-title"><span aria-hidden="true">🚲</span> צי אופניים</h2>
-        </div>
-        <div class="panel-body table-wrap">
-          <table aria-label="צי האופניים">
-            <thead>
-              <tr>
-                <th scope="col">מזהה</th>
-                <th scope="col">שם</th>
-                <th scope="col">שלדה</th>
-                <th scope="col">הנעה</th>
-                <th scope="col">סטטוס</th>
-                <th scope="col"><span class="sr-only">פעולות</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="background:rgba(255,242,204,0.06)">
-                <td><strong>PRIVATE</strong></td>
-                <td>אופניים פרטיים</td>
-                <td>—</td><td>—</td>
-                <td><span class="status status-ok">תמיד זמין</span></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>B001</td><td>הכחול</td><td>טנדם</td><td>חשמלי</td>
-                <td><span class="status status-ok">✅ תקין</span></td>
-                <td>
-                  <button class="btn btn-ghost btn-sm" aria-label="שנה סטטוס אופניים הכחול">שנה סטטוס</button>
-                </td>
-              </tr>
-              <tr>
-                <td>B002</td><td>האדום</td><td>טנדם</td><td>רגיל</td>
-                <td><span class="status status-ok">✅ תקין</span></td>
-                <td>
-                  <button class="btn btn-ghost btn-sm" aria-label="שנה סטטוס אופניים האדום">שנה סטטוס</button>
-                </td>
-              </tr>
-              <tr>
-                <td>B003</td><td>הירוק</td><td>סינגל</td><td>חשמלי</td>
-                <td><span class="status status-ok">✅ תקין</span></td>
-                <td>
-                  <button class="btn btn-ghost btn-sm" aria-label="שנה סטטוס אופניים הירוק">שנה סטטוס</button>
-                </td>
-              </tr>
-              <tr>
-                <td>B004</td><td>השחור</td><td>סינגל</td><td>רגיל</td>
-                <td><span class="status status-err">🔧 מושבת</span></td>
-                <td>
-                  <button class="btn btn-primary btn-sm" aria-label="הפעל מחדש אופניים השחור">הפעל מחדש</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── EXAMS ── -->
-    <section id="section-exams" aria-labelledby="exams-heading" hidden>
-      <h1 id="exams-heading" class="sr-only">בדיקות ארגומטריות</h1>
-      <div class="panel">
-        <div class="panel-header">
-          <h2 class="panel-title"><span aria-hidden="true">🩺</span> מעקב בדיקות ארגומטריות</h2>
-        </div>
-        <div class="panel-body table-wrap">
-          <table aria-label="סטטוס בדיקות ארגומטריות לכל הרוכבים">
-            <thead>
-              <tr>
-                <th scope="col">שם</th>
-                <th scope="col">תאריך בדיקה</th>
-                <th scope="col">תוקף עד</th>
-                <th scope="col">סטטוס</th>
-                <th scope="col">עדכון</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="td-name">יוסי כהן</td>
-                <td>01/06/2024</td>
-                <td>01/06/2025</td>
-                <td><span class="status status-ok">✅ תקין</span></td>
-                <td>
-                  <div class="exam-update">
-                    <label for="upd-yossi" class="sr-only">תאריך בדיקה חדש ליוסי כהן</label>
-                    <input type="date" id="upd-yossi" class="input-inline" aria-label="תאריך בדיקה חדש ליוסי כהן">
-                    <button class="btn btn-ghost btn-sm" aria-label="שמור עדכון בדיקה ליוסי כהן" onclick="showToast('עודכן ✅','success')">שמור</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td class="td-name">רחל לוי</td>
-                <td>15/01/2024</td>
-                <td>15/01/2025</td>
-                <td><span class="status status-warn">⚠️ פג בעוד 12 יום</span></td>
-                <td>
-                  <div class="exam-update">
-                    <label for="upd-rachel" class="sr-only">תאריך בדיקה חדש לרחל לוי</label>
-                    <input type="date" id="upd-rachel" class="input-inline" aria-label="תאריך בדיקה חדש לרחל לוי">
-                    <button class="btn btn-primary btn-sm" aria-label="שמור עדכון בדיקה לרחל לוי" onclick="showToast('עודכן ✅','success')">שמור</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td class="td-name">דוד מזרחי</td>
-                <td>20/08/2023</td>
-                <td>20/08/2024</td>
-                <td><span class="status status-err">❌ פג תוקף</span></td>
-                <td>
-                  <div class="exam-update">
-                    <label for="upd-david" class="sr-only">תאריך בדיקה חדש לדוד מזרחי</label>
-                    <input type="date" id="upd-david" class="input-inline" aria-label="תאריך בדיקה חדש לדוד מזרחי">
-                    <button class="btn btn-primary btn-sm" aria-label="שמור עדכון בדיקה לדוד מזרחי" onclick="showToast('עודכן ✅','success')">שמור</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td class="td-name">מרים אביב</td>
-                <td>10/11/2024</td>
-                <td>10/11/2025</td>
-                <td><span class="status status-ok">✅ תקין</span></td>
-                <td>
-                  <div class="exam-update">
-                    <label for="upd-miriam" class="sr-only">תאריך בדיקה חדש למרים אביב</label>
-                    <input type="date" id="upd-miriam" class="input-inline" aria-label="תאריך בדיקה חדש למרים אביב">
-                    <button class="btn btn-ghost btn-sm" aria-label="שמור עדכון בדיקה למרים אביב" onclick="showToast('עודכן ✅','success')">שמור</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td class="td-name">אמיר שלום</td>
-                <td>—</td>
-                <td>—</td>
-                <td><span class="status status-err">אין בדיקה</span></td>
-                <td>
-                  <div class="exam-update">
-                    <label for="upd-amir" class="sr-only">תאריך בדיקה חדש לאמיר שלום</label>
-                    <input type="date" id="upd-amir" class="input-inline" aria-label="תאריך בדיקה ראשונה לאמיר שלום">
-                    <button class="btn btn-primary btn-sm" aria-label="שמור בדיקה ראשונה לאמיר שלום" onclick="showToast('עודכן ✅','success')">שמור</button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-  </main>
-</div>
-
-<!-- ═══════════════════════
-     MODAL — הוספת רוכב
-═══════════════════════════ -->
-<div class="modal-backdrop" id="modalAddRider"
-     role="dialog"
-     aria-modal="true"
-     aria-labelledby="modal-title-add"
-     onclick="backdropClose(event,'modalAddRider')">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 class="modal-title" id="modal-title-add">הוספת רוכב חדש</h2>
-      <button class="modal-close" onclick="closeModal('modalAddRider')" aria-label="סגור חלון הוספת רוכב">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="new-tid">תעודת זהות *</label>
-          <input type="text" id="new-tid" class="input" placeholder="123456789"
-                 required aria-required="true"
-                 inputmode="numeric" maxlength="9">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="new-name">שם מלא *</label>
-          <input type="text" id="new-name" class="input" placeholder="ישראל ישראלי"
-                 required aria-required="true">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="new-phone">טלפון *</label>
-          <input type="tel" id="new-phone" class="input" placeholder="050-1234567"
-                 required aria-required="true">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="new-email">אימייל</label>
-          <input type="email" id="new-email" class="input" placeholder="name@email.com">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="new-city">עיר *</label>
-          <input type="text" id="new-city" class="input" placeholder="תל אביב"
-                 required aria-required="true">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="new-dob">תאריך לידה *</label>
-          <input type="date" id="new-dob" class="input" required aria-required="true">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="new-gender">מין *</label>
-          <select id="new-gender" class="select" style="width:100%" required aria-required="true">
-            <option value="">— בחר —</option>
-            <option>זכר</option>
-            <option>נקבה</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="new-style">סגנון רכיבה</label>
-          <select id="new-style" class="select" style="width:100%">
-            <option>סינגל</option>
-            <option>קפטן</option>
-            <option>סטוקר</option>
-          </select>
-        </div>
-      </div>
       <div class="form-group">
-        <label class="form-label" for="new-perm">הרשאת מערכת</label>
-        <select id="new-perm" class="select" style="width:100%">
-          <option>משתמש</option>
-          <option>מנהל</option>
-        </select>
+        <label class="form-label" for="phone">מספר טלפון</label>
+        <div class="input-wrap">
+          <span class="input-icon" aria-hidden="true">📱</span>
+          <input type="tel"
+                 id="phone"
+                 name="phone"
+                 class="input"
+                 placeholder="050-0000000"
+                 inputmode="tel"
+                 autocomplete="tel"
+                 required
+                 aria-required="true"
+                 aria-describedby="phone-hint">
+        </div>
+        <span id="phone-hint" style="font-size:0.76rem;color:var(--muted);display:block;margin-top:5px">
+          הזן את הטלפון שרשום במערכת
+        </span>
       </div>
 
-      <div id="add-rider-error" role="alert" aria-live="assertive"
-           style="display:none;background:rgba(255,90,90,0.1);border:1px solid var(--red);
-                  border-radius:8px;padding:10px 14px;font-size:0.85rem;color:var(--red);margin-top:8px">
+      <div class="form-group">
+        <label class="form-label" for="name">שם מלא</label>
+        <div class="input-wrap">
+          <span class="input-icon" aria-hidden="true">👤</span>
+          <input type="text"
+                 id="name"
+                 name="name"
+                 class="input"
+                 placeholder="ישראל ישראלי"
+                 autocomplete="name"
+                 required
+                 aria-required="true"
+                 aria-describedby="name-hint">
+        </div>
+        <span id="name-hint" style="font-size:0.76rem;color:var(--muted);display:block;margin-top:5px">
+          הזן את שמך כפי שנרשם בקבוצה
+        </span>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalAddRider')">ביטול</button>
-      <button class="btn btn-primary" onclick="submitAddRider()" aria-label="שמור רוכב חדש">
-        💾 הוסף רוכב
+
+      <button type="submit"
+              id="loginBtn"
+              class="btn-login"
+              aria-label="כניסה למערכת">
+        <span class="btn-text">כניסה למערכת ←</span>
+        <span class="spinner" aria-hidden="true"></span>
       </button>
+
+    </form>
+
+    <div class="divider" role="contentinfo">
+      שכחת את הפרטים? פנה למנהל הקבוצה
     </div>
+
   </div>
-</div>
-
-<!-- Toast area -->
-<div class="toast-area" id="toastArea" aria-live="polite" aria-atomic="false"></div>
-
-<!-- Visually hidden helper -->
-<style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>
+</main>
 
 <script>
-// ─── CONFIG ────────────────────────────────────────
-const API_URL = "https://script.google.com/macros/s/AKfycbwJiYxruPDlfVLB_xtC80k82-i-OSm0OVHN8ST_HTQb3_ht-Bi2VyvIZrOya8XVU01A/exec"; // ← הכנס כאן את ה-URL של ה-Apps Script לאחר הפריסה
+const API_URL = ""; // ← הכנס את ה-URL של Apps Script
 
-// ─── NAV ───────────────────────────────────────────
-const sections = ['dashboard','riders','events','assignments','bikes','exams'];
-const titles   = {
-  dashboard:   ['סקירה כללית',   'ניהול קבוצת אופניים / סקירה כללית'],
-  riders:      ['ניהול רוכבים',  'ניהול קבוצת אופניים / רוכבים'],
-  events:      ['ניהול אירועים', 'ניהול קבוצת אופניים / אירועים'],
-  assignments: ['שיבוצים',       'ניהול קבוצת אופניים / שיבוצים'],
-  bikes:       ['צי אופניים',    'ניהול קבוצת אופניים / צי אופניים'],
-  exams:       ['בדיקות ארגומטריות','ניהול קבוצת אופניים / בדיקות'],
-};
+async function handleLogin(e) {
+  e.preventDefault();
 
-function showSection(name) {
-  sections.forEach(s => {
-    const el = document.getElementById('section-' + s);
-    if (el) el.hidden = (s !== name);
-  });
-  document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.classList.remove('active');
-    btn.removeAttribute('aria-current');
-  });
-  event.currentTarget.classList.add('active');
-  event.currentTarget.setAttribute('aria-current','page');
-  document.getElementById('pageTitle').textContent       = titles[name][0];
-  document.getElementById('pageBreadcrumb').textContent  = titles[name][1];
-  document.getElementById('main-content').focus();
-  closeSidebar();
-}
+  const phone = document.getElementById('phone').value.trim();
+  const name  = document.getElementById('name').value.trim();
 
-// ─── MOBILE SIDEBAR ────────────────────────────────
-function toggleSidebar() {
-  const sb  = document.getElementById('sidebar');
-  const ov  = document.getElementById('overlay');
-  const btn = document.getElementById('menuToggle');
-  const open = sb.classList.toggle('open');
-  ov.classList.toggle('open', open);
-  btn.setAttribute('aria-expanded', open);
-  btn.setAttribute('aria-label', open ? 'סגור תפריט ניווט' : 'פתח תפריט ניווט');
-  if (open) { ov.setAttribute('aria-hidden','false'); sb.querySelector('.nav-item').focus(); }
-  else       { ov.setAttribute('aria-hidden','true'); }
-}
+  // ניקוי הודעות קודמות
+  hideAlerts();
 
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('overlay').classList.remove('open');
-  const btn = document.getElementById('menuToggle');
-  btn.setAttribute('aria-expanded','false');
-  btn.setAttribute('aria-label','פתח תפריט ניווט');
-}
-
-// ─── TABS ──────────────────────────────────────────
-function switchTab(btn, panelId) {
-  const panel = btn.closest('.panel');
-  panel.querySelectorAll('.tab-btn').forEach(b => {
-    b.classList.remove('active');
-    b.setAttribute('aria-selected','false');
-  });
-  panel.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  btn.setAttribute('aria-selected','true');
-  document.getElementById(panelId).classList.add('active');
-}
-
-// ─── MODAL ─────────────────────────────────────────
-let lastFocus = null;
-
-function openModal(id) {
-  lastFocus = document.activeElement;
-  const m = document.getElementById(id);
-  m.classList.add('open');
-  const firstInput = m.querySelector('input, select, button');
-  if (firstInput) firstInput.focus();
-  document.addEventListener('keydown', trapFocus);
-}
-
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-  document.removeEventListener('keydown', trapFocus);
-  if (lastFocus) lastFocus.focus();
-}
-
-function backdropClose(e, id) {
-  if (e.target === e.currentTarget) closeModal(id);
-}
-
-function trapFocus(e) {
-  if (e.key !== 'Tab') {
-    if (e.key === 'Escape') { document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open')); }
+  // ולידציה בסיסית
+  if (!phone) {
+    showError('נא להזין מספר טלפון');
+    document.getElementById('phone').focus();
     return;
   }
-  const modal = document.querySelector('.modal-backdrop.open .modal');
-  if (!modal) return;
-  const focusable = modal.querySelectorAll('input, select, textarea, button, [tabindex]:not([tabindex="-1"])');
-  const first = focusable[0], last = focusable[focusable.length - 1];
-  if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
-  else            { if (document.activeElement === last)  { e.preventDefault(); first.focus(); } }
-}
-
-// ─── ADD RIDER ─────────────────────────────────────
-async function submitAddRider() {
-  const errEl = document.getElementById('add-rider-error');
-  errEl.style.display = 'none';
-
-  const tid   = document.getElementById('new-tid').value.trim();
-  const name  = document.getElementById('new-name').value.trim();
-  const phone = document.getElementById('new-phone').value.trim();
-  const city  = document.getElementById('new-city').value.trim();
-  const dob   = document.getElementById('new-dob').value;
-  const gender= document.getElementById('new-gender').value;
-
-  if (!tid || !name || !phone || !city || !dob || !gender) {
-    errEl.textContent = 'נא למלא את כל השדות המסומנים בכוכבית (*)';
-    errEl.style.display = 'block';
-    errEl.focus();
+  if (!name) {
+    showError('נא להזין שם מלא');
+    document.getElementById('name').focus();
     return;
   }
 
-  if (!/^\d{9}$/.test(tid)) {
-    errEl.textContent = 'תעודת זהות חייבת להכיל בדיוק 9 ספרות';
-    errEl.style.display = 'block';
-    errEl.focus();
-    return;
+  // loading state
+  const btn = document.getElementById('loginBtn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+  btn.setAttribute('aria-label', 'מתחבר...');
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', phone, name })
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      showError(data.error || 'פרטי הכניסה שגויים');
+      return;
+    }
+
+    const user = data.data;
+
+    // שמירת פרטי המשתמש ב-sessionStorage
+    sessionStorage.setItem('user', JSON.stringify(user));
+
+    // בדיקה — אם בדיקה פגה ואינו מנהל
+    if (!user.canRegister && !user.isAdmin) {
+      showBlocked();
+      return;
+    }
+
+    // כולם מגיעים ל-rider.html — המנהל יראה שם כפתור ניהול
+    window.location.href = 'rider.html';
+
+  } catch (err) {
+    showError('שגיאת חיבור — בדוק חיבור לאינטרנט ונסה שוב');
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+    btn.setAttribute('aria-label', 'כניסה למערכת');
   }
-
-  // כאן יהיה קריאה ל-API בפרודקשן:
-  // const res = await callAPI('addRider', { tid, name, phone, city, dob, gender, ... });
-
-  closeModal('modalAddRider');
-  showToast(`רוכב ${name} נוסף בהצלחה ✅`, 'success');
 }
 
-// ─── EXAM DATE ─────────────────────────────────────
-function saveExamDate(riderId) {
-  const input = document.getElementById('exam-' + riderId);
-  if (!input || !input.value) {
-    showToast('נא לבחור תאריך בדיקה', 'error');
-    return;
-  }
-  // כאן קריאה ל-API: updateExamDate
-  showToast('תאריך הבדיקה עודכן ✅', 'success');
+function showError(msg) {
+  const el = document.getElementById('alertError');
+  document.getElementById('alertErrorText').textContent = msg;
+  el.classList.add('show');
+  el.focus();
 }
 
-// ─── FILTER RIDERS ─────────────────────────────────
-function filterRiders(query) {
-  const rows = document.querySelectorAll('#ridersBody tr');
-  const q = query.trim().toLowerCase();
-  rows.forEach(row => {
-    row.hidden = q && !row.textContent.toLowerCase().includes(q);
-  });
+function showBlocked() {
+  document.getElementById('alertBlocked').classList.add('show');
+  document.getElementById('alertBlocked').focus();
 }
 
-// ─── API HELPER ────────────────────────────────────
-async function callAPI(action, body = {}) {
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action, ...body })
-  });
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error);
-  return data.data;
+function hideAlerts() {
+  document.getElementById('alertError').classList.remove('show');
+  document.getElementById('alertBlocked').classList.remove('show');
 }
 
-// ─── TOAST ─────────────────────────────────────────
-function showToast(message, type = 'success') {
-  const area  = document.getElementById('toastArea');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.setAttribute('role', 'status');
-  toast.innerHTML = `<span aria-hidden="true">${type === 'success' ? '✅' : '❌'}</span> ${message}`;
-  area.appendChild(toast);
-  setTimeout(() => toast.remove(), 4000);
-}
+// אם כבר מחובר — הפנה ישירות ל-rider.html (כולם)
+window.addEventListener('DOMContentLoaded', () => {
+  const stored = sessionStorage.getItem('user');
+  if (stored) window.location.replace('rider.html');
+});
 </script>
 </body>
 </html>
