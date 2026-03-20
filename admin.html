@@ -1627,7 +1627,7 @@ tbody td {
 
 <script>
 // ─── CONFIG ────────────────────────────────────────
-const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec"; // ← הכנס כאן את ה-URL של ה-Apps Script לאחר הפריסה
+const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec";
 
 // ─── GUARD — מנהלים בלבד ───────────────────────────
 (function() {
@@ -1652,22 +1652,19 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3
 // DATA LAYER — טעינה מה-API בטעינת הדף
 // ══════════════════════════════════════════════════
 
-// קריאה ל-Apps Script (doGet)
+// קריאה ל-Apps Script (doGet — קריאה)
 async function apiGet(action, params = {}) {
-  const qs = new URLSearchParams({ action, ...params }).toString();
-  const res = await fetch(`${API_URL}?${qs}`);
+  const qs   = new URLSearchParams({ action, ...params }).toString();
+  const res  = await fetch(`${API_URL}?${qs}`);
   const data = await res.json();
   if (!data.success) throw new Error(data.error);
   return data.data;
 }
 
-// קריאה ל-Apps Script (doPost)
+// קריאה ל-Apps Script (doGet — כתיבה עם data=JSON)
 async function callAPI(action, body = {}) {
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action, ...body })
-  });
+  const qs   = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
+  const res  = await fetch(`${API_URL}?${qs}`);
   const data = await res.json();
   if (!data.success) throw new Error(data.error);
   return data.data;
