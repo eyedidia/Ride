@@ -843,9 +843,17 @@ tbody td {
       <span class="nav-icon" aria-hidden="true">⚙️</span>
       הגדרות
     </button>
-    <button class="nav-item btn-danger-nav" aria-label="התנתקות מהמערכת">
+    <button class="nav-item btn-danger-nav"
+            onclick="adminLogout()"
+            aria-label="התנתקות מהמערכת">
       <span class="nav-icon" aria-hidden="true">🚪</span>
       התנתקות
+    </button>
+    <button class="nav-item"
+            onclick="window.location.href='rider.html'"
+            aria-label="חזור לדף הרכיבות">
+      <span class="nav-icon" aria-hidden="true">🚴</span>
+      דף הרכיבות
     </button>
   </div>
 
@@ -1619,7 +1627,26 @@ tbody td {
 
 <script>
 // ─── CONFIG ────────────────────────────────────────
-const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec"; // ← הכנס כאן את ה-URL של ה-Apps Script לאחר הפריסה
+const API_URL = ""; // ← הכנס כאן את ה-URL של ה-Apps Script לאחר הפריסה
+
+// ─── GUARD — מנהלים בלבד ───────────────────────────
+(function() {
+  const stored = sessionStorage.getItem('user');
+  if (!stored) { window.location.replace('login.html'); return; }
+  const u = JSON.parse(stored);
+  if (u.permission !== 'מנהל') { window.location.replace('rider.html'); return; }
+  // עדכון כרטיס משתמש בסרגל הצד
+  document.addEventListener('DOMContentLoaded', () => {
+    const nameEl   = document.querySelector('.user-name');
+    const roleEl   = document.querySelector('.user-role');
+    const avatarEl = document.querySelector('.user-avatar');
+    if (nameEl)   nameEl.textContent   = u.name;
+    if (roleEl)   roleEl.textContent   = 'מנהל מערכת';
+    if (avatarEl) avatarEl.textContent = u.name.trim().split(' ').map(w=>w[0]).slice(0,2).join('');
+    const userCard = document.querySelector('.user-card');
+    if (userCard) userCard.setAttribute('aria-label', `משתמש מחובר: ${u.name}, מנהל מערכת`);
+  });
+})();
 
 // ══════════════════════════════════════════════════
 // DATA LAYER — טעינה מה-API בטעינת הדף
@@ -1935,6 +1962,12 @@ async function refreshAll() {
   } finally {
     showLoading(false);
   }
+}
+
+// ─── LOGOUT ────────────────────────────────────────
+function adminLogout() {
+  sessionStorage.removeItem('user');
+  window.location.replace('login.html');
 }
 
 // ─── LOADING INDICATOR ───────────────────────────

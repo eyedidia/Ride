@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>כניסה למערכת — קבוצת אופניים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0b0e18;
+  --surface:   #13172a;
+  --border:    #252a45;
+  --accent:    #4f7cff;
+  --accent2:   #7c5cff;
+  --green:     #2dd4a0;
+  --red:       #ff5a5a;
+  --text:      #e8eaf6;
+  --muted:     #6b728f;
+  --radius:    16px;
+  --font:      'Heebo', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* רקע עם גרדיאנט עדין */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(79,124,255,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(124,92,255,0.1) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* ─── CARD ─────────────────────────────── */
+.card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px 36px 36px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}
+
+/* ─── LOGO ─────────────────────────────── */
+.logo-wrap {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logo-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 20px;
+  font-size: 2rem;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 24px rgba(79,124,255,0.35);
+}
+
+.logo-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.logo-sub {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ─── FORM ─────────────────────────────── */
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 7px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.input-wrap {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.05rem;
+  pointer-events: none;
+  color: var(--muted);
+}
+
+.input {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 1rem;
+  padding: 13px 44px 13px 14px;
+  transition: border-color 0.2s, background 0.2s;
+  min-height: 52px;
+  -webkit-appearance: none;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(79,124,255,0.06);
+}
+
+.input::placeholder { color: var(--muted); font-size: 0.9rem; }
+
+/* ─── BUTTON ────────────────────────────── */
+.btn-login {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(79,124,255,0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-login:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(79,124,255,0.5);
+}
+
+.btn-login:active { transform: translateY(0); }
+
+.btn-login:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-login .spinner {
+  display: none;
+  width: 20px; height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.btn-login.loading .spinner { display: block; }
+.btn-login.loading .btn-text { display: none; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── ERROR / SUCCESS ───────────────────── */
+.alert {
+  border-radius: 10px;
+  padding: 13px 16px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  display: none;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.alert.show { display: flex; }
+
+.alert-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+
+.alert-error {
+  background: rgba(255,90,90,0.12);
+  border: 1px solid rgba(255,90,90,0.35);
+  color: #ff8a8a;
+}
+
+.alert-blocked {
+  background: rgba(255,179,71,0.1);
+  border: 1px solid rgba(255,179,71,0.35);
+  color: #ffb347;
+}
+
+/* ─── DIVIDER ───────────────────────────── */
+.divider {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin: 24px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* ─── RESPONSIVE ────────────────────────── */
+@media (max-width: 480px) {
+  .card { padding: 32px 20px 28px; }
+  .logo-title { font-size: 1.3rem; }
+}
+</style>
+</head>
+<body>
+
+<main>
+  <div class="card" role="main">
+
+    <!-- Logo -->
+    <div class="logo-wrap">
+      <div class="logo-icon" role="img" aria-label="לוגו קבוצת אופניים">🚴</div>
+      <h1 class="logo-title">קבוצת האופניים</h1>
+      <p class="logo-sub">כניסה לאזור האישי</p>
+    </div>
+
+    <!-- שגיאה כללית -->
+    <div id="alertError"
+         class="alert alert-error"
+         role="alert"
+         aria-live="assertive"
+         aria-atomic="true">
+      <span class="alert-icon" aria-hidden="true">❌</span>
+      <span id="alertErrorText"></span>
+    </div>
+
+    <!-- חסום — בדיקה פגה -->
+    <div id="alertBlocked"
+         class="alert alert-blocked"
+         role="alert"
+         aria-live="assertive"
+         aria-atomic="true">
+      <span class="alert-icon" aria-hidden="true">⚠️</span>
+      <span>אין לך בדיקה ארגומטרית בתוקף. אנא פנה למנהל המערכת לעדכון התאריך.</span>
+    </div>
+
+    <!-- טופס -->
+    <form id="loginForm"
+          novalidate
+          aria-label="טופס כניסה למערכת"
+          onsubmit="handleLogin(event)">
+
+      <div class="form-group">
+        <label class="form-label" for="phone">מספר טלפון</label>
+        <div class="input-wrap">
+          <span class="input-icon" aria-hidden="true">📱</span>
+          <input type="tel"
+                 id="phone"
+                 name="phone"
+                 class="input"
+                 placeholder="050-0000000"
+                 inputmode="tel"
+                 autocomplete="tel"
+                 required
+                 aria-required="true"
+                 aria-describedby="phone-hint">
+        </div>
+        <span id="phone-hint" style="font-size:0.76rem;color:var(--muted);display:block;margin-top:5px">
+          הזן את הטלפון שרשום במערכת
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="name">שם מלא</label>
+        <div class="input-wrap">
+          <span class="input-icon" aria-hidden="true">👤</span>
+          <input type="text"
+                 id="name"
+                 name="name"
+                 class="input"
+                 placeholder="ישראל ישראלי"
+                 autocomplete="name"
+                 required
+                 aria-required="true"
+                 aria-describedby="name-hint">
+        </div>
+        <span id="name-hint" style="font-size:0.76rem;color:var(--muted);display:block;margin-top:5px">
+          הזן את שמך כפי שנרשם בקבוצה
+        </span>
+      </div>
+
+      <button type="submit"
+              id="loginBtn"
+              class="btn-login"
+              aria-label="כניסה למערכת">
+        <span class="btn-text">כניסה למערכת ←</span>
+        <span class="spinner" aria-hidden="true"></span>
+      </button>
+
+    </form>
+
+    <div class="divider" role="contentinfo">
+      שכחת את הפרטים? פנה למנהל הקבוצה
+    </div>
+
+  </div>
+</main>
+
+<script>
+const API_URL = ""; // ← הכנס את ה-URL של Apps Script
+
+async function handleLogin(e) {
+  e.preventDefault();
+
+  const phone = document.getElementById('phone').value.trim();
+  const name  = document.getElementById('name').value.trim();
+
+  // ניקוי הודעות קודמות
+  hideAlerts();
+
+  // ולידציה בסיסית
+  if (!phone) {
+    showError('נא להזין מספר טלפון');
+    document.getElementById('phone').focus();
+    return;
+  }
+  if (!name) {
+    showError('נא להזין שם מלא');
+    document.getElementById('name').focus();
+    return;
+  }
+
+  // loading state
+  const btn = document.getElementById('loginBtn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+  btn.setAttribute('aria-label', 'מתחבר...');
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', phone, name })
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      showError(data.error || 'פרטי הכניסה שגויים');
+      return;
+    }
+
+    const user = data.data;
+
+    // שמירת פרטי המשתמש ב-sessionStorage
+    sessionStorage.setItem('user', JSON.stringify(user));
+
+    // בדיקה — אם בדיקה פגה ואינו מנהל
+    if (!user.canRegister && !user.isAdmin) {
+      showBlocked();
+      return;
+    }
+
+    // כולם מגיעים ל-rider.html — המנהל יראה שם כפתור ניהול
+    window.location.href = 'rider.html';
+
+  } catch (err) {
+    showError('שגיאת חיבור — בדוק חיבור לאינטרנט ונסה שוב');
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+    btn.setAttribute('aria-label', 'כניסה למערכת');
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('alertError');
+  document.getElementById('alertErrorText').textContent = msg;
+  el.classList.add('show');
+  el.focus();
+}
+
+function showBlocked() {
+  document.getElementById('alertBlocked').classList.add('show');
+  document.getElementById('alertBlocked').focus();
+}
+
+function hideAlerts() {
+  document.getElementById('alertError').classList.remove('show');
+  document.getElementById('alertBlocked').classList.remove('show');
+}
+
+// אם כבר מחובר — הפנה ישירות ל-rider.html (כולם)
+window.addEventListener('DOMContentLoaded', () => {
+  const stored = sessionStorage.getItem('user');
+  if (stored) window.location.replace('rider.html');
+});
+</script>
+</body>
+</html>

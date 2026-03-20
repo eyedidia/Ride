@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>האזור האישי שלי — קבוצת אופניים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0b0e18;
+  --surface:   #13172a;
+  --surface2:  #1c2138;
+  --border:    #252a45;
+  --accent:    #4f7cff;
+  --accent2:   #7c5cff;
+  --green:     #2dd4a0;
+  --red:       #ff5a5a;
+  --orange:    #ffb347;
+  --text:      #e8eaf6;
+  --muted:     #6b728f;
+  --radius:    14px;
+  --radius-sm: 9px;
+  --font:      'Heebo', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 80px; /* space for bottom nav */
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; right: 0; left: 0; height: 260px;
+  background: linear-gradient(180deg, rgba(79,124,255,0.1) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 5px;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ─── HEADER ────────────────────────────── */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11,14,24,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.header-name { font-size: 0.95rem; font-weight: 700; }
+.header-role { font-size: 0.75rem; color: var(--muted); }
+
+.btn-logout {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  padding: 7px 12px;
+  font-family: var(--font);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 36px;
+}
+.btn-logout:hover { background: var(--surface2); color: var(--text); }
+
+.btn-admin {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 7px 14px;
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 36px;
+  display: none; /* מוצג רק למנהל */
+  align-items: center;
+  gap: 6px;
+}
+.btn-admin:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn-admin.visible { display: flex; }
+
+/* ─── CONTENT ───────────────────────────── */
+.content {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+/* ─── EXAM BANNER ───────────────────────── */
+.exam-banner {
+  background: rgba(255,179,71,0.1);
+  border: 1px solid rgba(255,179,71,0.35);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  font-size: 0.88rem;
+  color: var(--orange);
+  font-weight: 500;
+}
+
+/* ─── BOTTOM NAV ────────────────────────── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; right: 0; left: 0;
+  z-index: 100;
+  background: rgba(19,23,42,0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding: env(safe-area-inset-bottom, 0) 0 0;
+}
+
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px 12px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+  min-height: 56px;
+  position: relative;
+}
+
+.nav-btn:hover, .nav-btn.active { color: var(--accent); }
+
+.nav-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 25%; left: 25%;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 0 0 2px 2px;
+}
+
+.nav-icon { font-size: 1.3rem; }
+
+/* ─── SECTIONS ──────────────────────────── */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ─── SECTION TITLE ─────────────────────── */
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─── EVENT CARDS ───────────────────────── */
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.event-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.event-card:hover { border-color: rgba(79,124,255,0.4); transform: translateY(-1px); }
+
+.event-card.registered {
+  border-color: rgba(45,212,160,0.4);
+  background: rgba(45,212,160,0.04);
+}
+
+.event-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.event-title {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.event-date {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.badge-reg {
+  background: rgba(45,212,160,0.15);
+  color: var(--green);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.meta-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  background: var(--surface2);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.meta-chip strong { color: var(--text); font-weight: 600; }
+
+.event-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  min-height: 40px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover { background: #3a67f0; transform: translateY(-1px); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+.btn-cancel {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid rgba(255,90,90,0.35);
+}
+.btn-cancel:hover { background: rgba(255,90,90,0.1); }
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ─── HISTORY LIST ──────────────────────── */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.history-date-block {
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 8px 12px;
+  text-align: center;
+  min-width: 54px;
+  flex-shrink: 0;
+}
+
+.history-day  { font-size: 1.3rem; font-weight: 800; line-height: 1; color: var(--accent); }
+.history-mon  { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+.history-info { flex: 1; min-width: 0; }
+.history-title { font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-meta  { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
+
+.history-km {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ─── PHONE BOOK ────────────────────────── */
+.phonebook-search {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.search-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.input {
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.95rem;
+  padding: 12px 42px 12px 14px;
+  min-height: 48px;
+  -webkit-appearance: none;
+}
+
+.input:focus { outline: none; border-color: var(--accent); }
+.input::placeholder { color: var(--muted); }
+
+.contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.contact-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.contact-info { min-width: 0; }
+.contact-name { font-weight: 700; font-size: 0.95rem; }
+.contact-city { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+.contact-phone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.phone-num {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  direction: ltr;
+}
+
+.call-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: rgba(45,212,160,0.15);
+  border: none;
+  color: var(--green);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.call-btn:hover { background: rgba(45,212,160,0.28); }
+
+/* ─── EMPTY STATE ───────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--muted);
+}
+.empty-icon { font-size: 3rem; margin-bottom: 12px; display: block; }
+.empty-text { font-size: 0.95rem; }
+
+/* ─── LOADING SKELETON ──────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--radius-sm);
+  height: 80px;
+  margin-bottom: 10px;
+}
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* ─── TOAST ─────────────────────────────── */
+.toast-area {
+  position: fixed;
+  bottom: 80px;
+  right: 16px; left: 16px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  align-items: center;
+}
+
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  animation: toastIn 0.25s ease;
+  pointer-events: auto;
+  max-width: 360px;
+}
+
+@keyframes toastIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.toast.success { border-color: var(--green); }
+.toast.error   { border-color: var(--red); }
+
+/* ─── RESPONSIVE ────────────────────────── */
+@media (min-width: 640px) {
+  .content { padding: 32px 24px; }
+  .event-meta { gap: 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ─────────────────────────── -->
+<header class="app-header">
+  <div class="header-user">
+    <div class="avatar" id="avatarEl" aria-hidden="true">??</div>
+    <div>
+      <div class="header-name" id="headerName">טוען...</div>
+      <div class="header-role" id="headerRole"></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="btn-admin"
+            id="btnAdmin"
+            onclick="window.location.href='admin.html'"
+            aria-label="עבור ללוח הבקרה של המנהל">
+      <span aria-hidden="true">⚙️</span> ניהול
+    </button>
+    <button class="btn-logout"
+            onclick="logout()"
+            aria-label="התנתק מהמערכת">
+      יציאה
+    </button>
+  </div>
+</header>
+
+<!-- ─── CONTENT ───────────────────────── -->
+<main class="content" id="main-content" tabindex="-1">
+
+  <!-- בנר בדיקה עומדת לפוג -->
+  <div id="examBanner"
+       class="exam-banner"
+       role="alert"
+       style="display:none"
+       aria-live="polite">
+    <span aria-hidden="true">⚠️</span>
+    <span id="examBannerText"></span>
+  </div>
+
+  <!-- ── אירועים ── -->
+  <section id="section-events"
+           class="section active"
+           aria-labelledby="events-heading">
+    <h1 id="events-heading" class="section-title">
+      <span aria-hidden="true">📅</span> רכיבות קרובות
+    </h1>
+    <div id="eventsList" class="events-list" aria-live="polite" aria-busy="true">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton" style="height:60px"></div>
+    </div>
+  </section>
+
+  <!-- ── היסטוריה ── -->
+  <section id="section-history"
+           class="section"
+           aria-labelledby="history-heading"
+           hidden>
+    <h1 id="history-heading" class="section-title">
+      <span aria-hidden="true">🏅</span> הרכיבות שלי
+    </h1>
+    <div id="historyList" class="history-list" aria-live="polite" aria-busy="true">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+  </section>
+
+  <!-- ── ספר טלפונים ── -->
+  <section id="section-phonebook"
+           class="section"
+           aria-labelledby="phone-heading"
+           hidden>
+    <h1 id="phone-heading" class="section-title">
+      <span aria-hidden="true">📞</span> אנשי קשר
+    </h1>
+    <div class="phonebook-search">
+      <span class="search-icon" aria-hidden="true">🔍</span>
+      <input type="search"
+             class="input"
+             id="phoneSearch"
+             placeholder="חיפוש לפי שם או עיר…"
+             aria-label="חפש איש קשר"
+             oninput="filterContacts(this.value)">
+    </div>
+    <div id="contactList"
+         class="contact-list"
+         aria-live="polite"
+         aria-busy="true">
+      <div class="skeleton" style="height:60px"></div>
+      <div class="skeleton" style="height:60px"></div>
+      <div class="skeleton" style="height:60px"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ─── BOTTOM NAV ─────────────────────── -->
+<nav class="bottom-nav" aria-label="ניווט תחתון">
+  <button class="nav-btn active"
+          id="nav-events"
+          onclick="switchTab('events')"
+          aria-label="רכיבות קרובות"
+          aria-current="page">
+    <span class="nav-icon" aria-hidden="true">📅</span>
+    <span>רכיבות</span>
+  </button>
+  <button class="nav-btn"
+          id="nav-history"
+          onclick="switchTab('history')"
+          aria-label="היסטוריית הרכיבות שלי">
+    <span class="nav-icon" aria-hidden="true">🏅</span>
+    <span>היסטוריה</span>
+  </button>
+  <button class="nav-btn"
+          id="nav-phonebook"
+          onclick="switchTab('phonebook')"
+          aria-label="ספר טלפונים">
+    <span class="nav-icon" aria-hidden="true">📞</span>
+    <span>אנשי קשר</span>
+  </button>
+</nav>
+
+<!-- Toast -->
+<div class="toast-area" id="toastArea" aria-live="polite" aria-atomic="false"></div>
+
+<script>
+const API_URL = ""; // ← הכנס את ה-URL של Apps Script
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let user        = null;
+let allContacts = [];
+let myRegs      = new Set(); // מזהי אירועים שהרוכב רשום אליהם
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  // ─── GUARD ─────────────────────────────────
+  const stored = sessionStorage.getItem('user');
+  if (!stored) { window.location.replace('login.html'); return; }
+  user = JSON.parse(stored);
+
+  // הצגת כפתור ניהול אם מנהל
+  if (user.isAdmin) {
+    document.getElementById('btnAdmin').classList.add('visible');
+  }
+
+  // עדכון header
+  renderHeader();
+
+  // בנר בדיקה אם עומדת לפוג
+  if (user.examStatus && (user.examStatus.includes('⚠️') || user.examStatus.includes('❌'))) {
+    const banner = document.getElementById('examBanner');
+    document.getElementById('examBannerText').textContent =
+      user.examStatus.includes('❌')
+        ? 'הבדיקה הארגומטרית שלך פגה תוקף. פנה למנהל הקבוצה.'
+        : 'הבדיקה הארגומטרית שלך עומדת לפוג בקרוב. פנה למנהל הקבוצה.';
+    banner.style.display = 'flex';
+  }
+
+  // טעינת נתונים ראשוניים
+  await loadEvents();
+});
+
+// ══════════════════════════════════════════
+// RENDER HEADER
+// ══════════════════════════════════════════
+function renderHeader() {
+  document.getElementById('headerName').textContent = user.name;
+  document.getElementById('headerRole').textContent = user.rideStyle + ' • ' + user.city;
+  const initials = user.name.trim().split(' ').map(w => w[0]).slice(0,2).join('');
+  const av = document.getElementById('avatarEl');
+  av.textContent = initials;
+  av.setAttribute('aria-label', `אווטאר של ${user.name}`);
+  document.title = `${user.name} — קבוצת אופניים`;
+}
+
+// ══════════════════════════════════════════
+// TAB NAVIGATION
+// ══════════════════════════════════════════
+const TABS = ['events','history','phonebook'];
+
+async function switchTab(name) {
+  TABS.forEach(t => {
+    const sec = document.getElementById('section-' + t);
+    const btn = document.getElementById('nav-' + t);
+    if (t === name) {
+      sec.classList.add('active'); sec.hidden = false;
+      btn.classList.add('active');
+      btn.setAttribute('aria-current','page');
+    } else {
+      sec.classList.remove('active'); sec.hidden = true;
+      btn.classList.remove('active');
+      btn.removeAttribute('aria-current');
+    }
+  });
+  document.getElementById('main-content').focus();
+
+  // טעינה עצלה
+  if (name === 'history' && document.getElementById('historyList').children[0]?.classList.contains('skeleton')) {
+    await loadHistory();
+  }
+  if (name === 'phonebook' && document.getElementById('contactList').children[0]?.classList.contains('skeleton')) {
+    await loadPhoneBook();
+  }
+}
+
+// ══════════════════════════════════════════
+// LOAD EVENTS
+// ══════════════════════════════════════════
+async function loadEvents() {
+  const container = document.getElementById('eventsList');
+  try {
+    const events = await apiGet('getEvents');
+    // טעינת הרשמות קיימות של הרוכב
+    await loadMyRegistrations(events);
+    renderEvents(events);
+  } catch(e) {
+    container.innerHTML = `<div class="empty-state" role="status">
+      <span class="empty-icon" aria-hidden="true">⚠️</span>
+      <span class="empty-text">שגיאה בטעינת אירועים: ${esc(e.message)}</span>
+    </div>`;
+  }
+}
+
+async function loadMyRegistrations(events) {
+  try {
+    for (const ev of events) {
+      const regs = await apiGet('getRegistrations', { eventId: ev.id });
+      if (regs.some(r => r.tid === user.tid)) myRegs.add(ev.id);
+    }
+  } catch(_) {}
+}
+
+function renderEvents(events) {
+  const container = document.getElementById('eventsList');
+  container.setAttribute('aria-busy','false');
+
+  if (!events.length) {
+    container.innerHTML = `<div class="empty-state" role="status">
+      <span class="empty-icon" aria-hidden="true">📅</span>
+      <span class="empty-text">אין רכיבות קרובות כרגע</span>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = events.map(ev => {
+    const isReg  = myRegs.has(ev.id);
+    const canReg = user.canRegister;
+    return `
+    <article class="event-card ${isReg ? 'registered' : ''}"
+             aria-label="אירוע: ${esc(ev.description)}, תאריך ${esc(ev.date)}${isReg ? ', רשום' : ''}">
+      <div class="event-top">
+        <div>
+          <div class="event-title">${esc(ev.description)}</div>
+          <div class="event-date">
+            <span aria-label="תאריך">📅 ${esc(ev.date)}</span>
+            &nbsp;·&nbsp;
+            <span aria-label="שעת מפגש">🕕 ${esc(ev.meetTime)}</span>
+          </div>
+        </div>
+        ${isReg ? '<span class="badge-reg" role="status" aria-label="רשום לאירוע זה">✓ רשום</span>' : ''}
+      </div>
+
+      <div class="event-meta" role="list" aria-label="פרטי אירוע">
+        <div class="meta-chip" role="listitem">
+          <span aria-hidden="true">📍</span>
+          <span>${esc(ev.meetPoint)}</span>
+        </div>
+        <div class="meta-chip" role="listitem">
+          <span aria-hidden="true">🚴</span>
+          <strong>${esc(String(ev.km))}</strong>&nbsp;ק"מ
+        </div>
+        <div class="meta-chip" role="listitem">
+          <span aria-hidden="true">⛰️</span>
+          <strong>${esc(String(ev.climb))}</strong>&nbsp;מ' עלייה
+        </div>
+        <div class="meta-chip" role="listitem">
+          <span aria-hidden="true">👑</span>
+          <span>${esc(ev.captain)}</span>
+        </div>
+      </div>
+
+      <div class="event-footer">
+        ${isReg
+          ? `<button class="btn btn-cancel"
+                     aria-label="בטל הרשמה לאירוע ${esc(ev.description)}"
+                     onclick="cancelReg('${esc(ev.id)}','${esc(ev.description)}',this)">
+               ✕ בטל הרשמה
+             </button>`
+          : `<button class="btn btn-primary"
+                     ${!canReg ? 'disabled aria-disabled="true"' : ''}
+                     aria-label="${canReg ? `הירשם לאירוע ${esc(ev.description)}` : 'לא ניתן להירשם — אין בדיקה בתוקף'}"
+                     onclick="register('${esc(ev.id)}','${esc(ev.description)}',this)">
+               ${canReg ? '+ הירשם' : '🔒 דרושה בדיקה'}
+             </button>`
+        }
+      </div>
+    </article>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// REGISTER / CANCEL
+// ══════════════════════════════════════════
+async function register(eventId, eventName, btn) {
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    await callAPI('register', {
+      tid: user.tid,
+      eventId,
+      role: user.rideStyle
+    });
+    myRegs.add(eventId);
+    showToast(`נרשמת לרכיבה: ${eventName} ✅`, 'success');
+    await loadEvents();
+  } catch(e) {
+    showToast('שגיאה: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '+ הירשם';
+  }
+}
+
+async function cancelReg(eventId, eventName, btn) {
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    await callAPI('cancelRegistration', { tid: user.tid, eventId });
+    myRegs.delete(eventId);
+    showToast(`ההרשמה לרכיבה "${eventName}" בוטלה`, 'success');
+    await loadEvents();
+  } catch(e) {
+    showToast('שגיאה: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '✕ בטל הרשמה';
+  }
+}
+
+// ══════════════════════════════════════════
+// RIDE HISTORY
+// ══════════════════════════════════════════
+async function loadHistory() {
+  const container = document.getElementById('historyList');
+  try {
+    const history = await apiGet('getRideHistory', { tid: user.tid });
+    container.setAttribute('aria-busy','false');
+
+    if (!history.length) {
+      container.innerHTML = `<div class="empty-state" role="status">
+        <span class="empty-icon" aria-hidden="true">🏅</span>
+        <span class="empty-text">עדיין לא השתתפת ברכיבות</span>
+      </div>`;
+      return;
+    }
+
+    container.innerHTML = history.map(h => {
+      const parts = h.date.split('/');
+      const day = parts[0] || '??';
+      const mon = parts[1] ? monthName(parseInt(parts[1])) : '';
+      return `
+      <div class="history-item" role="listitem">
+        <div class="history-date-block" aria-hidden="true">
+          <div class="history-day">${esc(day)}</div>
+          <div class="history-mon">${esc(mon)}</div>
+        </div>
+        <div class="history-info">
+          <div class="history-title">${esc(h.description)}</div>
+          <div class="history-meta">
+            <span aria-label="תפקיד">${esc(h.role)}</span>
+            ${h.bike ? ` · <span aria-label="אופניים">${esc(h.bike)}</span>` : ''}
+          </div>
+        </div>
+        <div class="history-km" aria-label="${esc(String(h.km))} קילומטר">
+          ${esc(String(h.km))} ק"מ
+        </div>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    container.innerHTML = `<div class="empty-state" role="alert">
+      <span class="empty-icon" aria-hidden="true">⚠️</span>
+      <span class="empty-text">שגיאה בטעינת היסטוריה: ${esc(e.message)}</span>
+    </div>`;
+  }
+}
+
+function monthName(m) {
+  return ['','ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'][m] || '';
+}
+
+// ══════════════════════════════════════════
+// PHONE BOOK
+// ══════════════════════════════════════════
+async function loadPhoneBook() {
+  const container = document.getElementById('contactList');
+  try {
+    allContacts = await apiGet('getPhoneBook');
+    container.setAttribute('aria-busy','false');
+    renderContacts(allContacts);
+  } catch(e) {
+    container.innerHTML = `<div class="empty-state" role="alert">
+      <span class="empty-icon" aria-hidden="true">⚠️</span>
+      <span class="empty-text">שגיאה בטעינת אנשי קשר: ${esc(e.message)}</span>
+    </div>`;
+  }
+}
+
+function renderContacts(contacts) {
+  const container = document.getElementById('contactList');
+  if (!contacts.length) {
+    container.innerHTML = `<div class="empty-state" role="status">
+      <span class="empty-icon" aria-hidden="true">📞</span>
+      <span class="empty-text">לא נמצאו אנשי קשר</span>
+    </div>`;
+    return;
+  }
+  container.innerHTML = contacts.map(c => `
+    <div class="contact-card">
+      <div class="contact-info">
+        <div class="contact-name">${esc(c.name)}</div>
+        <div class="contact-city">${esc(c.city)}</div>
+      </div>
+      <div class="contact-phone">
+        <span class="phone-num" aria-label="מספר טלפון ${esc(c.phone)}">${esc(c.phone)}</span>
+        <a href="tel:${esc(c.phone)}"
+           class="call-btn"
+           aria-label="התקשר אל ${esc(c.name)}">
+          📞
+        </a>
+      </div>
+    </div>`).join('');
+}
+
+function filterContacts(query) {
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? allContacts.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        c.city.toLowerCase().includes(q)
+      )
+    : allContacts;
+  renderContacts(filtered);
+}
+
+// ══════════════════════════════════════════
+// LOGOUT
+// ══════════════════════════════════════════
+function logout() {
+  sessionStorage.removeItem('user');
+  window.location.href = 'login.html';
+}
+
+// ══════════════════════════════════════════
+// API HELPERS
+// ══════════════════════════════════════════
+async function apiGet(action, params = {}) {
+  const qs  = new URLSearchParams({ action, ...params }).toString();
+  const res = await fetch(`${API_URL}?${qs}`);
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error);
+  return data.data;
+}
+
+async function callAPI(action, body = {}) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, ...body })
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error);
+  return data.data;
+}
+
+// ══════════════════════════════════════════
+// TOAST & UTILS
+// ══════════════════════════════════════════
+function showToast(message, type = 'success') {
+  const area  = document.getElementById('toastArea');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.setAttribute('role','status');
+  toast.innerHTML = `<span aria-hidden="true">${type === 'success' ? '✅' : '❌'}</span> ${message}`;
+  area.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+function esc(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
