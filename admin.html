@@ -952,26 +952,26 @@ tbody td {
     <section id="section-dashboard" aria-labelledby="dash-heading">
       <h1 id="dash-heading" class="sr-only">סקירה כללית</h1>
 
-      <!-- Stats -->
+      <!-- Stats — מתמלאים מה-API -->
       <div class="stats-grid" role="list" aria-label="נתוני סיכום">
         <div class="stat-card blue" role="listitem">
           <span class="stat-icon" aria-hidden="true">👥</span>
-          <div class="stat-value" aria-label="14 רוכבים פעילים">14</div>
+          <div class="stat-value" id="stat-riders" aria-label="טוען">—</div>
           <div class="stat-label">רוכבים פעילים</div>
         </div>
         <div class="stat-card green" role="listitem">
           <span class="stat-icon" aria-hidden="true">📅</span>
-          <div class="stat-value" aria-label="3 אירועים קרובים">3</div>
+          <div class="stat-value" id="stat-events" aria-label="טוען">—</div>
           <div class="stat-label">אירועים קרובים</div>
         </div>
         <div class="stat-card red" role="listitem">
           <span class="stat-icon" aria-hidden="true">⚠️</span>
-          <div class="stat-value" aria-label="2 בדיקות שפגות תוקף">2</div>
+          <div class="stat-value" id="stat-exams" aria-label="טוען">—</div>
           <div class="stat-label">בדיקות שפגות תוקף</div>
         </div>
         <div class="stat-card orange" role="listitem">
           <span class="stat-icon" aria-hidden="true">🚲</span>
-          <div class="stat-value" aria-label="4 אופניים זמינים">4</div>
+          <div class="stat-value" id="stat-bikes" aria-label="טוען">—</div>
           <div class="stat-label">אופניים זמינים</div>
         </div>
       </div>
@@ -991,44 +991,12 @@ tbody td {
                 <th scope="col">תאריך</th>
                 <th scope="col">מסלול</th>
                 <th scope="col">ק"מ</th>
-                <th scope="col">נרשמו</th>
-                <th scope="col">סטטוס</th>
+                <th scope="col">קפטן</th>
                 <th scope="col"><span class="sr-only">פעולות</span></th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td><strong>05/04/25</strong></td>
-                <td>
-                  <div class="td-name">ירושלים–מצדה</div>
-                  <div class="td-sub">קפטן: יוסי כהן</div>
-                </td>
-                <td>45 ק"מ</td>
-                <td><span aria-label="8 מתוך 12 נרשמו">8/12</span></td>
-                <td><span class="status status-ok" role="status">פעיל</span></td>
-                <td>
-                  <div class="row-actions">
-                    <button class="icon-btn" aria-label="ערוך אירוע ירושלים מצדה" title="עריכה">✏️</button>
-                    <button class="icon-btn" aria-label="הצג הרשמות לאירוע ירושלים מצדה" title="הרשמות">👁️</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td><strong>12/04/25</strong></td>
-                <td>
-                  <div class="td-name">מסלול הכרמל</div>
-                  <div class="td-sub">קפטן: מרים אביב</div>
-                </td>
-                <td>30 ק"מ</td>
-                <td><span aria-label="5 מתוך 10 נרשמו">5/10</span></td>
-                <td><span class="status status-ok" role="status">פעיל</span></td>
-                <td>
-                  <div class="row-actions">
-                    <button class="icon-btn" aria-label="ערוך אירוע מסלול הכרמל" title="עריכה">✏️</button>
-                    <button class="icon-btn" aria-label="הצג הרשמות לאירוע מסלול הכרמל" title="הרשמות">👁️</button>
-                  </div>
-                </td>
-              </tr>
+            <tbody id="dashEventsBody">
+              <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">טוען...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1049,35 +1017,8 @@ tbody td {
                 <th scope="col">עדכון תאריך</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td class="td-name">דוד מזרחי</td>
-                <td>ירושלים</td>
-                <td><span class="status status-err" role="status">❌ פג תוקף</span></td>
-                <td>
-                  <div class="exam-update">
-                    <label for="exam-david" class="sr-only">תאריך בדיקה חדש לדוד מזרחי</label>
-                    <input type="date" id="exam-david" class="input-inline" aria-label="תאריך בדיקה חדש לדוד מזרחי">
-                    <button class="btn btn-primary btn-sm"
-                            aria-label="שמור תאריך בדיקה חדש לדוד מזרחי"
-                            onclick="saveExamDate('david')">שמור</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td class="td-name">רחל לוי</td>
-                <td>חיפה</td>
-                <td><span class="status status-warn" role="status">⚠️ פג תוקף בעוד 12 יום</span></td>
-                <td>
-                  <div class="exam-update">
-                    <label for="exam-rachel" class="sr-only">תאריך בדיקה חדש לרחל לוי</label>
-                    <input type="date" id="exam-rachel" class="input-inline" aria-label="תאריך בדיקה חדש לרחל לוי">
-                    <button class="btn btn-primary btn-sm"
-                            aria-label="שמור תאריך בדיקה חדש לרחל לוי"
-                            onclick="saveExamDate('rachel')">שמור</button>
-                  </div>
-                </td>
-              </tr>
+            <tbody id="dashExamsBody">
+              <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">טוען...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1131,96 +1072,7 @@ tbody td {
               </tr>
             </thead>
             <tbody id="ridersBody">
-              <tr>
-                <td>
-                  <div class="td-name">יוסי כהן</div>
-                  <div class="td-sub">123456789</div>
-                </td>
-                <td>050-1234567</td>
-                <td>תל אביב</td>
-                <td>40</td>
-                <td><span class="role-tag">קפטן</span></td>
-                <td><span class="status status-blue">מנהל</span></td>
-                <td><span class="status status-ok">✅ תקין</span></td>
-                <td>
-                  <div class="row-actions">
-                    <button class="icon-btn" aria-label="ערוך פרטי רוכב יוסי כהן" title="עריכה">✏️</button>
-                    <button class="icon-btn danger" aria-label="מחק רוכב יוסי כהן" title="מחיקה">🗑️</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="td-name">רחל לוי</div>
-                  <div class="td-sub">987654321</div>
-                </td>
-                <td>052-7654321</td>
-                <td>חיפה</td>
-                <td>35</td>
-                <td><span class="role-tag">סטוקר</span></td>
-                <td><span class="status status-blue">משתמש</span></td>
-                <td><span class="status status-warn">⚠️ פג בעוד 12 יום</span></td>
-                <td>
-                  <div class="row-actions">
-                    <button class="icon-btn" aria-label="ערוך פרטי רוכב רחל לוי" title="עריכה">✏️</button>
-                    <button class="icon-btn danger" aria-label="מחק רוכב רחל לוי" title="מחיקה">🗑️</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="td-name">דוד מזרחי</div>
-                  <div class="td-sub">111222333</div>
-                </td>
-                <td>054-1112223</td>
-                <td>ירושלים</td>
-                <td>47</td>
-                <td><span class="role-tag">סינגל</span></td>
-                <td><span class="status status-blue">משתמש</span></td>
-                <td><span class="status status-err">❌ פג תוקף</span></td>
-                <td>
-                  <div class="row-actions">
-                    <button class="icon-btn" aria-label="ערוך פרטי רוכב דוד מזרחי" title="עריכה">✏️</button>
-                    <button class="icon-btn danger" aria-label="מחק רוכב דוד מזרחי" title="מחיקה">🗑️</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="td-name">מרים אביב</div>
-                  <div class="td-sub">444555666</div>
-                </td>
-                <td>055-4445556</td>
-                <td>באר שבע</td>
-                <td>30</td>
-                <td><span class="role-tag">קפטן</span></td>
-                <td><span class="status status-blue">משתמש</span></td>
-                <td><span class="status status-ok">✅ תקין</span></td>
-                <td>
-                  <div class="row-actions">
-                    <button class="icon-btn" aria-label="ערוך פרטי רוכב מרים אביב" title="עריכה">✏️</button>
-                    <button class="icon-btn danger" aria-label="מחק רוכב מרים אביב" title="מחיקה">🗑️</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="td-name">אמיר שלום</div>
-                  <div class="td-sub">777888999</div>
-                </td>
-                <td>050-7778889</td>
-                <td>נתניה</td>
-                <td>43</td>
-                <td><span class="role-tag">סטוקר</span></td>
-                <td><span class="status status-blue">משתמש</span></td>
-                <td><span class="status status-err">אין בדיקה</span></td>
-                <td>
-                  <div class="row-actions">
-                    <button class="icon-btn" aria-label="ערוך פרטי רוכב אמיר שלום" title="עריכה">✏️</button>
-                    <button class="icon-btn danger" aria-label="מחק רוכב אמיר שלום" title="מחיקה">🗑️</button>
-                  </div>
-                </td>
-              </tr>
+              <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1802,24 +1654,23 @@ function renderEventsTable(events) {
 
 // ─── אירועים בדשבורד ─────────────────────────────
 function renderDashboardEvents(events) {
-  const tbody = document.querySelector('#section-dashboard .panel .table-wrap table tbody');
+  const tbody = document.getElementById('dashEventsBody');
   if (!tbody) return;
   const upcoming = events.slice(0, 3);
   if (!upcoming.length) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-muted)">אין אירועים קרובים</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">אין אירועים קרובים</td></tr>`;
     return;
   }
   tbody.innerHTML = upcoming.map(e => `
     <tr>
-      <td><strong>${esc(e.date)}</strong></td>
-      <td><div class="td-name">${esc(e.description)}</div><div class="td-sub">קפטן: ${esc(e.captain)}</div></td>
+      <td><strong>${esc(e.date)}</strong><div class="td-sub">${esc(e.meetTime)}</div></td>
+      <td><div class="td-name">${esc(e.description)}</div><div class="td-sub">${esc(e.meetPoint)}</div></td>
       <td>${esc(String(e.km))} ק"מ</td>
-      <td>—</td>
-      <td><span class="status status-ok" role="status">פעיל</span></td>
+      <td>${esc(e.captain)}</td>
       <td>
         <div class="row-actions">
-          <button class="icon-btn" aria-label="ערוך אירוע ${esc(e.description)}">✏️</button>
-          <button class="icon-btn" aria-label="הצג הרשמות לאירוע ${esc(e.description)}">👁️</button>
+          <button class="icon-btn" aria-label="ערוך אירוע ${esc(e.description)}" onclick="showSection('events')">✏️</button>
+          <button class="icon-btn" aria-label="הרשמות לאירוע ${esc(e.description)}" onclick="loadRegistrations('${esc(e.id)}')">👁️</button>
         </div>
       </td>
     </tr>`).join('');
@@ -1854,19 +1705,35 @@ function renderBikesTable(bikes) {
 
 // ─── כרטיסי סטטיסטיקה ───────────────────────────
 function updateDashboardStats() {
-  const riders = STATE.riders;
-  const events = STATE.events;
+  const riders      = STATE.riders;
+  const events      = STATE.events;
   const expiredCount = riders.filter(r =>
     r.examStatus && (r.examStatus.includes('❌') || r.examStatus.includes('אין'))
   ).length;
   const availBikes = STATE.bikes.filter(b => b.status === 'תקין' && b.id !== 'PRIVATE').length;
 
-  setStatCard(0, riders.length, `${riders.length} רוכבים פעילים`);
-  setStatCard(1, events.length, `${events.length} אירועים קרובים`);
-  setStatCard(2, expiredCount, `${expiredCount} בדיקות שפגות תוקף`);
-  setStatCard(3, availBikes,   `${availBikes} אופניים זמינים`);
+  // עדכון לפי ID ישיר — לא תלוי בסדר DOM
+  const set = (id, val, label) => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = val; el.setAttribute('aria-label', label); }
+  };
+  // ה-IDs בה-HTML הם stat-riders, stat-events, stat-exams, stat-bikes
+  // אם לא קיימים — נסה לפי querySelectorAll כ-fallback
+  const cards = document.querySelectorAll('.stat-card .stat-value');
+  const vals  = [riders.length, events.length, expiredCount, availBikes];
+  const labels = [
+    `${riders.length} רוכבים פעילים`,
+    `${events.length} אירועים קרובים`,
+    `${expiredCount} בדיקות שפגות תוקף`,
+    `${availBikes} אופניים זמינים`
+  ];
+  cards.forEach((el, i) => {
+    if (i < vals.length) {
+      el.textContent = vals[i];
+      el.setAttribute('aria-label', labels[i]);
+    }
+  });
 
-  // עדכן badge בתפריט
   const badge = document.querySelector('.badge');
   if (badge) {
     badge.textContent = expiredCount;
@@ -1884,7 +1751,7 @@ function setStatCard(index, value, ariaLabel) {
 
 // ─── התראות בדיקות ───────────────────────────────
 function updateExamAlerts() {
-  const tbody = document.querySelector('#section-dashboard .panel:last-of-type tbody');
+  const tbody = document.getElementById('dashExamsBody');
   if (!tbody) return;
   const alerts = STATE.riders.filter(r =>
     r.examStatus && (r.examStatus.includes('❌') || r.examStatus.includes('⚠️') || r.examStatus.includes('אין'))
