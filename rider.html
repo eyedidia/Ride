@@ -1025,14 +1025,18 @@ function renderEvents(events, counts = {}) {
 // ── STATE של האירועים האחרונים ──────────────
 let cachedEvents = [];
 let cachedCounts = {};
+let registering  = false; // מונע לחיצה כפולה
 
 async function register(eventId, eventName, btn) {
+  if (registering) return; // חסימת לחיצה כפולה
+  registering = true;
   btn.disabled = true;
   btn.textContent = '...';
+
   try {
     await callAPI('register', { tid: user.tid, eventId, role: user.rideStyle });
 
-    // עדכון אופטימיסטי מיידי — לא מחכים לשרת
+    // עדכון אופטימיסטי מיידי
     myRegs.add(eventId);
     cachedCounts[eventId] = (cachedCounts[eventId] || 0) + 1;
     showToast(`נרשמת לרכיבה: ${eventName} ✅`, 'success');
@@ -1040,9 +1044,17 @@ async function register(eventId, eventName, btn) {
 
   } catch(e) {
     myRegs.delete(eventId);
-    showToast('שגיאה: ' + e.message, 'error');
-    btn.disabled = false;
-    btn.textContent = '+ הירשם';
+    // אם השגיאה היא "כבר רשום" — עדכן UI בלי להציג שגיאה
+    if (e.message.includes('כבר רשום')) {
+      myRegs.add(eventId);
+      renderEvents(cachedEvents, cachedCounts);
+    } else {
+      showToast('שגיאה: ' + e.message, 'error');
+      btn.disabled = false;
+      btn.textContent = '+ הירשם';
+    }
+  } finally {
+    registering = false;
   }
 }
 
@@ -1052,7 +1064,6 @@ async function cancelReg(eventId, eventName, btn) {
   try {
     await callAPI('cancelRegistration', { tid: user.tid, eventId });
 
-    // עדכון אופטימיסטי מיידי
     myRegs.delete(eventId);
     cachedCounts[eventId] = Math.max(0, (cachedCounts[eventId] || 1) - 1);
     showToast(`ההרשמה לרכיבה "${eventName}" בוטלה`, 'success');
