@@ -815,6 +815,89 @@ tbody td {
   .topbar { padding: 8px 6px 8px 46px; }
   .topbar-actions .btn-primary { padding: 6px 8px; font-size: 0.75rem; }
 }
+
+/* ══════════════════════════════
+   כרטיסי רוכבים במובייל
+══════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* מסתיר עמודות משניות במובייל */
+  .hide-mobile { display: none; }
+
+  /* טבלת רוכבים → כרטיסים */
+  #ridersTable thead { display: none; }
+  #ridersTable tbody tr.rider-row {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    padding: 14px;
+    position: relative;
+  }
+  #ridersTable tbody tr.rider-row td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+    border: none;
+    font-size: 0.85rem;
+  }
+  #ridersTable tbody tr.rider-row td:first-child {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  #ridersTable tbody tr.rider-row td[data-label]::before {
+    content: attr(data-label) ": ";
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+  #ridersTable tbody tr.rider-row td:first-child::before { display: none; }
+  #ridersTable tbody tr.rider-row td[data-label="פעולות"] {
+    justify-content: flex-end;
+    padding-top: 10px;
+    margin-top: 6px;
+    border-top: 1px solid var(--border);
+  }
+  #ridersTable tbody tr.rider-row td[data-label="פעולות"]::before { display: none; }
+
+  /* תפריט צד — overlay מלא */
+  .sidebar {
+    width: 80%;
+    max-width: 300px;
+  }
+
+  /* שיבוצים — טור אחד */
+  #assignmentsBody tr {
+    display: block;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    padding: 12px;
+  }
+  #assignmentsBody td {
+    display: block;
+    border: none;
+    padding: 4px 0;
+    font-size: 0.85rem;
+  }
+  #assignmentsBody select { width: 100%; margin-top: 4px; }
+  #assignmentsBody thead { display: none; }
+
+  /* טבלת בדיקות — inline */
+  #examsBody td { font-size: 0.78rem; padding: 8px 6px; }
+  #examsBody .exam-update { flex-direction: column; gap: 4px; }
+  #examsBody .input-inline { width: 100%; }
+
+  /* Badge מיקום */
+  .badge { margin-right: 4px; }
+}
 </style>
 </head>
 <body>
@@ -889,7 +972,7 @@ tbody td {
             aria-label="בדיקות ארגומטריות">
       <span class="nav-icon" aria-hidden="true">🩺</span>
       בדיקות ארגומטריות
-      <span class="badge" aria-label="2 רוכבים דורשים תשומת לב">2</span>
+      <span class="badge" id="examBadge" aria-label="רוכבים דורשים תשומת לב">—</span>
     </button>
   </div>
 
@@ -1605,18 +1688,19 @@ function renderRidersTable(riders) {
                     : r.examStatus.includes('❌') ? 'status-err' : 'status-warn';
     const permClass = r.permission === 'מנהל' ? 'status-blue' : 'status-blue';
     return `
-    <tr>
-      <td>
+    <tr class="rider-row">
+      <td data-label="שם">
         <div class="td-name">${esc(r.name)}</div>
-        <div class="td-sub">${esc(r.tid)}</div>
+        <div class="td-sub">${esc(r.phone)}</div>
+        <div class="td-sub">${esc(r.city)} · גיל ${esc(r.age)}</div>
       </td>
-      <td>${esc(r.phone)}</td>
-      <td>${esc(r.city)}</td>
-      <td>${esc(r.age)}</td>
-      <td><span class="role-tag">${esc(r.rideStyle)}</span></td>
-      <td><span class="status ${permClass}">${esc(r.permission)}</span></td>
-      <td><span class="status ${examClass}" role="status">${esc(r.examStatus)}</span></td>
-      <td>
+      <td data-label="טלפון" class="hide-mobile">${esc(r.phone)}</td>
+      <td data-label="עיר" class="hide-mobile">${esc(r.city)}</td>
+      <td data-label="גיל" class="hide-mobile">${esc(r.age)}</td>
+      <td data-label="סגנון"><span class="role-tag">${esc(r.rideStyle)}</span></td>
+      <td data-label="הרשאה"><span class="status ${permClass}">${esc(r.permission)}</span></td>
+      <td data-label="בדיקה"><span class="status ${examClass}" role="status">${esc(r.examStatus)}</span></td>
+      <td data-label="פעולות">
         <div class="row-actions">
           <button class="icon-btn" aria-label="ערוך פרטי רוכב ${esc(r.name)}" title="עריכה" onclick="editRider('${esc(r.tid)}')">✏️</button>
           <button class="icon-btn danger" aria-label="מחק רוכב ${esc(r.name)}" title="מחיקה" onclick="deleteRider('${esc(r.tid)}','${esc(r.name)}')">🗑️</button>
@@ -1734,9 +1818,10 @@ function updateDashboardStats() {
     }
   });
 
-  const badge = document.querySelector('.badge');
+  const badge = document.getElementById('examBadge');
   if (badge) {
-    badge.textContent = expiredCount;
+    badge.textContent = expiredCount || '';
+    badge.style.display = expiredCount > 0 ? 'inline-block' : 'none';
     badge.setAttribute('aria-label', `${expiredCount} רוכבים דורשים תשומת לב`);
   }
 }
