@@ -910,11 +910,13 @@ async function switchTab(name) {
 async function loadEvents() {
   const container = document.getElementById('eventsList');
   try {
-    // טוען אירועים + ספירות + הרשמות במקביל
     const [events, counts] = await Promise.all([
       apiGet('getEvents'),
       apiGet('getEventCounts').catch(() => ({}))
     ]);
+    // שמירה ב-cache לשימוש בהרשמה/ביטול
+    cachedEvents = events;
+    cachedCounts = counts;
     await loadMyRegistrations(events);
     renderEvents(events, counts);
   } catch(e) {
@@ -1020,19 +1022,22 @@ function renderEvents(events, counts = {}) {
 // ══════════════════════════════════════════
 // REGISTER / CANCEL
 // ══════════════════════════════════════════
+// ── STATE של האירועים האחרונים ──────────────
+let cachedEvents = [];
+let cachedCounts = {};
+
 async function register(eventId, eventName, btn) {
   btn.disabled = true;
   btn.textContent = '...';
   try {
     await callAPI('register', { tid: user.tid, eventId, role: user.rideStyle });
+
+    // עדכון אופטימיסטי מיידי — לא מחכים לשרת
     myRegs.add(eventId);
+    cachedCounts[eventId] = (cachedCounts[eventId] || 0) + 1;
     showToast(`נרשמת לרכיבה: ${eventName} ✅`, 'success');
-    const [events, counts] = await Promise.all([
-      apiGet('getEvents'),
-      apiGet('getEventCounts').catch(() => ({}))
-    ]);
-    await loadMyRegistrations(events);
-    renderEvents(events, counts);
+    renderEvents(cachedEvents, cachedCounts);
+
   } catch(e) {
     myRegs.delete(eventId);
     showToast('שגיאה: ' + e.message, 'error');
@@ -1046,14 +1051,13 @@ async function cancelReg(eventId, eventName, btn) {
   btn.textContent = '...';
   try {
     await callAPI('cancelRegistration', { tid: user.tid, eventId });
+
+    // עדכון אופטימיסטי מיידי
     myRegs.delete(eventId);
+    cachedCounts[eventId] = Math.max(0, (cachedCounts[eventId] || 1) - 1);
     showToast(`ההרשמה לרכיבה "${eventName}" בוטלה`, 'success');
-    const [events, counts] = await Promise.all([
-      apiGet('getEvents'),
-      apiGet('getEventCounts').catch(() => ({}))
-    ]);
-    await loadMyRegistrations(events);
-    renderEvents(events, counts);
+    renderEvents(cachedEvents, cachedCounts);
+
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
     btn.disabled = false;
