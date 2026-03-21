@@ -503,6 +503,80 @@ body::before {
 .toast.success { border-color: var(--green); }
 .toast.error   { border-color: var(--red); }
 
+/* ─── STATS MINI CARDS ──────────────────── */
+.stat-mini {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-mini::before {
+  content:''; position:absolute; top:0; right:0;
+  width:4px; height:100%; border-radius:0 var(--radius) var(--radius) 0;
+}
+.stat-mini.blue::before  { background: var(--accent); }
+.stat-mini.green::before { background: var(--green); }
+.stat-mini-val { font-size:1.7rem; font-weight:800; line-height:1; margin-bottom:4px; }
+.stat-mini.blue  .stat-mini-val { color: var(--accent); }
+.stat-mini.green .stat-mini-val { color: var(--green); }
+.stat-mini-lbl { font-size:0.76rem; color:var(--muted); font-weight:500; }
+
+/* ─── STATS PANELS ──────────────────────── */
+.stats-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.stats-panel-title { font-size:0.85rem; font-weight:700; margin-bottom:10px; }
+.partner-row, .bike-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 0; border-bottom:1px solid var(--border); gap:10px;
+}
+.partner-row:last-child, .bike-row:last-child { border-bottom:none; }
+.partner-name { font-weight:600; font-size:0.9rem; }
+.partner-meta { font-size:0.76rem; color:var(--muted); margin-top:2px; }
+.partner-km   { font-size:0.85rem; font-weight:700; color:var(--accent); flex-shrink:0; }
+
+/* ─── FILTERS ───────────────────────────── */
+.history-filters { margin-bottom:14px; display:flex; flex-direction:column; gap:8px; }
+.filter-row { display:flex; gap:8px; flex-wrap:wrap; }
+.flt-select, .flt-input {
+  background:var(--surface); border:1.5px solid var(--border);
+  border-radius:var(--radius-sm); color:var(--text);
+  font-family:var(--font); font-size:0.82rem;
+  padding:8px 10px; min-height:38px; flex:1; min-width:120px;
+}
+.flt-select:focus, .flt-input:focus { outline:none; border-color:var(--accent); }
+.flt-input::placeholder { color:var(--muted); }
+.flt-reset {
+  background:transparent; border:1px solid var(--border);
+  border-radius:var(--radius-sm); color:var(--muted);
+  font-family:var(--font); font-size:0.8rem;
+  padding:8px 12px; cursor:pointer; min-height:38px;
+  white-space:nowrap;
+}
+.flt-reset:hover { background:var(--surface2); color:var(--text); }
+
+/* ─── PAGER ─────────────────────────────── */
+.pager {
+  display:flex; align-items:center; justify-content:center;
+  gap:16px; padding:16px 0; margin-top:4px;
+}
+.pager-btn {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-sm); color:var(--text);
+  width:40px; height:40px; cursor:pointer; font-size:1rem;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s;
+}
+.pager-btn:hover:not(:disabled) { background:var(--surface2); border-color:var(--accent); }
+.pager-btn:disabled { opacity:0.35; cursor:not-allowed; }
+.pager-info { font-size:0.85rem; color:var(--muted); font-weight:600; }
+
 /* ─── RESPONSIVE ────────────────────────── */
 @media (min-width: 640px) {
   .content { padding: 32px 24px; }
@@ -564,16 +638,77 @@ body::before {
   </section>
 
   <!-- ── היסטוריה ── -->
-  <section id="section-history"
-           class="section"
-           aria-labelledby="history-heading"
-           hidden>
+  <section id="section-history" class="section" aria-labelledby="history-heading" hidden>
     <h1 id="history-heading" class="section-title">
       <span aria-hidden="true">🏅</span> הרכיבות שלי
     </h1>
+
+    <!-- כרטיסי סטטיסטיקה -->
+    <div id="statsCards" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+        <div class="stat-mini blue">
+          <div class="stat-mini-val" id="stat-total">—</div>
+          <div class="stat-mini-lbl">רכיבות סה"כ</div>
+        </div>
+        <div class="stat-mini green">
+          <div class="stat-mini-val" id="stat-km">—</div>
+          <div class="stat-mini-lbl">ק"מ מצטבר</div>
+        </div>
+      </div>
+
+      <!-- שותפים מובילים -->
+      <div class="stats-panel" id="topPartnersPanel" style="display:none">
+        <div class="stats-panel-title">👥 שותפי טנדם מובילים</div>
+        <div id="topPartnersList"></div>
+      </div>
+
+      <!-- אופניים מועדף -->
+      <div class="stats-panel" id="topBikePanel" style="display:none">
+        <div class="stats-panel-title">🚲 האופניים שלי</div>
+        <div id="topBikesList"></div>
+      </div>
+    </div>
+
+    <!-- פילטרים -->
+    <div class="history-filters" id="historyFilters" style="display:none">
+      <div class="filter-row">
+        <label for="flt-partner" class="sr-only">סינון לפי שותף</label>
+        <select id="flt-partner" class="flt-select" aria-label="סינון לפי שותף" onchange="applyFilters()">
+          <option value="">כל השותפים</option>
+        </select>
+        <label for="flt-bike" class="sr-only">סינון לפי אופניים</label>
+        <select id="flt-bike" class="flt-select" aria-label="סינון לפי אופניים" onchange="applyFilters()">
+          <option value="">כל האופניים</option>
+        </select>
+        <label for="flt-sort" class="sr-only">מיון</label>
+        <select id="flt-sort" class="flt-select" aria-label="מיון" onchange="applyFilters()">
+          <option value="desc">חדש → ישן</option>
+          <option value="asc">ישן → חדש</option>
+          <option value="km-desc">ק"מ רב → מועט</option>
+          <option value="km-asc">ק"מ מועט → רב</option>
+        </select>
+      </div>
+      <div class="filter-row">
+        <label for="flt-route" class="sr-only">חיפוש מסלול</label>
+        <input type="search" id="flt-route" class="flt-input"
+               placeholder="🔍 חיפוש לפי מסלול…"
+               aria-label="חיפוש לפי מסלול"
+               oninput="applyFilters()">
+        <button class="flt-reset" onclick="resetFilters()" aria-label="נקה פילטרים">✕ נקה</button>
+      </div>
+    </div>
+
+    <!-- רשימת רכיבות -->
     <div id="historyList" class="history-list" aria-live="polite" aria-busy="true">
       <div class="skeleton"></div>
       <div class="skeleton"></div>
+    </div>
+
+    <!-- דפדוף -->
+    <div id="historyPager" class="pager" style="display:none" aria-label="דפדוף בהיסטוריה">
+      <button class="pager-btn" id="pagerPrev" onclick="changePage(-1)" aria-label="עמוד קודם">→</button>
+      <span id="pagerInfo" class="pager-info"></span>
+      <button class="pager-btn" id="pagerNext" onclick="changePage(1)" aria-label="עמוד הבא">←</button>
     </div>
   </section>
 
@@ -681,7 +816,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ══════════════════════════════════════════
 function renderHeader() {
   document.getElementById('headerName').textContent = user.name;
-  document.getElementById('headerRole').textContent = user.rideStyle + ' • ' + user.city;
+  const roleLabel = { 'קפטן': 'רוכב קפטן', 'סטוקר': 'רוכב סטוקר', 'סינגל': 'רוכב סינגל' };
+  document.getElementById('headerRole').textContent = roleLabel[user.rideStyle] || user.rideStyle;
   const initials = user.name.trim().split(' ').map(w => w[0]).slice(0,2).join('');
   const av = document.getElementById('avatarEl');
   av.textContent = initials;
@@ -852,15 +988,20 @@ async function cancelReg(eventId, eventName, btn) {
 }
 
 // ══════════════════════════════════════════
-// RIDE HISTORY
+// RIDE HISTORY — סטטיסטיקה + פילטרים + דפדוף
 // ══════════════════════════════════════════
+const PAGE_SIZE   = 10;
+let allHistory    = [];   // כל הרכיבות מה-API
+let filteredHistory = []; // אחרי פילטר
+let currentPage   = 1;
+
 async function loadHistory() {
   const container = document.getElementById('historyList');
   try {
-    const history = await apiGet('getRideHistory', { tid: user.tid });
+    allHistory = await apiGet('getRideHistory', { tid: user.tid });
     container.setAttribute('aria-busy','false');
 
-    if (!history.length) {
+    if (!allHistory.length) {
       container.innerHTML = `<div class="empty-state" role="status">
         <span class="empty-icon" aria-hidden="true">🏅</span>
         <span class="empty-text">עדיין לא השתתפת ברכיבות</span>
@@ -868,28 +1009,9 @@ async function loadHistory() {
       return;
     }
 
-    container.innerHTML = history.map(h => {
-      const parts = h.date.split('/');
-      const day = parts[0] || '??';
-      const mon = parts[1] ? monthName(parseInt(parts[1])) : '';
-      return `
-      <div class="history-item" role="listitem">
-        <div class="history-date-block" aria-hidden="true">
-          <div class="history-day">${esc(day)}</div>
-          <div class="history-mon">${esc(mon)}</div>
-        </div>
-        <div class="history-info">
-          <div class="history-title">${esc(h.description)}</div>
-          <div class="history-meta">
-            <span aria-label="תפקיד">${esc(h.role)}</span>
-            ${h.bike ? ` · <span aria-label="אופניים">${esc(h.bike)}</span>` : ''}
-          </div>
-        </div>
-        <div class="history-km" aria-label="${esc(String(h.km))} קילומטר">
-          ${esc(String(h.km))} ק"מ
-        </div>
-      </div>`;
-    }).join('');
+    renderStats(allHistory);
+    populateFilterOptions(allHistory);
+    applyFilters();
 
   } catch(e) {
     container.innerHTML = `<div class="empty-state" role="alert">
@@ -897,6 +1019,174 @@ async function loadHistory() {
       <span class="empty-text">שגיאה בטעינת היסטוריה: ${esc(e.message)}</span>
     </div>`;
   }
+}
+
+// ── סטטיסטיקות ────────────────────────────
+function renderStats(history) {
+  document.getElementById('statsCards').style.display = 'block';
+  document.getElementById('historyFilters').style.display = 'flex';
+
+  // סה"כ וק"מ
+  const totalKm = history.reduce((s, h) => s + (Number(h.km) || 0), 0);
+  document.getElementById('stat-total').textContent = history.length;
+  document.getElementById('stat-km').textContent    = totalKm.toLocaleString('he-IL') + ' ק"מ';
+
+  // שותפים מובילים (טנדם)
+  const partners = {};
+  history.forEach(h => {
+    if (h.partner && h.partner !== '—' && h.partner !== '') {
+      if (!partners[h.partner]) partners[h.partner] = { count: 0, km: 0 };
+      partners[h.partner].count++;
+      partners[h.partner].km += Number(h.km) || 0;
+    }
+  });
+  const topPartners = Object.entries(partners)
+    .sort((a,b) => b[1].count - a[1].count).slice(0,3);
+
+  const partPanel = document.getElementById('topPartnersPanel');
+  if (topPartners.length) {
+    partPanel.style.display = 'block';
+    document.getElementById('topPartnersList').innerHTML = topPartners.map(([name, d]) => `
+      <div class="partner-row">
+        <div>
+          <div class="partner-name">${esc(name)}</div>
+          <div class="partner-meta">${d.count} רכיבות יחד</div>
+        </div>
+        <div class="partner-km">${d.km.toLocaleString('he-IL')} ק"מ</div>
+      </div>`).join('');
+  }
+
+  // אופניים
+  const bikes = {};
+  history.forEach(h => {
+    if (h.bike && h.bike !== 'PRIVATE' && h.bike !== '') {
+      bikes[h.bike] = (bikes[h.bike] || 0) + 1;
+    }
+  });
+  const topBikes = Object.entries(bikes).sort((a,b) => b[1]-a[1]).slice(0,3);
+  const bikePanel = document.getElementById('topBikePanel');
+  if (topBikes.length) {
+    bikePanel.style.display = 'block';
+    document.getElementById('topBikesList').innerHTML = topBikes.map(([name, count]) => `
+      <div class="bike-row">
+        <div class="partner-name">${esc(name)}</div>
+        <div class="partner-km">${count} רכיבות</div>
+      </div>`).join('');
+  }
+}
+
+// ── אכלוס תפריטי פילטר ────────────────────
+function populateFilterOptions(history) {
+  const partners = [...new Set(history.map(h => h.partner).filter(p => p && p !== '—' && p !== ''))];
+  const bikes    = [...new Set(history.map(h => h.bike).filter(b => b && b !== ''))];
+
+  const pSel = document.getElementById('flt-partner');
+  pSel.innerHTML = '<option value="">כל השותפים</option>' +
+    partners.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+
+  const bSel = document.getElementById('flt-bike');
+  bSel.innerHTML = '<option value="">כל האופניים</option>' +
+    bikes.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
+}
+
+// ── פילטר + מיון ──────────────────────────
+function applyFilters() {
+  const partner = document.getElementById('flt-partner')?.value || '';
+  const bike    = document.getElementById('flt-bike')?.value    || '';
+  const sort    = document.getElementById('flt-sort')?.value    || 'desc';
+  const route   = document.getElementById('flt-route')?.value.trim().toLowerCase() || '';
+
+  filteredHistory = allHistory.filter(h => {
+    if (partner && h.partner !== partner) return false;
+    if (bike    && h.bike    !== bike)    return false;
+    if (route   && !h.description.toLowerCase().includes(route)) return false;
+    return true;
+  });
+
+  // מיון
+  filteredHistory.sort((a, b) => {
+    if (sort === 'asc'     ) return parseDate(a.date) - parseDate(b.date);
+    if (sort === 'km-desc' ) return (Number(b.km)||0) - (Number(a.km)||0);
+    if (sort === 'km-asc'  ) return (Number(a.km)||0) - (Number(b.km)||0);
+    return parseDate(b.date) - parseDate(a.date); // desc default
+  });
+
+  currentPage = 1;
+  renderHistoryPage();
+}
+
+function resetFilters() {
+  document.getElementById('flt-partner').value = '';
+  document.getElementById('flt-bike').value    = '';
+  document.getElementById('flt-sort').value    = 'desc';
+  document.getElementById('flt-route').value   = '';
+  applyFilters();
+}
+
+function parseDate(str) {
+  const [d,m,y] = (str||'').split('/');
+  return new Date(`${y}-${m}-${d}`).getTime() || 0;
+}
+
+// ── רינדור עמוד ───────────────────────────
+function renderHistoryPage() {
+  const container = document.getElementById('historyList');
+  const pager     = document.getElementById('historyPager');
+  const totalPages = Math.ceil(filteredHistory.length / PAGE_SIZE);
+
+  if (!filteredHistory.length) {
+    container.innerHTML = `<div class="empty-state" role="status">
+      <span class="empty-icon" aria-hidden="true">🔍</span>
+      <span class="empty-text">לא נמצאו רכיבות תואמות לפילטר</span>
+    </div>`;
+    pager.style.display = 'none';
+    return;
+  }
+
+  const start  = (currentPage - 1) * PAGE_SIZE;
+  const pageData = filteredHistory.slice(start, start + PAGE_SIZE);
+
+  container.innerHTML = pageData.map(h => {
+    const parts = (h.date||'').split('/');
+    const day = parts[0]||'??';
+    const mon = parts[1] ? monthName(parseInt(parts[1])) : '';
+    return `
+    <div class="history-item" role="listitem">
+      <div class="history-date-block" aria-hidden="true">
+        <div class="history-day">${esc(day)}</div>
+        <div class="history-mon">${esc(mon)}</div>
+      </div>
+      <div class="history-info">
+        <div class="history-title">${esc(h.description)}</div>
+        <div class="history-meta">
+          <span>${esc(h.role)}</span>
+          ${h.bike    ? ` · <span>${esc(h.bike)}</span>`    : ''}
+          ${h.partner && h.partner !== '—' ? ` · <span>עם ${esc(h.partner)}</span>` : ''}
+        </div>
+      </div>
+      <div class="history-km" aria-label="${esc(String(h.km))} קילומטר">
+        ${esc(String(h.km))} ק"מ
+      </div>
+    </div>`;
+  }).join('');
+
+  // דפדוף
+  if (totalPages > 1) {
+    pager.style.display        = 'flex';
+    document.getElementById('pagerInfo').textContent =
+      `עמוד ${currentPage} מתוך ${totalPages} (${filteredHistory.length} רכיבות)`;
+    document.getElementById('pagerPrev').disabled = currentPage <= 1;
+    document.getElementById('pagerNext').disabled = currentPage >= totalPages;
+  } else {
+    pager.style.display = 'none';
+  }
+}
+
+function changePage(dir) {
+  const totalPages = Math.ceil(filteredHistory.length / PAGE_SIZE);
+  currentPage = Math.max(1, Math.min(totalPages, currentPage + dir));
+  renderHistoryPage();
+  document.getElementById('section-history').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 function monthName(m) {
