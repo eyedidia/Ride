@@ -1220,6 +1220,8 @@ tbody td {
     <!-- ── ASSIGNMENTS ── -->
     <section id="section-assignments" aria-labelledby="assign-heading" hidden>
       <h1 id="assign-heading" class="sr-only">שיבוצים</h1>
+
+      <!-- בחירת אירוע -->
       <div class="panel">
         <div class="panel-header">
           <h2 class="panel-title"><span aria-hidden="true">🔗</span> שיבוץ רוכבים לאירוע</h2>
@@ -1230,22 +1232,47 @@ tbody td {
             </select>
           </div>
         </div>
-        <div class="panel-body table-wrap">
-          <table aria-label="שיבוץ רוכבים לאירוע הנבחר">
-            <thead>
-              <tr>
-                <th scope="col">שם רוכב</th>
-                <th scope="col">תפקיד</th>
-                <th scope="col">אופניים</th>
-                <th scope="col">רוכב שותף (טנדם בלבד)</th>
-                <th scope="col"><span class="sr-only">שמור</span></th>
-              </tr>
-            </thead>
-            <tbody id="assignmentsBody">
-              <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">בחר אירוע לשיבוץ</td></tr>
-            </tbody>
-          </table>
+      </div>
+
+      <div id="assignmentsContent" style="display:none">
+
+        <!-- טבלת קפטנים + סינגלים -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title"><span aria-hidden="true">👑</span> קפטנים וסינגלים</h3>
+            <span id="captainsCount" style="font-size:0.8rem;color:var(--text-muted)"></span>
+          </div>
+          <div class="panel-body table-wrap">
+            <table aria-label="קפטנים וסינגלים">
+              <thead>
+                <tr>
+                  <th scope="col">שם רוכב</th>
+                  <th scope="col">תפקיד</th>
+                  <th scope="col">אופניים</th>
+                  <th scope="col">סטוקר שותף</th>
+                  <th scope="col"><span class="sr-only">שמור</span></th>
+                </tr>
+              </thead>
+              <tbody id="captainsBody">
+                <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">בחר אירוע</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        <!-- טבלת סטוקרים זמינים -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title"><span aria-hidden="true">🤝</span> סטוקרים זמינים</h3>
+            <span id="stokersCount" style="font-size:0.8rem;color:var(--text-muted)"></span>
+          </div>
+          <div class="panel-body">
+            <div id="stokersList" style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px">
+              <span style="color:var(--text-muted);font-size:0.85rem">בחר אירוע</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -1946,69 +1973,160 @@ function renderAllEventsTables(allEvents) {
 }
 
 // ─── LOAD ASSIGNMENTS ──────────────────────────────
+let assignRegs  = []; // כל הנרשמים לאירוע
+let assignBikes = []; // אופניים זמינים
+
 async function loadAssignments() {
   const eventId = document.getElementById('event-select-assign').value;
-  const tbody   = document.getElementById('assignmentsBody');
   if (!eventId) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">בחר אירוע לשיבוץ</td></tr>`;
+    document.getElementById('assignmentsContent').style.display = 'none';
     return;
   }
-  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text-muted)">טוען...</td></tr>`;
+
+  document.getElementById('assignmentsContent').style.display = 'block';
+  document.getElementById('captainsBody').innerHTML =
+    `<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text-muted)">טוען...</td></tr>`;
+  document.getElementById('stokersList').innerHTML =
+    `<span style="color:var(--text-muted);font-size:0.85rem">טוען...</span>`;
+
   try {
-    const regs  = await apiGet('getRegistrations', { eventId });
-    const bikes = STATE.bikes.filter(b => b.status === 'תקין');
-    const riders = STATE.riders;
-
-    if (!regs.length) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">אין נרשמים לאירוע זה</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = regs.map(r => {
-      const isTandem = r.role === 'קפטן' || r.role === 'סטוקר';
-      const bikeOpts = bikes.map(b =>
-        `<option value="${esc(b.id)}" ${b.id === r.bike ? 'selected' : ''}>${esc(b.name)} (${esc(b.frame)})</option>`
-      ).join('') + `<option value="PRIVATE" ${r.bike === 'PRIVATE' ? 'selected' : ''}>אופניים פרטיים</option>`;
-
-      const partnerOpts = isTandem
-        ? `<select class="select" id="partner-${esc(r.tid)}" aria-label="רוכב שותף ל${esc(r.name)}" style="min-width:120px">
-             <option value="">— בחר —</option>
-             ${riders.filter(x => x.tid !== r.tid).map(x =>
-               `<option value="${esc(x.tid)}" ${r.partnerTid === x.tid ? 'selected':''}>${esc(x.name)}</option>`
-             ).join('')}
-           </select>`
-        : `<span style="color:var(--text-muted)">— סינגל —</span>`;
-
-      return `<tr>
-        <td><div class="td-name">${esc(r.name)}</div></td>
-        <td><span class="role-tag">${esc(r.role)}</span></td>
-        <td>
-          <label for="bike-${esc(r.tid)}" class="sr-only">אופניים ל${esc(r.name)}</label>
-          <select class="select" id="bike-${esc(r.tid)}" aria-label="אופניים ל${esc(r.name)}" style="min-width:130px">
-            ${bikeOpts}
-          </select>
-        </td>
-        <td>${partnerOpts}</td>
-        <td>
-          <button class="btn btn-primary btn-sm"
-                  aria-label="שמור שיבוץ ל${esc(r.name)}"
-                  onclick="saveAssignment('${esc(eventId)}','${esc(r.tid)}','${esc(r.name)}')">שמור</button>
-        </td>
-      </tr>`;
-    }).join('');
+    assignRegs  = await apiGet('getRegistrations', { eventId });
+    assignBikes = STATE.bikes.filter(b => b.status === 'תקין');
+    renderAssignments();
   } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--red)">שגיאה: ${esc(e.message)}</td></tr>`;
+    document.getElementById('captainsBody').innerHTML =
+      `<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--red)">שגיאה: ${esc(e.message)}</td></tr>`;
   }
 }
 
-async function saveAssignment(eventId, tid, name) {
-  const bikeId    = document.getElementById('bike-' + tid)?.value;
-  const partnerEl = document.getElementById('partner-' + tid);
-  const partnerTid = partnerEl ? partnerEl.value : '';
+function renderAssignments() {
+  const captains = assignRegs.filter(r => r.role === 'קפטן' || r.role === 'סינגל');
+  const stokers  = assignRegs.filter(r => r.role === 'סטוקר');
+
+  // מי שכבר שובץ כשותף — לא מופיע במלאי
+  const assignedStokerTids = new Set(
+    captains.map(c => c.partnerTid).filter(Boolean)
+  );
+  const availableStokers = stokers.filter(s => !assignedStokerTids.has(s.tid));
+
+  // עדכון ספירות
+  document.getElementById('captainsCount').textContent =
+    `${captains.length} רוכבים`;
+  document.getElementById('stokersCount').textContent =
+    `${availableStokers.length} זמינים מתוך ${stokers.length}`;
+
+  // ── טבלת קפטנים + סינגלים ──
+  const bikeOpts = (selected) =>
+    assignBikes.map(b =>
+      `<option value="${esc(b.id)}" ${b.id === selected ? 'selected' : ''}>${esc(b.name)} (${esc(b.frame)})</option>`
+    ).join('') +
+    `<option value="PRIVATE" ${selected === 'PRIVATE' ? 'selected' : ''}>אופניים פרטיים</option>`;
+
+  const stokerOpts = (currentPartnerTid) =>
+    `<option value="">— ללא שותף —</option>` +
+    stokers.map(s => {
+      const alreadyAssigned = assignedStokerTids.has(s.tid) && s.tid !== currentPartnerTid;
+      return `<option value="${esc(s.tid)}"
+                       ${s.tid === currentPartnerTid ? 'selected' : ''}
+                       ${alreadyAssigned ? 'disabled' : ''}>
+                ${esc(s.name)}${alreadyAssigned ? ' (משובץ)' : ''}
+              </option>`;
+    }).join('');
+
+  const captainsBody = document.getElementById('captainsBody');
+  captainsBody.innerHTML = captains.length ? captains.map(r => `
+    <tr>
+      <td>
+        <div class="td-name">${esc(r.name)}</div>
+        <div class="td-sub"><span class="role-tag">${esc(r.role)}</span></div>
+      </td>
+      <td>
+        <label for="bike-${esc(r.tid)}" class="sr-only">אופניים ל${esc(r.name)}</label>
+        <select class="select" id="bike-${esc(r.tid)}" style="min-width:120px"
+                aria-label="אופניים ל${esc(r.name)}"
+                onchange="updatePartnerBike('${esc(r.tid)}')">
+          ${bikeOpts(r.bike)}
+        </select>
+      </td>
+      <td>
+        ${r.role === 'קפטן'
+          ? `<label for="stoker-${esc(r.tid)}" class="sr-only">סטוקר ל${esc(r.name)}</label>
+             <select class="select" id="stoker-${esc(r.tid)}" style="min-width:130px"
+                     aria-label="סטוקר שותף ל${esc(r.name)}"
+                     onchange="onStokerChange('${esc(r.tid)}')">
+               ${stokerOpts(r.partnerTid || '')}
+             </select>`
+          : `<span style="color:var(--text-muted);font-size:0.82rem">— סינגל —</span>`
+        }
+      </td>
+      <td>
+        <button class="btn btn-primary btn-sm"
+                aria-label="שמור שיבוץ ל${esc(r.name)}"
+                onclick="saveAssignment('${esc(document.getElementById('event-select-assign').value)}','${esc(r.tid)}','${esc(r.name)}')">
+          שמור
+        </button>
+      </td>
+    </tr>`).join('')
+  : `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">אין קפטנים/סינגלים רשומים</td></tr>`;
+
+  // ── מלאי סטוקרים זמינים ──
+  const stokersList = document.getElementById('stokersList');
+  stokersList.innerHTML = availableStokers.length
+    ? availableStokers.map(s => `
+        <div style="background:var(--surface2);border:1px solid var(--border);
+                    border-radius:8px;padding:8px 12px;font-size:0.85rem;font-weight:600">
+          🤝 ${esc(s.name)}
+        </div>`).join('')
+    : `<span style="color:var(--text-muted);font-size:0.85rem">
+         ${stokers.length ? 'כל הסטוקרים שובצו ✅' : 'אין סטוקרים רשומים'}
+       </span>`;
+}
+
+function onStokerChange(captainTid) {
+  // כשבוחרים סטוקר — מסמן אותו כמשובץ ומרנדר מחדש
+  const sel = document.getElementById('stoker-' + captainTid);
+  if (!sel) return;
+  const selectedTid = sel.value;
+
+  // עדכון partnerTid במערך המקומי
+  const captain = assignRegs.find(r => r.tid === captainTid);
+  if (captain) captain.partnerTid = selectedTid;
+
+  // סטוקר ישן — שחרר אם שונה
+  renderAssignments();
+}
+
+function updatePartnerBike(captainTid) {
+  // כשמשנים אופניים — מעדכן גם את האופניים של הסטוקר המשובץ
+  const captain = assignRegs.find(r => r.tid === captainTid);
+  if (!captain || !captain.partnerTid) return;
+  const partnerBikeEl = document.getElementById('bike-' + captain.partnerTid);
+  const captainBikeEl = document.getElementById('bike-' + captainTid);
+  if (partnerBikeEl && captainBikeEl) {
+    partnerBikeEl.value = captainBikeEl.value;
+  }
+}
+
+async function saveAssignment(eventId, captainTid, captainName) {
+  const bikeId    = document.getElementById('bike-' + captainTid)?.value;
+  const stokerSel = document.getElementById('stoker-' + captainTid);
+  const stokerTid = stokerSel ? stokerSel.value : '';
+
   try {
-    await callAPI('assignBike', { eventId, tid, bikeId });
-    if (partnerTid) await callAPI('assignBike', { eventId, tid: partnerTid, bikeId });
-    showToast(`שיבוץ נשמר ל${name} ✅`, 'success');
+    // שמור אופניים לקפטן
+    if (bikeId) await callAPI('assignBike', { eventId, tid: captainTid, bikeId });
+
+    // שמור שותף סטוקר — אם נבחר
+    if (stokerTid) {
+      await callAPI('assignBike', { eventId, tid: stokerTid, bikeId: bikeId || '' });
+      // עדכון partnerTid בשני הכיוונים ב-registrations
+      await callAPI('assignPartner', { eventId, captainTid, stokerTid });
+    }
+
+    showToast(`שיבוץ נשמר ל${captainName} ✅`, 'success');
+    // רענן
+    assignRegs = await apiGet('getRegistrations', { eventId });
+    renderAssignments();
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
   }
