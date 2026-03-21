@@ -910,10 +910,13 @@ async function switchTab(name) {
 async function loadEvents() {
   const container = document.getElementById('eventsList');
   try {
-    const events = await apiGet('getEvents');
-    // טעינת הרשמות קיימות של הרוכב
+    // טוען אירועים + ספירות + הרשמות במקביל
+    const [events, counts] = await Promise.all([
+      apiGet('getEvents'),
+      apiGet('getEventCounts').catch(() => ({}))
+    ]);
     await loadMyRegistrations(events);
-    renderEvents(events);
+    renderEvents(events, counts);
   } catch(e) {
     container.innerHTML = `<div class="empty-state" role="status">
       <span class="empty-icon" aria-hidden="true">⚠️</span>
@@ -937,7 +940,7 @@ async function loadMyRegistrations(events) {
   } catch(_) {}
 }
 
-function renderEvents(events) {
+function renderEvents(events, counts = {}) {
   const container = document.getElementById('eventsList');
   container.setAttribute('aria-busy','false');
 
@@ -952,6 +955,7 @@ function renderEvents(events) {
   container.innerHTML = events.map(ev => {
     const isReg  = myRegs.has(ev.id);
     const canReg = user.canRegister;
+    const count  = counts[ev.id] || 0;
     return `
     <article class="event-card ${isReg ? 'registered' : ''}"
              aria-label="אירוע: ${esc(ev.description)}, תאריך ${esc(ev.date)}${isReg ? ', רשום' : ''}">
@@ -964,7 +968,10 @@ function renderEvents(events) {
             <span aria-label="שעת מפגש">🕕 ${esc(ev.meetTime)}</span>
           </div>
         </div>
-        ${isReg ? '<span class="badge-reg" role="status" aria-label="רשום לאירוע זה">✓ רשום</span>' : ''}
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+          ${isReg ? '<span class="badge-reg" role="status" aria-label="רשום לאירוע זה">✓ רשום</span>' : ''}
+          ${count > 0 ? `<span style="font-size:0.75rem;color:var(--muted)">${count} נרשמו</span>` : ''}
+        </div>
       </div>
 
       <div class="event-meta" role="list" aria-label="פרטי אירוע">
@@ -988,9 +995,9 @@ function renderEvents(events) {
 
       <div class="event-footer">
         <button class="btn btn-ghost"
-                aria-label="הצג פרטי אירוע ${esc(ev.description)} ורשימת נרשמים"
+                aria-label="הצג נרשמים לאירוע ${esc(ev.description)}"
                 onclick="showEventDetails('${esc(ev.id)}','${esc(ev.description)}')">
-          👥 נרשמים
+          👥 נרשמים ${count > 0 ? `(${count})` : ''}
         </button>
         ${isReg
           ? `<button class="btn btn-cancel"
@@ -1017,15 +1024,17 @@ async function register(eventId, eventName, btn) {
   btn.disabled = true;
   btn.textContent = '...';
   try {
-    await callAPI('register', {
-      tid: user.tid,
-      eventId,
-      role: user.rideStyle
-    });
+    await callAPI('register', { tid: user.tid, eventId, role: user.rideStyle });
     myRegs.add(eventId);
     showToast(`נרשמת לרכיבה: ${eventName} ✅`, 'success');
-    await loadEvents();
+    const [events, counts] = await Promise.all([
+      apiGet('getEvents'),
+      apiGet('getEventCounts').catch(() => ({}))
+    ]);
+    await loadMyRegistrations(events);
+    renderEvents(events, counts);
   } catch(e) {
+    myRegs.delete(eventId);
     showToast('שגיאה: ' + e.message, 'error');
     btn.disabled = false;
     btn.textContent = '+ הירשם';
@@ -1039,7 +1048,12 @@ async function cancelReg(eventId, eventName, btn) {
     await callAPI('cancelRegistration', { tid: user.tid, eventId });
     myRegs.delete(eventId);
     showToast(`ההרשמה לרכיבה "${eventName}" בוטלה`, 'success');
-    await loadEvents();
+    const [events, counts] = await Promise.all([
+      apiGet('getEvents'),
+      apiGet('getEventCounts').catch(() => ({}))
+    ]);
+    await loadMyRegistrations(events);
+    renderEvents(events, counts);
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
     btn.disabled = false;
