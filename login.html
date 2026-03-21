@@ -263,7 +263,8 @@ body::before {
          class="alert alert-error"
          role="alert"
          aria-live="assertive"
-         aria-atomic="true">
+         aria-atomic="true"
+         style="display:none">
       <span class="alert-icon" aria-hidden="true">❌</span>
       <span id="alertErrorText"></span>
     </div>
@@ -273,7 +274,8 @@ body::before {
          class="alert alert-blocked"
          role="alert"
          aria-live="assertive"
-         aria-atomic="true">
+         aria-atomic="true"
+         style="display:none">
       <span class="alert-icon" aria-hidden="true">⚠️</span>
       <span>אין לך בדיקה ארגומטרית בתוקף. אנא פנה למנהל המערכת לעדכון התאריך.</span>
     </div>
@@ -371,9 +373,7 @@ async function handleLogin(e) {
 
     const user = data.data;
     sessionStorage.setItem('user', JSON.stringify(user));
-
-    if (!user.canRegister && !user.isAdmin) { showBlocked(); return; }
-
+    // כולם נכנסים — חסימת הרשמה נעשית בדף הרכיבות עצמו
     window.location.href = 'rider.html';
 
   } catch (err) {
