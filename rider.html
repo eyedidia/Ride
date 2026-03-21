@@ -1307,8 +1307,9 @@ async function showEventDetails(eventId, eventName) {
       return;
     }
 
-    const captains = regs.filter(r => r.role === 'קפטן');
-    const singles  = regs.filter(r => r.role === 'סינגל');
+    const captains         = regs.filter(r => r.role === 'קפטן');
+    const singles          = regs.filter(r => r.role === 'סינגל');
+    const unpairedStokers  = regs.filter(r => r.role === 'סטוקר'); // סטוקרים שטרם שובצו
 
     let html = `<div style="margin-bottom:14px;font-size:0.85rem;color:var(--muted)">
       סה"כ ${regs.length} נרשמים
@@ -1365,6 +1366,37 @@ async function showEventDetails(eventId, eventName) {
           <div style="padding:10px 14px;font-size:0.8rem;color:var(--muted);font-style:italic">
             🤝 ממתין לסטוקר
           </div>`}
+        </div>`;
+      }).join('');
+    }
+
+    // ── סטוקרים שטרם שובצו ──
+    if (unpairedStokers.length) {
+      html += `<div style="font-size:0.78rem;font-weight:700;color:var(--muted);
+                            text-transform:uppercase;letter-spacing:0.08em;
+                            margin-top:${captains.length ? '14px' : '0'};margin-bottom:8px">
+                 🤝 סטוקרים (ממתינים לשיבוץ) (${unpairedStokers.length})
+               </div>`;
+
+      html += unpairedStokers.map(s => {
+        const isMe = normTid(s.tid) === normTid(user.tid);
+        return `
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;
+                    background:var(--surface2);border-radius:10px;margin-bottom:8px;
+                    border:1px solid ${isMe ? 'var(--accent)' : 'var(--border)'}">
+          <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;
+                      background:rgba(255,179,71,0.2);
+                      display:flex;align-items:center;justify-content:center;
+                      font-weight:800;font-size:0.78rem;color:var(--orange)">
+            ${esc(s.name.trim().split(' ').map(w=>w[0]).slice(0,2).join(''))}
+          </div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:0.9rem">
+              ${esc(s.name)}
+              ${isMe ? '<span style="font-size:0.7rem;background:rgba(79,124,255,0.2);color:var(--accent);padding:2px 7px;border-radius:20px;margin-right:4px;font-weight:700">אתה</span>' : ''}
+            </div>
+            <div style="font-size:0.72rem;color:var(--muted)">🤝 סטוקר · ממתין לשיבוץ</div>
+          </div>
         </div>`;
       }).join('');
     }
