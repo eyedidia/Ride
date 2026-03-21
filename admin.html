@@ -867,35 +867,117 @@ tbody td {
   }
   #ridersTable tbody tr.rider-row td[data-label="פעולות"]::before { display: none; }
 
-  /* תפריט צד — overlay מלא */
+  /* תפריט צד — רוחב מוגבל */
   .sidebar {
-    width: 80%;
-    max-width: 300px;
+    width: 75%;
+    max-width: 280px;
   }
 
-  /* שיבוצים — טור אחד */
-  #assignmentsBody tr {
+  /* בדיקות ארגומטריות — כרטיסים במובייל */
+  #examsBody thead { display: none; }
+  #examsBody tr {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    padding: 12px 14px;
+  }
+  #examsBody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: none;
+    padding: 4px 0;
+    font-size: 0.82rem;
+  }
+  #examsBody td[data-label]::before {
+    content: attr(data-label) ": ";
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+  #examsBody .exam-update {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    width: 100%;
+    padding-top: 8px;
+    margin-top: 4px;
+    border-top: 1px solid var(--border);
+  }
+  #examsBody td:last-child { display: block; }
+  #examsBody td:last-child::before { display: none; }
+  #examsBody .input-inline { width: 100%; }
+  #examsBody .exam-update .btn { width: 100%; justify-content: center; }
+
+  /* צי אופניים — כרטיסים */
+  #bikesBody thead { display: none !important; }
+  #section-bikes table thead { display: none; }
+  #bikesBody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    padding: 10px 12px;
+  }
+  #bikesBody td {
+    border: none;
+    padding: 2px 4px;
+    font-size: 0.82rem;
+  }
+  #bikesBody td:last-child {
+    margin-right: auto;
+  }
+  #bikesBody .btn { white-space: nowrap; }
+
+  /* שיבוצים — כרטיסים מלאים */
+  #captainsBody thead { display: none; }
+  #captainsBody tr {
     display: block;
     background: var(--surface2);
     border-radius: var(--radius-sm);
-    margin-bottom: 10px;
-    padding: 12px;
+    margin-bottom: 12px;
+    padding: 14px;
+    border: 1px solid var(--border);
   }
-  #assignmentsBody td {
+  #captainsBody td {
     display: block;
     border: none;
-    padding: 4px 0;
+    padding: 5px 0;
     font-size: 0.85rem;
   }
-  #assignmentsBody select { width: 100%; margin-top: 4px; }
-  #assignmentsBody thead { display: none; }
+  /* שם רוכב — בולט בראש הכרטיס */
+  #captainsBody td:first-child {
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding-bottom: 10px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  /* כל select ברוחב מלא */
+  #captainsBody select { width: 100%; margin-top: 4px; }
+  /* כפתור שמור ברוחב מלא */
+  #captainsBody .btn { width: 100%; justify-content: center; margin-top: 8px; }
+  /* תווית לפני כל שדה */
+  #captainsBody td[data-label]::before {
+    content: attr(data-label) ": ";
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 2px;
+  }
+  #captainsBody td:first-child::before { display: none; }
+  #captainsBody td:last-child::before  { display: none; }
 
-  /* טבלת בדיקות — inline */
-  #examsBody td { font-size: 0.78rem; padding: 8px 6px; }
-  #examsBody .exam-update { flex-direction: column; gap: 4px; }
-  #examsBody .input-inline { width: 100%; }
-
-  /* Badge מיקום */
+  /* Badge */
   .badge { margin-right: 4px; }
 }
 </style>
@@ -933,26 +1015,26 @@ tbody td {
   <div class="nav-section">
     <div class="nav-section-label" aria-hidden="true">ראשי</div>
     <button class="nav-item active"
-            onclick="showSection('dashboard')"
+            onclick="showSection('dashboard',this)"
             aria-current="page"
             aria-label="סקירה כללית">
       <span class="nav-icon" aria-hidden="true">📊</span>
       סקירה כללית
     </button>
     <button class="nav-item"
-            onclick="showSection('riders')"
+            onclick="showSection('riders',this)"
             aria-label="ניהול רוכבים">
       <span class="nav-icon" aria-hidden="true">👥</span>
       רוכבים
     </button>
     <button class="nav-item"
-            onclick="showSection('events')"
+            onclick="showSection('events',this)"
             aria-label="ניהול אירועים">
       <span class="nav-icon" aria-hidden="true">📅</span>
       אירועים
     </button>
     <button class="nav-item"
-            onclick="showSection('assignments')"
+            onclick="showSection('assignments',this)"
             aria-label="שיבוצים">
       <span class="nav-icon" aria-hidden="true">🔗</span>
       שיבוצים
@@ -962,13 +1044,13 @@ tbody td {
   <div class="nav-section">
     <div class="nav-section-label" aria-hidden="true">ניהול</div>
     <button class="nav-item"
-            onclick="showSection('bikes')"
+            onclick="showSection('bikes',this)"
             aria-label="ניהול צי אופניים">
       <span class="nav-icon" aria-hidden="true">🚲</span>
       צי אופניים
     </button>
     <button class="nav-item"
-            onclick="showSection('exams')"
+            onclick="showSection('exams',this)"
             aria-label="בדיקות ארגומטריות">
       <span class="nav-icon" aria-hidden="true">🩺</span>
       בדיקות ארגומטריות
@@ -1063,7 +1145,7 @@ tbody td {
       <div class="panel">
         <div class="panel-header">
           <h2 class="panel-title"><span aria-hidden="true">📅</span> אירועים קרובים</h2>
-          <button class="btn btn-ghost btn-sm" onclick="showSection('events')" aria-label="הצג את כל האירועים">
+          <button class="btn btn-ghost btn-sm" onclick="showSection('events',this)" aria-label="הצג את כל האירועים">
             הכל →
           </button>
         </div>
@@ -1780,7 +1862,7 @@ function renderDashboardEvents(events) {
       <td>${esc(e.captain)}</td>
       <td>
         <div class="row-actions">
-          <button class="icon-btn" aria-label="ערוך אירוע ${esc(e.description)}" onclick="showSection('events')">✏️</button>
+          <button class="icon-btn" aria-label="ערוך אירוע ${esc(e.description)}" onclick="showSection('events',this)">✏️</button>
           <button class="icon-btn" aria-label="הרשמות לאירוע ${esc(e.description)}" onclick="loadRegistrations('${esc(e.id)}')">👁️</button>
         </div>
       </td>
@@ -1915,14 +1997,13 @@ function renderExamsTable(riders) {
   tbody.innerHTML = riders.map(r => {
     const cls = r.examStatus.includes('✅') ? 'status-ok'
               : r.examStatus.includes('❌') || r.examStatus.includes('אין') ? 'status-err' : 'status-warn';
-    // תאריך בדיקה קיים — הצג אותו כ-value בשדה
     const examVal = r.examDate
       ? r.examDate.split('/').reverse().join('-') : '';
     return `<tr>
-      <td class="td-name">${esc(r.name)}</td>
-      <td>${esc(r.examDate) || '—'}</td>
-      <td>${esc(r.examExpiry) || '—'}</td>
-      <td><span class="status ${cls}" role="status">${esc(r.examStatus)}</span></td>
+      <td data-label="שם" class="td-name">${esc(r.name)}</td>
+      <td data-label="תאריך בדיקה">${esc(r.examDate) || '—'}</td>
+      <td data-label="תוקף עד">${esc(r.examExpiry) || '—'}</td>
+      <td data-label="סטטוס"><span class="status ${cls}" role="status">${esc(r.examStatus)}</span></td>
       <td>
         <div class="exam-update">
           <label for="upd-${esc(r.tid)}" class="sr-only">תאריך בדיקה ל${esc(r.name)}</label>
@@ -2040,7 +2121,7 @@ function renderAssignments() {
         <div class="td-name">${esc(r.name)}</div>
         <div class="td-sub"><span class="role-tag">${esc(r.role)}</span></div>
       </td>
-      <td>
+      <td data-label="אופניים">
         <label for="bike-${esc(r.tid)}" class="sr-only">אופניים ל${esc(r.name)}</label>
         <select class="select" id="bike-${esc(r.tid)}" style="min-width:120px"
                 aria-label="אופניים ל${esc(r.name)}"
@@ -2048,7 +2129,7 @@ function renderAssignments() {
           ${bikeOpts(r.bike)}
         </select>
       </td>
-      <td>
+      <td data-label="סטוקר שותף">
         ${r.role === 'קפטן'
           ? `<label for="stoker-${esc(r.tid)}" class="sr-only">סטוקר ל${esc(r.name)}</label>
              <select class="select" id="stoker-${esc(r.tid)}" style="min-width:130px"
@@ -2063,7 +2144,7 @@ function renderAssignments() {
         <button class="btn btn-primary btn-sm"
                 aria-label="שמור שיבוץ ל${esc(r.name)}"
                 onclick="saveAssignment('${esc(document.getElementById('event-select-assign').value)}','${esc(r.tid)}','${esc(r.name)}')">
-          שמור
+          💾 שמור
         </button>
       </td>
     </tr>`).join('')
@@ -2354,7 +2435,7 @@ const titles   = {
   exams:       ['בדיקות ארגומטריות','ניהול קבוצת אופניים / בדיקות'],
 };
 
-function showSection(name) {
+function showSection(name, clickedBtn) {
   sections.forEach(s => {
     const el = document.getElementById('section-' + s);
     if (el) el.hidden = (s !== name);
@@ -2363,11 +2444,14 @@ function showSection(name) {
     btn.classList.remove('active');
     btn.removeAttribute('aria-current');
   });
-  event.currentTarget.classList.add('active');
-  event.currentTarget.setAttribute('aria-current','page');
-  document.getElementById('pageTitle').textContent       = titles[name][0];
-  document.getElementById('pageBreadcrumb').textContent  = titles[name][1];
+  if (clickedBtn) {
+    clickedBtn.classList.add('active');
+    clickedBtn.setAttribute('aria-current','page');
+  }
+  document.getElementById('pageTitle').textContent      = titles[name][0];
+  document.getElementById('pageBreadcrumb').textContent = titles[name][1];
   document.getElementById('main-content').focus();
+  // סוגר תפריט במובייל תמיד
   closeSidebar();
 }
 
