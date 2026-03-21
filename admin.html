@@ -2168,10 +2168,10 @@ async function submitEditRider() {
     errEl.style.display = 'block'; errEl.focus();
   }
 }
+async function loadRegistrations(eventId) {
   try {
     const regs = await apiGet('getRegistrations', { eventId });
     showToast(`נטענו ${regs.length} הרשמות לאירוע`, 'success');
-    // TODO: render registrations modal
   } catch(e) {
     showToast('שגיאה בטעינת הרשמות: ' + e.message, 'error');
   }
