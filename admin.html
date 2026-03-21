@@ -1930,7 +1930,9 @@ function renderExamsTable(riders) {
   tbody.innerHTML = riders.map(r => {
     const cls = r.examStatus.includes('✅') ? 'status-ok'
               : r.examStatus.includes('❌') || r.examStatus.includes('אין') ? 'status-err' : 'status-warn';
-    const btnCls = r.examStatus.includes('✅') ? 'btn-ghost' : 'btn-primary';
+    // תאריך בדיקה קיים — הצג אותו כ-value בשדה
+    const examVal = r.examDate
+      ? r.examDate.split('/').reverse().join('-') : '';
     return `<tr>
       <td class="td-name">${esc(r.name)}</td>
       <td>${esc(r.examDate) || '—'}</td>
@@ -1938,10 +1940,11 @@ function renderExamsTable(riders) {
       <td><span class="status ${cls}" role="status">${esc(r.examStatus)}</span></td>
       <td>
         <div class="exam-update">
-          <label for="upd-${esc(r.tid)}" class="sr-only">תאריך בדיקה חדש ל${esc(r.name)}</label>
+          <label for="upd-${esc(r.tid)}" class="sr-only">תאריך בדיקה ל${esc(r.name)}</label>
           <input type="date" id="upd-${esc(r.tid)}" class="input-inline"
-                 aria-label="תאריך בדיקה חדש ל${esc(r.name)}">
-          <button class="btn ${btnCls} btn-sm"
+                 value="${esc(examVal)}"
+                 aria-label="תאריך בדיקה ל${esc(r.name)}">
+          <button class="btn btn-primary btn-sm"
                   aria-label="שמור תאריך בדיקה ל${esc(r.name)}"
                   onclick="saveExamDate('${esc(r.tid)}','${esc(r.name)}')">שמור</button>
         </div>
@@ -2189,7 +2192,24 @@ async function toggleBike(bikeId, currentStatus) {
 }
 
 function editRider(tid) {
-  showToast('עריכת רוכב — בקרוב', 'success');
+  const r = STATE.riders.find(x => x.tid === tid);
+  if (!r) { showToast('רוכב לא נמצא ב-STATE — נסה לרענן', 'error'); return; }
+  document.getElementById('edit-tid').value   = r.tid;
+  document.getElementById('edit-name').value  = r.name;
+  document.getElementById('edit-phone').value = r.phone;
+  document.getElementById('edit-email').value = r.email  || '';
+  document.getElementById('edit-city').value  = r.city   || '';
+  document.getElementById('edit-style').value = r.rideStyle;
+  document.getElementById('edit-perm').value  = r.permission;
+  // המרת תאריך DD/MM/YYYY → YYYY-MM-DD לשדה input date
+  if (r.examDate && r.examDate !== '—') {
+    const [d,m,y] = r.examDate.split('/');
+    document.getElementById('edit-exam').value = `${y}-${m}-${d}`;
+  } else {
+    document.getElementById('edit-exam').value = '';
+  }
+  document.getElementById('edit-rider-error').style.display = 'none';
+  openModal('modalEditRider');
 }
 
 async function deleteRider(tid, name) {
@@ -2209,6 +2229,10 @@ async function refreshAll() {
   try {
     await Promise.all([loadRiders(), loadEvents(), loadBikes()]);
     updateDashboardStats();
+    updateExamAlerts();
+    renderExamsTable(STATE.riders);
+    renderAllEventsTables(STATE.events);
+    renderAssignmentsEventSelect(STATE.events);
     showToast('הנתונים עודכנו ✅', 'success');
   } catch(e) {
     showToast('שגיאה ברענון: ' + e.message, 'error');
@@ -2395,7 +2419,8 @@ async function submitAddRider() {
 
 // ─── EXAM DATE ─────────────────────────────────────
 async function saveExamDate(tid, name) {
-  const input = document.getElementById('exam-' + tid);
+  const input = document.getElementById('exam-' + tid)
+             || document.getElementById('upd-' + tid);
   if (!input || !input.value) {
     showToast('נא לבחור תאריך בדיקה', 'error');
     return;
@@ -2406,6 +2431,7 @@ async function saveExamDate(tid, name) {
     await loadRiders();
     updateDashboardStats();
     updateExamAlerts();
+    renderExamsTable(STATE.riders); // ← מרענן טבלת בדיקות
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
   }

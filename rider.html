@@ -630,6 +630,17 @@ body::before {
     <h1 id="events-heading" class="section-title">
       <span aria-hidden="true">📅</span> רכיבות קרובות
     </h1>
+
+    <!-- בנר חסימת הרשמה -->
+    <div id="regBlockedBanner" style="display:none;
+         background:rgba(255,90,90,0.1);border:1px solid rgba(255,90,90,0.4);
+         border-radius:12px;padding:14px 18px;margin-bottom:16px;
+         display:none;align-items:flex-start;gap:12px;font-size:0.88rem;color:#ff8a8a;font-weight:500"
+         role="alert" aria-live="assertive">
+      <span style="font-size:1.2rem;flex-shrink:0" aria-hidden="true">🔒</span>
+      <span id="regBlockedText"></span>
+    </div>
+
     <div id="eventsList" class="events-list" aria-live="polite" aria-busy="true">
       <div class="skeleton"></div>
       <div class="skeleton"></div>
@@ -797,13 +808,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   // עדכון header
   renderHeader();
 
-  // בנר בדיקה אם עומדת לפוג
-  if (user.examStatus && (user.examStatus.includes('⚠️') || user.examStatus.includes('❌'))) {
+  // בנרים לפי סטטוס בדיקה
+  const examStatus = user.examStatus || '';
+  if (!user.canRegister && !user.isAdmin) {
+    // בנר בדף האירועים — חסימת הרשמה
+    const blocked    = document.getElementById('regBlockedBanner');
+    const blockedTxt = document.getElementById('regBlockedText');
+    if (examStatus.includes('אין בדיקה')) {
+      blockedTxt.textContent = 'אין לך בדיקה ארגומטרית במערכת. לא ניתן להירשם לרכיבות. אנא פנה למנהל הקבוצה לתיאום בדיקה.';
+    } else {
+      blockedTxt.textContent = 'הבדיקה הארגומטרית שלך פגה תוקף. לא ניתן להירשם לרכיבות עד לחידוש הבדיקה. אנא פנה למנהל הקבוצה.';
+    }
+    blocked.style.display = 'flex';
+  } else if (examStatus.includes('⚠️')) {
+    // בנר אזהרה — בדיקה עומדת לפוג
     const banner = document.getElementById('examBanner');
     document.getElementById('examBannerText').textContent =
-      user.examStatus.includes('❌')
-        ? 'הבדיקה הארגומטרית שלך פגה תוקף. פנה למנהל הקבוצה.'
-        : 'הבדיקה הארגומטרית שלך עומדת לפוג בקרוב. פנה למנהל הקבוצה.';
+      'הבדיקה הארגומטרית שלך עומדת לפוג בקרוב. אנא פנה למנהל הקבוצה לחידוש.';
     banner.style.display = 'flex';
   }
 
