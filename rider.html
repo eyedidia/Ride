@@ -928,18 +928,25 @@ async function loadEvents() {
 }
 
 async function loadMyRegistrations(events) {
-  // תמיד מאפסים ומטענים מחדש מה-API
   myRegs.clear();
   try {
-    // טוען במקביל לכל האירועים
     const checks = await Promise.all(
       events.map(ev => apiGet('getRegistrations', { eventId: ev.id })
-        .then(regs => ({ eventId: ev.id, registered: regs.some(r => r.tid === user.tid) }))
+        .then(regs => ({
+          eventId: ev.id,
+          // השוואה עם normTid בצד הלקוח
+          registered: regs.some(r => normTid(r.tid) === normTid(user.tid))
+        }))
         .catch(() => ({ eventId: ev.id, registered: false }))
       )
     );
     checks.forEach(c => { if (c.registered) myRegs.add(c.eventId); });
   } catch(_) {}
+}
+
+// נרמול TID — מסיר רווחים ו-.0 מסוף (למקרה שנשמר כמספר)
+function normTid(val) {
+  return String(val || '').trim().replace(/\.0+$/, '');
 }
 
 function renderEvents(events, counts = {}) {
