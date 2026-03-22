@@ -937,46 +937,6 @@ tbody td {
   }
   #bikesBody .btn { white-space: nowrap; }
 
-  /* שיבוצים — כרטיסים מלאים */
-  #captainsBody thead { display: none; }
-  #captainsBody tr {
-    display: block;
-    background: var(--surface2);
-    border-radius: var(--radius-sm);
-    margin-bottom: 12px;
-    padding: 14px;
-    border: 1px solid var(--border);
-  }
-  #captainsBody td {
-    display: block;
-    border: none;
-    padding: 5px 0;
-    font-size: 0.85rem;
-  }
-  /* שם רוכב — בולט בראש הכרטיס */
-  #captainsBody td:first-child {
-    font-weight: 700;
-    font-size: 0.95rem;
-    padding-bottom: 10px;
-    margin-bottom: 6px;
-    border-bottom: 1px solid var(--border);
-  }
-  /* כל select ברוחב מלא */
-  #captainsBody select { width: 100%; margin-top: 4px; }
-  /* כפתור שמור ברוחב מלא */
-  #captainsBody .btn { width: 100%; justify-content: center; margin-top: 8px; }
-  /* תווית לפני כל שדה */
-  #captainsBody td[data-label]::before {
-    content: attr(data-label) ": ";
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    font-weight: 600;
-    display: block;
-    margin-bottom: 2px;
-  }
-  #captainsBody td:first-child::before { display: none; }
-  #captainsBody td:last-child::before  { display: none; }
-
   /* Badge */
   .badge { margin-right: 4px; }
 }
@@ -1318,27 +1278,16 @@ tbody td {
 
       <div id="assignmentsContent" style="display:none">
 
-        <!-- טבלת קפטנים + סינגלים -->
+        <!-- קפטנים + סינגלים — כרטיסים -->
         <div class="panel">
           <div class="panel-header">
             <h3 class="panel-title"><span aria-hidden="true">👑</span> קפטנים וסינגלים</h3>
             <span id="captainsCount" style="font-size:0.8rem;color:var(--text-muted)"></span>
           </div>
-          <div class="panel-body table-wrap">
-            <table aria-label="קפטנים וסינגלים">
-              <thead>
-                <tr>
-                  <th scope="col">שם רוכב</th>
-                  <th scope="col">תפקיד</th>
-                  <th scope="col">אופניים</th>
-                  <th scope="col">סטוקר שותף</th>
-                  <th scope="col"><span class="sr-only">שמור</span></th>
-                </tr>
-              </thead>
-              <tbody id="captainsBody">
-                <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">בחר אירוע</td></tr>
-              </tbody>
-            </table>
+          <div class="panel-body">
+            <div id="captainsBody" style="padding:12px 16px">
+              <p style="text-align:center;padding:20px;color:var(--text-muted)">בחר אירוע</p>
+            </div>
           </div>
         </div>
 
@@ -1428,19 +1377,19 @@ tbody td {
       <button class="modal-close" onclick="closeModal('modalAddEvent')" aria-label="סגור">✕</button>
     </div>
     <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" for="ev-desc">תיאור מסלול *</label>
+        <input type="text" id="ev-desc" class="input" placeholder="ירושלים–מצדה" required aria-required="true">
+      </div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="ev-id">מזהה אירוע *</label>
-          <input type="text" id="ev-id" class="input" placeholder="E010" required aria-required="true">
-        </div>
         <div class="form-group">
           <label class="form-label" for="ev-date">תאריך *</label>
           <input type="date" id="ev-date" class="input" required aria-required="true">
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="ev-desc">תיאור מסלול *</label>
-        <input type="text" id="ev-desc" class="input" placeholder="ירושלים–מצדה" required aria-required="true">
+        <div class="form-group">
+          <label class="form-label" for="ev-time">שעת מפגש</label>
+          <input type="time" id="ev-time" class="input" value="06:00">
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -1452,15 +1401,9 @@ tbody td {
           <input type="number" id="ev-climb" class="input" placeholder="800" min="0">
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="ev-meet">נקודת מפגש</label>
-          <input type="text" id="ev-meet" class="input" placeholder="כניסה לירושלים">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="ev-time">שעת מפגש</label>
-          <input type="time" id="ev-time" class="input" value="06:00">
-        </div>
+      <div class="form-group">
+        <label class="form-label" for="ev-meet">נקודת מפגש</label>
+        <input type="text" id="ev-meet" class="input" placeholder="כניסה לירושלים">
       </div>
       <div class="form-group">
         <label class="form-label" for="ev-captain">קפטן מוביל</label>
@@ -1490,15 +1433,9 @@ tbody td {
       <button class="modal-close" onclick="closeModal('modalAddBike')" aria-label="סגור">✕</button>
     </div>
     <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="bike-id">מזהה *</label>
-          <input type="text" id="bike-new-id" class="input" placeholder="B005" required aria-required="true">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="bike-new-name">שם / כינוי *</label>
-          <input type="text" id="bike-new-name" class="input" placeholder="הכתום" required aria-required="true">
-        </div>
+      <div class="form-group">
+        <label class="form-label" for="bike-new-name">שם / כינוי *</label>
+        <input type="text" id="bike-new-name" class="input" placeholder="הכתום" required aria-required="true">
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -2116,39 +2053,49 @@ function renderAssignments() {
 
   const captainsBody = document.getElementById('captainsBody');
   captainsBody.innerHTML = captains.length ? captains.map(r => `
-    <tr>
-      <td>
-        <div class="td-name">${esc(r.name)}</div>
-        <div class="td-sub"><span class="role-tag">${esc(r.role)}</span></div>
-      </td>
-      <td data-label="אופניים">
+    <div style="background:var(--surface2);border:1px solid var(--border);
+                border-radius:var(--radius-sm);padding:14px;margin-bottom:12px">
+
+      <!-- שם ותפקיד -->
+      <div style="display:flex;align-items:center;justify-content:space-between;
+                  margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-weight:700;font-size:0.95rem">${esc(r.name)}</div>
+          <div style="margin-top:3px"><span class="role-tag">${esc(r.role)}</span></div>
+        </div>
+      </div>
+
+      <!-- אופניים -->
+      <div style="margin-bottom:10px">
+        <div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;margin-bottom:4px">אופניים</div>
         <label for="bike-${esc(r.tid)}" class="sr-only">אופניים ל${esc(r.name)}</label>
-        <select class="select" id="bike-${esc(r.tid)}" style="min-width:120px"
+        <select class="select" id="bike-${esc(r.tid)}" style="width:100%"
                 aria-label="אופניים ל${esc(r.name)}"
                 onchange="updatePartnerBike('${esc(r.tid)}')">
           ${bikeOpts(r.bike)}
         </select>
-      </td>
-      <td data-label="סטוקר שותף">
-        ${r.role === 'קפטן'
-          ? `<label for="stoker-${esc(r.tid)}" class="sr-only">סטוקר ל${esc(r.name)}</label>
-             <select class="select" id="stoker-${esc(r.tid)}" style="min-width:130px"
-                     aria-label="סטוקר שותף ל${esc(r.name)}"
-                     onchange="onStokerChange('${esc(r.tid)}')">
-               ${stokerOpts(r.partnerTid || '')}
-             </select>`
-          : `<span style="color:var(--text-muted);font-size:0.82rem">— סינגל —</span>`
-        }
-      </td>
-      <td>
-        <button class="btn btn-primary btn-sm"
-                aria-label="שמור שיבוץ ל${esc(r.name)}"
-                onclick="saveAssignment('${esc(document.getElementById('event-select-assign').value)}','${esc(r.tid)}','${esc(r.name)}')">
-          💾 שמור
-        </button>
-      </td>
-    </tr>`).join('')
-  : `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">אין קפטנים/סינגלים רשומים</td></tr>`;
+      </div>
+
+      <!-- סטוקר שותף (קפטן בלבד) -->
+      ${r.role === 'קפטן' ? `
+      <div style="margin-bottom:12px">
+        <div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;margin-bottom:4px">סטוקר שותף</div>
+        <label for="stoker-${esc(r.tid)}" class="sr-only">סטוקר ל${esc(r.name)}</label>
+        <select class="select" id="stoker-${esc(r.tid)}" style="width:100%"
+                aria-label="סטוקר שותף ל${esc(r.name)}"
+                onchange="onStokerChange('${esc(r.tid)}')">
+          ${stokerOpts(r.partnerTid || '')}
+        </select>
+      </div>` : ''}
+
+      <!-- כפתור שמור -->
+      <button class="btn btn-primary" style="width:100%;justify-content:center"
+              aria-label="שמור שיבוץ ל${esc(r.name)}"
+              onclick="saveAssignment('${esc(document.getElementById('event-select-assign').value)}','${esc(r.tid)}','${esc(r.name)}')">
+        💾 שמור שיבוץ
+      </button>
+    </div>`).join('')
+  : `<p style="text-align:center;padding:20px;color:var(--text-muted)">אין קפטנים/סינגלים רשומים</p>`;
 
   // ── מלאי סטוקרים זמינים ──
   const stokersList = document.getElementById('stokersList');
@@ -2230,7 +2177,6 @@ async function cancelEvent(eventId, name) {
 async function submitAddEvent() {
   const errEl = document.getElementById('add-event-error');
   errEl.style.display = 'none';
-  const id      = document.getElementById('ev-id').value.trim();
   const date    = document.getElementById('ev-date').value;
   const desc    = document.getElementById('ev-desc').value.trim();
   const km      = document.getElementById('ev-km').value;
@@ -2239,16 +2185,19 @@ async function submitAddEvent() {
   const time    = document.getElementById('ev-time').value;
   const captain = document.getElementById('ev-captain').value;
 
-  if (!id || !date || !desc) {
-    errEl.textContent = 'נא למלא מזהה, תאריך ותיאור מסלול';
+  if (!date || !desc) {
+    errEl.textContent = 'נא למלא תאריך ותיאור מסלול';
     errEl.style.display = 'block'; errEl.focus(); return;
   }
   try {
-    await callAPI('addEvent', { id, date, description: desc, km: Number(km)||0,
-                                climb: Number(climb)||0, meetPoint: meet,
-                                meetTime: time, captain, status: 'פעיל' });
+    const result = await callAPI('addEvent', {
+      date, description: desc,
+      km: Number(km)||0, climb: Number(climb)||0,
+      meetPoint: meet, meetTime: time,
+      captain, status: 'פעיל'
+    });
     closeModal('modalAddEvent');
-    showToast(`אירוע "${desc}" נוצר ✅`, 'success');
+    showToast(`אירוע "${desc}" נוצר (${result.id || ''}) ✅`, 'success');
     await loadEvents();
     renderAllEventsTables(STATE.events);
     renderAssignmentsEventSelect(STATE.events);
@@ -2262,18 +2211,17 @@ async function submitAddEvent() {
 async function submitAddBike() {
   const errEl = document.getElementById('add-bike-error');
   errEl.style.display = 'none';
-  const id    = document.getElementById('bike-new-id').value.trim();
   const name  = document.getElementById('bike-new-name').value.trim();
   const frame = document.getElementById('bike-new-frame').value;
   const drive = document.getElementById('bike-new-drive').value;
-  if (!id || !name || !frame || !drive) {
+  if (!name || !frame || !drive) {
     errEl.textContent = 'נא למלא את כל השדות';
     errEl.style.display = 'block'; errEl.focus(); return;
   }
   try {
-    await callAPI('addBike', { id, name, frame, drive, status: 'תקין' });
+    const result = await callAPI('addBike', { name, frame, drive, status: 'תקין' });
     closeModal('modalAddBike');
-    showToast(`אופניים "${name}" נוספו לצי ✅`, 'success');
+    showToast(`אופניים "${name}" נוספו לצי (${result.id || ''}) ✅`, 'success');
     await loadBikes();
   } catch(e) {
     errEl.textContent = 'שגיאה: ' + e.message;
