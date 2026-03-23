@@ -939,6 +939,18 @@ tbody td {
 
   /* Badge */
   .badge { margin-right: 4px; }
+
+  /* שיבוצים — ודא רוחב מלא */
+  #assignmentsContent,
+  #assignmentsContent .panel,
+  #assignmentsContent .panel-body,
+  #captainsBody,
+  #captainsBody > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+  }
 }
 </style>
 </head>
@@ -1285,7 +1297,7 @@ tbody td {
             <span id="captainsCount" style="font-size:0.8rem;color:var(--text-muted)"></span>
           </div>
           <div class="panel-body">
-            <div id="captainsBody" style="padding:12px 16px">
+            <div id="captainsBody" style="padding:12px 16px;width:100%;box-sizing:border-box">
               <p style="text-align:center;padding:20px;color:var(--text-muted)">בחר אירוע</p>
             </div>
           </div>
@@ -2040,21 +2052,29 @@ function renderAssignments() {
     ).join('') +
     `<option value="PRIVATE" ${selected === 'PRIVATE' ? 'selected' : ''}>אופניים פרטיים</option>`;
 
-  const stokerOpts = (currentPartnerTid) =>
-    `<option value="">— ללא שותף —</option>` +
-    stokers.map(s => {
-      const alreadyAssigned = assignedStokerTids.has(s.tid) && s.tid !== currentPartnerTid;
-      return `<option value="${esc(s.tid)}"
-                       ${s.tid === currentPartnerTid ? 'selected' : ''}
-                       ${alreadyAssigned ? 'disabled' : ''}>
-                ${esc(s.name)}${alreadyAssigned ? ' (משובץ)' : ''}
-              </option>`;
-    }).join('');
+  const stokerOpts = (currentPartnerTid, currentPartnerName) => {
+    // בנה רשימה: סטוקרים זמינים + הסטוקר הנוכחי המשובץ (אם קיים)
+    const allOptions = [...stokers];
+    // אם יש שותף משובץ שכבר לא בטבלה — הוסף אותו ידנית
+    if (currentPartnerTid && !stokers.find(s => s.tid === currentPartnerTid)) {
+      allOptions.unshift({ tid: currentPartnerTid, name: currentPartnerName || currentPartnerTid, role: 'סטוקר' });
+    }
+    return `<option value="">— ללא שותף —</option>` +
+      allOptions.map(s => {
+        const alreadyAssigned = assignedStokerTids.has(s.tid) && s.tid !== currentPartnerTid;
+        return `<option value="${esc(s.tid)}"
+                         ${s.tid === currentPartnerTid ? 'selected' : ''}
+                         ${alreadyAssigned ? 'disabled' : ''}>
+                  ${esc(s.name)}${alreadyAssigned ? ' (משובץ)' : ''}
+                </option>`;
+      }).join('');
+  };
 
   const captainsBody = document.getElementById('captainsBody');
   captainsBody.innerHTML = captains.length ? captains.map(r => `
     <div style="background:var(--surface2);border:1px solid var(--border);
-                border-radius:var(--radius-sm);padding:14px;margin-bottom:12px">
+                border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;
+                width:100%;box-sizing:border-box;min-width:0">
 
       <!-- שם ותפקיד -->
       <div style="display:flex;align-items:center;justify-content:space-between;
@@ -2084,7 +2104,7 @@ function renderAssignments() {
         <select class="select" id="stoker-${esc(r.tid)}" style="width:100%"
                 aria-label="סטוקר שותף ל${esc(r.name)}"
                 onchange="onStokerChange('${esc(r.tid)}')">
-          ${stokerOpts(r.partnerTid || '')}
+          ${stokerOpts(r.partnerTid || '', r.partner || '')}
         </select>
       </div>` : ''}
 
