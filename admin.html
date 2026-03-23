@@ -2048,9 +2048,10 @@ function renderAssignments() {
   // ── טבלת קפטנים + סינגלים ──
   const bikeOpts = (selected) =>
     assignBikes.map(b =>
-      `<option value="${esc(b.id)}" ${b.id === selected ? 'selected' : ''}>${esc(b.name)} (${esc(b.frame)})</option>`
-    ).join('') +
-    `<option value="PRIVATE" ${selected === 'PRIVATE' ? 'selected' : ''}>אופניים פרטיים</option>`;
+      `<option value="${esc(b.id)}" ${b.id === selected ? 'selected' : ''}>
+        ${esc(b.name)}${b.frame && b.id !== 'PRIVATE' ? ` (${esc(b.frame)})` : ''}
+      </option>`
+    ).join('');
 
   const stokerOpts = (currentPartnerTid, currentPartnerName) => {
     // בנה רשימה: סטוקרים זמינים + הסטוקר הנוכחי המשובץ (אם קיים)
@@ -2071,7 +2072,41 @@ function renderAssignments() {
   };
 
   const captainsBody = document.getElementById('captainsBody');
-  captainsBody.innerHTML = captains.length ? captains.map(r => `
+  captainsBody.innerHTML = captains.length ? captains.map(r => {
+    const isAssigned = r.bike && r.bike !== 'PRIVATE' && r.bike !== '—' && r.bike !== '';
+    const hasPartner = r.role === 'קפטן' && r.partnerTid;
+
+    if (isAssigned) {
+      // ── כרטיס נעול — שיבוץ קיים ──
+      return `
+      <div style="background:var(--surface2);border:2px solid var(--green);
+                  border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;
+                  width:100%;box-sizing:border-box;min-width:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;
+                    margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-weight:700;font-size:0.95rem">${esc(r.name)}</div>
+            <div style="margin-top:3px"><span class="role-tag">${esc(r.role)}</span></div>
+          </div>
+          <span style="font-size:0.75rem;background:rgba(45,212,160,0.15);color:var(--green);
+                       padding:3px 9px;border-radius:20px;font-weight:700">✅ משובץ</span>
+        </div>
+        <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:6px">
+          🚲 ${esc(r.bike)}${hasPartner ? ` &nbsp;·&nbsp; 🤝 ${esc(r.partner || r.partnerTid)}` : ''}
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-ghost btn-sm" style="flex:1"
+                  onclick="editAssignment('${esc(r.tid)}')">✏️ עריכה</button>
+          <button class="btn btn-sm" style="flex:1;background:rgba(255,90,90,0.15);color:var(--red);border:1px solid rgba(255,90,90,0.3)"
+                  onclick="unassignCaptain('${esc(document.getElementById('event-select-assign').value)}','${esc(r.tid)}','${esc(r.name)}')">
+            🔓 פרק שיבוץ
+          </button>
+        </div>
+      </div>`;
+    }
+
+    // ── כרטיס פתוח — ממתין לשיבוץ ──
+    return `
     <div style="background:var(--surface2);border:1px solid var(--border);
                 border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;
                 width:100%;box-sizing:border-box;min-width:0">
@@ -2114,7 +2149,8 @@ function renderAssignments() {
               onclick="saveAssignment('${esc(document.getElementById('event-select-assign').value)}','${esc(r.tid)}','${esc(r.name)}')">
         💾 שמור שיבוץ
       </button>
-    </div>`).join('')
+    </div>`;
+  }).join('')
   : `<p style="text-align:center;padding:20px;color:var(--text-muted)">אין קפטנים/סינגלים רשומים</p>`;
 
   // ── מלאי סטוקרים זמינים ──
@@ -2128,6 +2164,12 @@ function renderAssignments() {
     : `<span style="color:var(--text-muted);font-size:0.85rem">
          ${stokers.length ? 'כל הסטוקרים שובצו ✅' : 'אין סטוקרים רשומים'}
        </span>`;
+}
+
+function editAssignment(captainTid) {
+  const captain = assignRegs.find(r => r.tid === captainTid);
+  if (captain) captain.bike = '';
+  renderAssignments();
 }
 
 function onStokerChange(captainTid) {
@@ -2161,18 +2203,26 @@ async function saveAssignment(eventId, captainTid, captainName) {
   const stokerTid = stokerSel ? stokerSel.value : '';
 
   try {
-    // שמור אופניים לקפטן
     if (bikeId) await callAPI('assignBike', { eventId, tid: captainTid, bikeId });
-
-    // שמור שותף סטוקר — אם נבחר
     if (stokerTid) {
       await callAPI('assignBike', { eventId, tid: stokerTid, bikeId: bikeId || '' });
-      // עדכון partnerTid בשני הכיוונים ב-registrations
       await callAPI('assignPartner', { eventId, captainTid, stokerTid });
     }
-
     showToast(`שיבוץ נשמר ל${captainName} ✅`, 'success');
-    // רענן
+    assignRegs = await apiGet('getRegistrations', { eventId });
+    renderAssignments();
+  } catch(e) {
+    showToast('שגיאה: ' + e.message, 'error');
+  }
+}
+
+async function unassignCaptain(eventId, captainTid, captainName) {
+  if (!confirm(`לפרק את השיבוץ של ${captainName}?`)) return;
+  try {
+    // אפס אופניים ושותף
+    await callAPI('assignBike', { eventId, tid: captainTid, bikeId: 'PRIVATE' });
+    await callAPI('assignPartner', { eventId, captainTid, stokerTid: '' });
+    showToast(`שיבוץ ${captainName} פורק`, 'success');
     assignRegs = await apiGet('getRegistrations', { eventId });
     renderAssignments();
   } catch(e) {
