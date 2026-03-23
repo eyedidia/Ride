@@ -1927,9 +1927,23 @@ function updateExamAlerts() {
 function renderAssignmentsEventSelect(events) {
   const sel = document.getElementById('event-select-assign');
   if (!sel) return;
-  sel.innerHTML = events.map(e =>
-    `<option value="${esc(e.id)}">${esc(e.date)} — ${esc(e.description)}</option>`
-  ).join('');
+  const upcoming = events.filter(e => {
+    const d = new Date(e.date.split('/').reverse().join('-'));
+    return d >= new Date();
+  });
+  // מיון עולה לפי תאריך
+  upcoming.sort((a,b) => new Date(a.date.split('/').reverse().join('-')) - new Date(b.date.split('/').reverse().join('-')));
+
+  sel.innerHTML = '<option value="">— בחר אירוע —</option>' +
+    upcoming.map(e =>
+      `<option value="${esc(e.id)}">${esc(e.date)} — ${esc(e.description)}</option>`
+    ).join('');
+
+  // בחר אוטומטית את הראשון
+  if (upcoming.length) {
+    sel.value = upcoming[0].id;
+    loadAssignments();
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -2046,12 +2060,19 @@ function renderAssignments() {
     `${availableStokers.length} זמינים מתוך ${stokers.length}`;
 
   // ── טבלת קפטנים + סינגלים ──
-  const bikeOpts = (selected) =>
-    assignBikes.map(b =>
+  const bikeOpts = (selected, role) => {
+    const filtered = assignBikes.filter(b => {
+      if (b.id === 'PRIVATE') return true;
+      if (role === 'סינגל') return b.frame === 'סינגל';
+      if (role === 'קפטן')  return b.frame === 'טנדם';
+      return true;
+    });
+    return filtered.map(b =>
       `<option value="${esc(b.id)}" ${b.id === selected ? 'selected' : ''}>
         ${esc(b.name)}${b.frame && b.id !== 'PRIVATE' ? ` (${esc(b.frame)})` : ''}
       </option>`
     ).join('');
+  };
 
   const stokerOpts = (currentPartnerTid, currentPartnerName) => {
     // בנה רשימה: סטוקרים זמינים + הסטוקר הנוכחי המשובץ (אם קיים)
@@ -2127,7 +2148,7 @@ function renderAssignments() {
         <select class="select" id="bike-${esc(r.tid)}" style="width:100%"
                 aria-label="אופניים ל${esc(r.name)}"
                 onchange="updatePartnerBike('${esc(r.tid)}')">
-          ${bikeOpts(r.bike)}
+          ${bikeOpts(r.bike, r.role)}
         </select>
       </div>
 
@@ -2219,9 +2240,16 @@ async function saveAssignment(eventId, captainTid, captainName) {
 async function unassignCaptain(eventId, captainTid, captainName) {
   if (!confirm(`לפרק את השיבוץ של ${captainName}?`)) return;
   try {
-    // אפס אופניים ושותף
+    // מצא את ה-partnerTid הנוכחי לפני הפירוק
+    const captain = assignRegs.find(r => r.tid === captainTid);
+    const partnerTid  = captain?.partnerTid  || '';
+    const partnerName = captain?.partner || '';
+
+    // פרק שיבוץ — מנקה עמודות G+I ומחזיר סטוקר לטבלה
+    await callAPI('unassignPartner', { eventId, captainTid, stokerTid: partnerTid, stokerName: partnerName });
+    // אפס אופניים לקפטן
     await callAPI('assignBike', { eventId, tid: captainTid, bikeId: 'PRIVATE' });
-    await callAPI('assignPartner', { eventId, captainTid, stokerTid: '' });
+
     showToast(`שיבוץ ${captainName} פורק`, 'success');
     assignRegs = await apiGet('getRegistrations', { eventId });
     renderAssignments();
