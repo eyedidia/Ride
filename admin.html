@@ -1716,11 +1716,14 @@ async function loadRiders() {
 
 async function loadEvents() {
   if (!API_URL) return;
-  const events = await apiGet('getEvents');
-  STATE.events = events;
-  renderEventsTable(events);
-  renderDashboardEvents(events);
-  renderAssignmentsEventSelect(events);
+  const all = await apiGet('getAllEvents');
+  // STATE.events = רק קרובים (לשיבוצים, dashboard)
+  STATE.events = all.upcoming || [];
+  renderEventsTable(STATE.events);
+  renderDashboardEvents(STATE.events);
+  renderAssignmentsEventSelect(STATE.events);
+  // טבלאות מנהל — כולל עבר
+  renderAllEventsTables(all);
 }
 
 async function loadBikes() {
@@ -1983,10 +1986,10 @@ function renderExamsTable(riders) {
 }
 
 // ─── RENDER EVENTS TABLES ──────────────────────────
-function renderAllEventsTables(allEvents) {
-  const today = new Date(); today.setHours(0,0,0,0);
-  const upcoming = allEvents.filter(e => new Date(e.date.split('/').reverse().join('-')) >= today);
-  const past     = allEvents.filter(e => new Date(e.date.split('/').reverse().join('-')) <  today);
+function renderAllEventsTables(all) {
+  const upcoming  = all.upcoming  || all; // תמיכה בשני פורמטים
+  const past      = all.past      || [];
+  const cancelled = all.cancelled || [];
 
   const upTbody = document.getElementById('eventsUpcomingBody');
   upTbody.innerHTML = upcoming.length ? upcoming.map(e => `
@@ -2010,10 +2013,21 @@ function renderAllEventsTables(allEvents) {
     <tr>
       <td>${esc(e.date)}</td>
       <td>${esc(e.description)}</td>
-      <td>${esc(String(e.km))}</td>
+      <td>${esc(String(e.km))} ק"מ</td>
       <td>${esc(e.captain)}</td>
     </tr>`).join('')
   : `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">אין אירועים שעברו</td></tr>`;
+
+  const cancelTbody = document.getElementById('tabp-cancelled');
+  if (cancelTbody) {
+    cancelTbody.innerHTML = cancelled.length
+      ? `<div class="table-wrap"><table><thead><tr>
+           <th>תאריך</th><th>מסלול</th>
+         </tr></thead><tbody>${cancelled.map(e => `
+           <tr><td>${esc(e.date)}</td><td>${esc(e.description)}</td></tr>`).join('')}
+         </tbody></table></div>`
+      : `<p style="padding:20px;color:var(--text-muted);text-align:center">אין אירועים מבוטלים</p>`;
+  }
 }
 
 // ─── LOAD ASSIGNMENTS ──────────────────────────────

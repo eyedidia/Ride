@@ -670,6 +670,10 @@ body::before {
           <div class="stat-mini-val" id="stat-km">—</div>
           <div class="stat-mini-lbl">ק"מ מצטבר</div>
         </div>
+        <div class="stat-mini" style="background:var(--surface);border:1px solid var(--border)">
+          <div class="stat-mini-val" id="stat-climb" style="color:var(--orange)">—</div>
+          <div class="stat-mini-lbl">מטרי עלייה מצטברים</div>
+        </div>
       </div>
 
       <!-- שותפים מובילים -->
@@ -1122,10 +1126,12 @@ function renderStats(history) {
   document.getElementById('statsCards').style.display = 'block';
   document.getElementById('historyFilters').style.display = 'flex';
 
-  // סה"כ וק"מ
-  const totalKm = history.reduce((s, h) => s + (Number(h.km) || 0), 0);
+  const totalKm    = history.reduce((s, h) => s + (Number(h.km)    || 0), 0);
+  const totalClimb = history.reduce((s, h) => s + (Number(h.climb) || 0), 0);
+
   document.getElementById('stat-total').textContent = history.length;
   document.getElementById('stat-km').textContent    = totalKm.toLocaleString('he-IL') + ' ק"מ';
+  document.getElementById('stat-climb').textContent = totalClimb.toLocaleString('he-IL') + ' מ\'';
 
   // שותפים מובילים (טנדם)
   const partners = {};
