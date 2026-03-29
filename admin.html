@@ -1363,8 +1363,14 @@ tbody td {
           <h2 class="panel-title"><span aria-hidden="true">🔧</span> היסטוריית תחזוקה</h2>
           <div class="filter-bar">
             <label for="maint-filter-bike" class="sr-only">סנן לפי אופניים</label>
-            <select id="maint-filter-bike" class="select" aria-label="סנן לפי אופניים" onchange="loadMaintenance()">
+            <select id="maint-filter-bike" class="select" aria-label="סנן לפי אופניים" onchange="applyMaintenanceFilter()">
               <option value="">כל האופניים</option>
+            </select>
+            <label for="maint-filter-status" class="sr-only">סנן לפי סטטוס</label>
+            <select id="maint-filter-status" class="select" aria-label="סנן לפי סטטוס" onchange="applyMaintenanceFilter()">
+              <option value="">כל הסטטוסים</option>
+              <option value="בתיקון">🔧 בתיקון בלבד</option>
+              <option value="תוקן">✅ תוקנו בלבד</option>
             </select>
           </div>
         </div>
@@ -2014,6 +2020,9 @@ function renderBikesTable(bikes) {
             <button class="icon-btn"
                     aria-label="ערוך אופניים ${esc(b.name)}" title="עריכה"
                     onclick="editBike('${esc(b.id)}')">✏️</button>
+            <button class="icon-btn"
+                    aria-label="היסטוריית תחזוקה ${esc(b.name)}" title="היסטוריה"
+                    onclick="openMaintenanceForBike('${esc(b.id)}','${esc(b.name)}')">📋</button>
             <button class="btn ${b.status === 'תקין' ? 'btn-ghost' : 'btn-primary'} btn-sm"
                     aria-label="${b.status === 'תקין' ? 'השבת' : 'הפעל מחדש'} אופניים ${esc(b.name)}"
                     onclick="toggleBike('${esc(b.id)}','${b.status}')">
@@ -2632,19 +2641,41 @@ async function enableBike(bikeId) {
 }
 
 // ─── MAINTENANCE ───────────────────────────────────
+let allMaintenanceRecords = []; // cache לכל הרשומות
+
 async function loadMaintenance() {
-  const bikeId = document.getElementById('maint-filter-bike')?.value || '';
-  const tbody  = document.getElementById('maintenanceBody');
+  const tbody = document.getElementById('maintenanceBody');
   if (!tbody) return;
   tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">טוען...</td></tr>`;
   try {
-    const records = await apiGet('getMaintenance', bikeId ? { bikeId } : {});
-    renderMaintenanceTable(records);
-    // אכלוס פילטר אופניים
+    allMaintenanceRecords = await apiGet('getMaintenance');
     populateMaintenanceBikeFilter();
+    applyMaintenanceFilter();
   } catch(e) {
     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--red)">שגיאה: ${esc(e.message)}</td></tr>`;
   }
+}
+
+function applyMaintenanceFilter() {
+  const bikeId = document.getElementById('maint-filter-bike')?.value  || '';
+  const status = document.getElementById('maint-filter-status')?.value || '';
+  const filtered = allMaintenanceRecords.filter(r => {
+    if (bikeId && r.bikeId !== bikeId) return false;
+    if (status && r.status !== status) return false;
+    return true;
+  });
+  renderMaintenanceTable(filtered);
+}
+
+// פתיחת תחזוקה מסוננת לאופניים ספציפיים מדף צי האופניים
+function openMaintenanceForBike(bikeId, bikeName) {
+  showSection('maintenance', document.querySelector('[onclick*="maintenance"]'));
+  // המתן לרינדור ואז הגדר פילטר
+  setTimeout(() => {
+    populateMaintenanceBikeFilter();
+    const sel = document.getElementById('maint-filter-bike');
+    if (sel) { sel.value = bikeId; applyMaintenanceFilter(); }
+  }, 100);
 }
 
 function renderMaintenanceTable(records) {
