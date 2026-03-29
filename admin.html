@@ -1805,22 +1805,6 @@ tbody td {
   </div>
 </div>
 
-<!-- ═══════════════════════
-     MODAL — היסטוריית אופניים
-═══════════════════════════ -->
-<div class="modal-backdrop" id="modalBikeHistory" role="dialog" aria-modal="true"
-     aria-labelledby="modal-title-bike-history" onclick="backdropClose(event,'modalBikeHistory')">
-  <div class="modal" style="max-width:540px">
-    <div class="modal-header">
-      <h2 class="modal-title" id="modal-title-bike-history">היסטוריית תחזוקה</h2>
-      <button class="modal-close" onclick="closeModal('modalBikeHistory')" aria-label="סגור">✕</button>
-    </div>
-    <div class="modal-body" id="bikeHistoryBody" style="padding:16px 20px 20px">
-      <div style="text-align:center;padding:20px;color:var(--text-muted)">טוען...</div>
-    </div>
-  </div>
-</div>
-
 <!-- Toast area -->
 <div class="toast-area" id="toastArea" aria-live="polite" aria-atomic="false"></div>
 
@@ -2699,77 +2683,18 @@ function applyMaintenanceFilter() {
   renderMaintenanceTable(filtered);
 }
 
-// פתיחת מודל היסטוריה לאופניים ספציפיים
-async function openBikeHistory(bikeId, bikeName) {
-  document.getElementById('modal-title-bike-history').textContent = `🔧 ${bikeName} — היסטוריית תחזוקה`;
-  const body = document.getElementById('bikeHistoryBody');
-  body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted)">טוען...</div>`;
-  openModal('modalBikeHistory');
-
-  try {
-    const records = allMaintenanceRecords.filter(r => r.bikeId === bikeId);
-
-    if (!records.length) {
-      body.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted)">
-        <div style="font-size:2rem;margin-bottom:8px">✅</div>
-        <div>לא נמצאו רשומות תחזוקה לאופניים אלה</div>
-      </div>`;
-      return;
-    }
-
-    // סטטיסטיקה
-    const totalTimes  = records.length;
-    const inRepair    = records.filter(r => r.status === 'בתיקון').length;
-    const faultCounts = {};
-    records.forEach(r => {
-      const key = r.fault || 'לא צוין';
-      faultCounts[key] = (faultCounts[key] || 0) + 1;
-    });
-    const topFault = Object.entries(faultCounts).sort((a,b) => b[1]-a[1])[0];
-
-    body.innerHTML = `
-      <!-- סיכום -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px">
-        <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center">
-          <div style="font-size:1.6rem;font-weight:800;color:var(--red)">${totalTimes}</div>
-          <div style="font-size:0.74rem;color:var(--text-muted)">סה"כ השבתות</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center">
-          <div style="font-size:1.6rem;font-weight:800;color:${inRepair ? 'var(--orange)' : 'var(--green)'}">${inRepair}</div>
-          <div style="font-size:0.74rem;color:var(--text-muted)">כרגע בתיקון</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;overflow:hidden">
-          <div style="font-size:0.82rem;font-weight:700;color:var(--accent);white-space:nowrap;
-                      overflow:hidden;text-overflow:ellipsis">${esc(topFault?.[0] || '—')}</div>
-          <div style="font-size:0.74rem;color:var(--text-muted)">תקלה נפוצה</div>
-        </div>
-      </div>
-
-      <!-- רשימת רשומות -->
-      <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);
-                  text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">
-        כל האירועים (${totalTimes})
-      </div>
-      ${records.map((r, i) => {
-        const isOpen = r.status === 'בתיקון';
-        return `
-        <div style="background:var(--surface2);border:1px solid ${isOpen ? 'rgba(255,179,71,0.4)' : 'var(--border)'};
-                    border-radius:8px;padding:12px 14px;margin-bottom:8px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <span style="font-size:0.78rem;color:var(--text-muted)">#${i+1}</span>
-            <span class="status ${isOpen ? 'status-warn' : 'status-ok'}">${isOpen ? '🔧 בתיקון' : '✅ תוקן'}</span>
-          </div>
-          <div style="font-weight:600;font-size:0.9rem;margin-bottom:6px">${esc(r.fault)}</div>
-          <div style="display:flex;gap:16px;font-size:0.78rem;color:var(--text-muted)">
-            <span>📅 נכנס: <strong style="color:var(--text)">${esc(r.dateIn) || '—'}</strong></span>
-            <span>🔄 יצא: <strong style="color:var(--text)">${esc(r.dateOut) || (isOpen ? 'עדיין בתיקון' : '—')}</strong></span>
-          </div>
-        </div>`;
-      }).join('')}
-    `;
-  } catch(e) {
-    body.innerHTML = `<p style="color:var(--red);padding:16px">שגיאה: ${esc(e.message)}</p>`;
-  }
+// לחיצה על שם אופניים — מעבר לתחזוקה מסוננת לאותם אופניים + כל המצבים
+function openBikeHistory(bikeId, bikeName) {
+  // עבור לסקשן תחזוקה
+  showSection('maintenance', document.querySelector('.nav-item[onclick*="maintenance"]'));
+  // אחרי טעינה — הגדר פילטרים
+  loadMaintenance().then(() => {
+    const bikeSel   = document.getElementById('maint-filter-bike');
+    const statusSel = document.getElementById('maint-filter-status');
+    if (bikeSel)   bikeSel.value   = bikeId;
+    if (statusSel) statusSel.value = '';       // כל המצבים
+    applyMaintenanceFilter();
+  });
 }
 
 function renderMaintenanceTable(records) {
