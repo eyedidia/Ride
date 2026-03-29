@@ -1022,6 +1022,12 @@ tbody td {
       צי אופניים
     </button>
     <button class="nav-item"
+            onclick="showSection('maintenance',this)"
+            aria-label="היסטוריית תחזוקה">
+      <span class="nav-icon" aria-hidden="true">🔧</span>
+      תחזוקה
+    </button>
+    <button class="nav-item"
             onclick="showSection('exams',this)"
             aria-label="בדיקות ארגומטריות">
       <span class="nav-icon" aria-hidden="true">🩺</span>
@@ -1349,7 +1355,37 @@ tbody td {
       </div>
     </section>
 
-    <!-- ── EXAMS ── -->
+    <!-- ── MAINTENANCE ── -->
+    <section id="section-maintenance" aria-labelledby="maint-heading" hidden>
+      <h1 id="maint-heading" class="sr-only">תחזוקת אופניים</h1>
+      <div class="panel">
+        <div class="panel-header">
+          <h2 class="panel-title"><span aria-hidden="true">🔧</span> היסטוריית תחזוקה</h2>
+          <div class="filter-bar">
+            <label for="maint-filter-bike" class="sr-only">סנן לפי אופניים</label>
+            <select id="maint-filter-bike" class="select" aria-label="סנן לפי אופניים" onchange="loadMaintenance()">
+              <option value="">כל האופניים</option>
+            </select>
+          </div>
+        </div>
+        <div class="panel-body table-wrap">
+          <table aria-label="היסטוריית תחזוקת אופניים">
+            <thead>
+              <tr>
+                <th scope="col">אופניים</th>
+                <th scope="col">סוג תקלה</th>
+                <th scope="col">תאריך השבתה</th>
+                <th scope="col">תאריך חזרה</th>
+                <th scope="col">סטטוס</th>
+              </tr>
+            </thead>
+            <tbody id="maintenanceBody">
+              <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section> -->
     <section id="section-exams" aria-labelledby="exams-heading" hidden>
       <h1 id="exams-heading" class="sr-only">בדיקות ארגומטריות</h1>
       <div class="panel">
@@ -1718,6 +1754,47 @@ tbody td {
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modalEditBike')">ביטול</button>
       <button class="btn btn-primary" onclick="submitEditBike()">💾 שמור</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════
+     MODAL — השבתת אופניים
+═══════════════════════════ -->
+<div class="modal-backdrop" id="modalDisableBike" role="dialog" aria-modal="true"
+     aria-labelledby="modal-title-disable" onclick="backdropClose(event,'modalDisableBike')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-title-disable">השבתת אופניים</h2>
+      <button class="modal-close" onclick="closeModal('modalDisableBike')" aria-label="סגור">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="disable-bike-id">
+      <div style="background:rgba(255,90,90,0.08);border:1px solid rgba(255,90,90,0.3);
+                  border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:0.85rem;color:var(--red)">
+        ⚠️ האופניים יועברו למצב מושבת ותיפתח רשומת תחזוקה
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="disable-bike-name">אופניים</label>
+        <input type="text" id="disable-bike-name" class="input" disabled
+               style="opacity:0.6;background:var(--surface2)">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="disable-fault">סוג תקלה / סיבת השבתה *</label>
+        <textarea id="disable-fault" class="input"
+                  style="height:90px;resize:vertical;padding-top:10px"
+                  placeholder="תאר את התקלה או סיבת ההשבתה…"
+                  required aria-required="true"></textarea>
+      </div>
+      <div id="disable-bike-error" role="alert"
+           style="display:none;background:rgba(255,90,90,0.1);border:1px solid var(--red);
+                  border-radius:8px;padding:10px 14px;font-size:0.85rem;color:var(--red);margin-top:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalDisableBike')">ביטול</button>
+      <button class="btn btn-danger" onclick="submitDisableBike()" style="border:none;background:var(--red);color:#fff">
+        🔒 השבת אופניים
+      </button>
     </div>
   </div>
 </div>
@@ -2503,15 +2580,104 @@ async function loadRegistrations(eventId) {
   }
 }
 
-async function toggleBike(bikeId, currentStatus) {
-  const newStatus = currentStatus === 'תקין' ? 'מושבת' : 'תקין';
-  try {
-    await callAPI('updateBikeStatus', { bikeId, status: newStatus });
-    await loadBikes();
-    showToast(`אופניים ${bikeId} עודכן ל${newStatus} ✅`, 'success');
-  } catch(e) {
-    showToast('שגיאה בעדכון אופניים: ' + e.message, 'error');
+// ─── DISABLE / ENABLE BIKE ─────────────────────────
+function toggleBike(bikeId, currentStatus) {
+  if (currentStatus === 'תקין') {
+    // פתח מודל השבתה
+    const bike = STATE.bikes.find(b => b.id === bikeId);
+    document.getElementById('disable-bike-id').value   = bikeId;
+    document.getElementById('disable-bike-name').value = bike ? bike.name : bikeId;
+    document.getElementById('disable-fault').value     = '';
+    document.getElementById('disable-bike-error').style.display = 'none';
+    openModal('modalDisableBike');
+  } else {
+    // הפעל מחדש — ישירות
+    enableBike(bikeId);
   }
+}
+
+async function submitDisableBike() {
+  const errEl  = document.getElementById('disable-bike-error');
+  errEl.style.display = 'none';
+  const bikeId = document.getElementById('disable-bike-id').value;
+  const fault  = document.getElementById('disable-fault').value.trim();
+  if (!fault) {
+    errEl.textContent = 'נא לתאר את סיבת ההשבתה';
+    errEl.style.display = 'block'; return;
+  }
+  try {
+    const bike = STATE.bikes.find(b => b.id === bikeId);
+    await callAPI('disableBike', { bikeId, bikeName: bike?.name || bikeId, fault });
+    closeModal('modalDisableBike');
+    showToast(`אופניים "${bike?.name || bikeId}" הושבתו 🔒`, 'success');
+    await loadBikes();
+    await loadMaintenance();
+  } catch(e) {
+    errEl.textContent = 'שגיאה: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+async function enableBike(bikeId) {
+  const bike = STATE.bikes.find(b => b.id === bikeId);
+  if (!confirm(`להפעיל מחדש את "${bike?.name || bikeId}"?`)) return;
+  try {
+    await callAPI('enableBike', { bikeId });
+    showToast(`אופניים "${bike?.name || bikeId}" הופעלו מחדש ✅`, 'success');
+    await loadBikes();
+    await loadMaintenance();
+  } catch(e) {
+    showToast('שגיאה: ' + e.message, 'error');
+  }
+}
+
+// ─── MAINTENANCE ───────────────────────────────────
+async function loadMaintenance() {
+  const bikeId = document.getElementById('maint-filter-bike')?.value || '';
+  const tbody  = document.getElementById('maintenanceBody');
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">טוען...</td></tr>`;
+  try {
+    const records = await apiGet('getMaintenance', bikeId ? { bikeId } : {});
+    renderMaintenanceTable(records);
+    // אכלוס פילטר אופניים
+    populateMaintenanceBikeFilter();
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--red)">שגיאה: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+function renderMaintenanceTable(records) {
+  const tbody = document.getElementById('maintenanceBody');
+  if (!records.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">אין רשומות תחזוקה</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = records.map(r => {
+    const isOpen  = r.status === 'בתיקון';
+    const stCls   = isOpen ? 'status-err' : 'status-ok';
+    const stLabel = isOpen ? '🔧 בתיקון' : '✅ תוקן';
+    return `<tr>
+      <td>
+        <div class="td-name">${esc(r.bikeName)}</div>
+        <div class="td-sub">${esc(r.bikeId)}</div>
+      </td>
+      <td style="max-width:220px;white-space:pre-wrap">${esc(r.fault)}</td>
+      <td>${esc(r.dateIn)  || '—'}</td>
+      <td>${esc(r.dateOut) || (isOpen ? '<span style="color:var(--orange)">בתיקון</span>' : '—')}</td>
+      <td><span class="status ${stCls}">${stLabel}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function populateMaintenanceBikeFilter() {
+  const sel = document.getElementById('maint-filter-bike');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">כל האופניים</option>' +
+    STATE.bikes.filter(b => b.id !== 'PRIVATE').map(b =>
+      `<option value="${esc(b.id)}" ${b.id === current ? 'selected' : ''}>${esc(b.name)}</option>`
+    ).join('');
 }
 
 function editRider(tid) {
@@ -2590,13 +2756,14 @@ function esc(str) {
 }
 
 // ─── NAV ───────────────────────────────────────────
-const sections = ['dashboard','riders','events','assignments','bikes','exams'];
+const sections = ['dashboard','riders','events','assignments','bikes','maintenance','exams'];
 const titles   = {
   dashboard:   ['סקירה כללית',   'ניהול קבוצת אופניים / סקירה כללית'],
   riders:      ['ניהול רוכבים',  'ניהול קבוצת אופניים / רוכבים'],
   events:      ['ניהול אירועים', 'ניהול קבוצת אופניים / אירועים'],
   assignments: ['שיבוצים',       'ניהול קבוצת אופניים / שיבוצים'],
   bikes:       ['צי אופניים',    'ניהול קבוצת אופניים / צי אופניים'],
+  maintenance: ['תחזוקה',        'ניהול קבוצת אופניים / תחזוקה'],
   exams:       ['בדיקות ארגומטריות','ניהול קבוצת אופניים / בדיקות'],
 };
 
@@ -2618,6 +2785,8 @@ function showSection(name, clickedBtn) {
   document.getElementById('main-content').focus();
   // סוגר תפריט במובייל תמיד
   closeSidebar();
+  // טעינה עצלה לתחזוקה
+  if (name === 'maintenance') loadMaintenance();
 }
 
 // ─── MOBILE SIDEBAR ────────────────────────────────
