@@ -1686,9 +1686,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     ]);
     updateDashboardStats();
     updateExamAlerts();
-    renderAllEventsTables(STATE.events);
     renderExamsTable(STATE.riders);
-    renderAssignmentsEventSelect(STATE.events);
+    // renderAllEventsTables נקרא כבר מתוך loadEvents
   } catch(e) {
     showToast('שגיאה בטעינת הנתונים: ' + e.message, 'error');
   } finally {
@@ -1717,12 +1716,9 @@ async function loadRiders() {
 async function loadEvents() {
   if (!API_URL) return;
   const all = await apiGet('getAllEvents');
-  // STATE.events = רק קרובים (לשיבוצים, dashboard)
   STATE.events = all.upcoming || [];
-  renderEventsTable(STATE.events);
   renderDashboardEvents(STATE.events);
   renderAssignmentsEventSelect(STATE.events);
-  // טבלאות מנהל — כולל עבר
   renderAllEventsTables(all);
 }
 
@@ -2448,8 +2444,7 @@ async function refreshAll() {
     updateDashboardStats();
     updateExamAlerts();
     renderExamsTable(STATE.riders);
-    renderAllEventsTables(STATE.events);
-    renderAssignmentsEventSelect(STATE.events);
+    // renderAllEventsTables + renderAssignmentsEventSelect נקראים מתוך loadEvents
     showToast('הנתונים עודכנו ✅', 'success');
   } catch(e) {
     showToast('שגיאה ברענון: ' + e.message, 'error');
