@@ -1179,14 +1179,14 @@ tbody td {
                      oninput="filterRiders(this.value)">
             </div>
             <label for="filter-style" class="sr-only">סנן לפי סגנון רכיבה</label>
-            <select id="filter-style" class="select" aria-label="סנן לפי סגנון רכיבה">
+            <select id="filter-style" class="select" aria-label="סנן לפי סגנון רכיבה" onchange="applyRidersFilter()">
               <option value="">כל הסגנונות</option>
               <option>קפטן</option>
               <option>סטוקר</option>
               <option>סינגל</option>
             </select>
             <label for="filter-exam" class="sr-only">סנן לפי סטטוס בדיקה</label>
-            <select id="filter-exam" class="select" aria-label="סנן לפי סטטוס בדיקה">
+            <select id="filter-exam" class="select" aria-label="סנן לפי סטטוס בדיקה" onchange="applyRidersFilter()">
               <option value="">כל הסטטוסים</option>
               <option>תקין</option>
               <option>פג תוקף</option>
@@ -1624,6 +1624,104 @@ tbody td {
   </div>
 </div>
 
+<!-- ═══════════════════════
+     MODAL — עריכת אירוע
+═══════════════════════════ -->
+<div class="modal-backdrop" id="modalEditEvent" role="dialog" aria-modal="true"
+     aria-labelledby="modal-title-edit-event" onclick="backdropClose(event,'modalEditEvent')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-title-edit-event">עריכת אירוע</h2>
+      <button class="modal-close" onclick="closeModal('modalEditEvent')" aria-label="סגור">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-event-id">
+      <div class="form-group">
+        <label class="form-label" for="edit-ev-desc">תיאור מסלול *</label>
+        <input type="text" id="edit-ev-desc" class="input" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="edit-ev-date">תאריך *</label>
+          <input type="date" id="edit-ev-date" class="input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-ev-time">שעת מפגש</label>
+          <input type="time" id="edit-ev-time" class="input">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="edit-ev-km">ק"מ</label>
+          <input type="number" id="edit-ev-km" class="input" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-ev-climb">עליות (מ')</label>
+          <input type="number" id="edit-ev-climb" class="input" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="edit-ev-meet">נקודת מפגש</label>
+        <input type="text" id="edit-ev-meet" class="input">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="edit-ev-captain">קפטן מוביל</label>
+        <select id="edit-ev-captain" class="select" style="width:100%">
+          <option value="">— בחר —</option>
+        </select>
+      </div>
+      <div id="edit-event-error" role="alert" style="display:none;background:rgba(255,90,90,0.1);
+           border:1px solid var(--red);border-radius:8px;padding:10px 14px;
+           font-size:0.85rem;color:var(--red);margin-top:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalEditEvent')">ביטול</button>
+      <button class="btn btn-primary" onclick="submitEditEvent()">💾 שמור שינויים</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════
+     MODAL — עריכת אופניים
+═══════════════════════════ -->
+<div class="modal-backdrop" id="modalEditBike" role="dialog" aria-modal="true"
+     aria-labelledby="modal-title-edit-bike" onclick="backdropClose(event,'modalEditBike')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-title-edit-bike">עריכת אופניים</h2>
+      <button class="modal-close" onclick="closeModal('modalEditBike')" aria-label="סגור">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-bike-id">
+      <div class="form-group">
+        <label class="form-label" for="edit-bike-name">שם / כינוי *</label>
+        <input type="text" id="edit-bike-name" class="input" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="edit-bike-frame">סוג שלדה *</label>
+          <select id="edit-bike-frame" class="select" style="width:100%">
+            <option>טנדם</option><option>סינגל</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-bike-drive">סוג הנעה *</label>
+          <select id="edit-bike-drive" class="select" style="width:100%">
+            <option>חשמלי</option><option>רגיל</option>
+          </select>
+        </div>
+      </div>
+      <div id="edit-bike-error" role="alert" style="display:none;background:rgba(255,90,90,0.1);
+           border:1px solid var(--red);border-radius:8px;padding:10px 14px;
+           font-size:0.85rem;color:var(--red);margin-top:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalEditBike')">ביטול</button>
+      <button class="btn btn-primary" onclick="submitEditBike()">💾 שמור</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast area -->
 <div class="toast-area" id="toastArea" aria-live="polite" aria-atomic="false"></div>
 
@@ -1716,7 +1814,8 @@ async function loadRiders() {
 async function loadEvents() {
   if (!API_URL) return;
   const all = await apiGet('getAllEvents');
-  STATE.events = all.upcoming || [];
+  STATE.events    = all.upcoming || [];
+  STATE.allEvents = all;
   renderDashboardEvents(STATE.events);
   renderAssignmentsEventSelect(STATE.events);
   renderAllEventsTables(all);
@@ -1822,7 +1921,7 @@ function renderBikesTable(bikes) {
   const tbody = document.querySelector('#section-bikes table tbody');
   if (!tbody) return;
   tbody.innerHTML = bikes.map(b => {
-    const isPrivate = b.id === 'PRIVATE';
+    const isPrivate   = b.id === 'PRIVATE';
     const statusClass = b.status === 'תקין' ? 'status-ok' : 'status-err';
     const statusLabel = b.status === 'תקין' ? '✅ תקין' : '🔧 מושבת';
     return `
@@ -1833,12 +1932,21 @@ function renderBikesTable(bikes) {
       <td>${esc(b.drive)}</td>
       <td><span class="status ${statusClass}" role="status">${isPrivate ? 'תמיד זמין' : statusLabel}</span></td>
       <td>
-        ${isPrivate ? '' : `
-          <button class="btn ${b.status === 'תקין' ? 'btn-ghost' : 'btn-primary'} btn-sm"
-                  aria-label="${b.status === 'תקין' ? 'השבת' : 'הפעל מחדש'} אופניים ${esc(b.name)}"
-                  onclick="toggleBike('${esc(b.id)}','${b.status}')">
-            ${b.status === 'תקין' ? 'השבת' : 'הפעל מחדש'}
-          </button>`}
+        <div class="row-actions">
+          ${isPrivate ? '' : `
+            <button class="icon-btn"
+                    aria-label="ערוך אופניים ${esc(b.name)}" title="עריכה"
+                    onclick="editBike('${esc(b.id)}')">✏️</button>
+            <button class="btn ${b.status === 'תקין' ? 'btn-ghost' : 'btn-primary'} btn-sm"
+                    aria-label="${b.status === 'תקין' ? 'השבת' : 'הפעל מחדש'} אופניים ${esc(b.name)}"
+                    onclick="toggleBike('${esc(b.id)}','${b.status}')">
+              ${b.status === 'תקין' ? 'השבת' : 'הפעל מחדש'}
+            </button>
+            <button class="icon-btn danger"
+                    aria-label="מחק אופניים ${esc(b.name)}" title="מחיקה"
+                    onclick="deleteBike('${esc(b.id)}','${esc(b.name)}')">🗑️</button>
+          `}
+        </div>
       </td>
     </tr>`;
   }).join('');
@@ -1997,7 +2105,9 @@ function renderAllEventsTables(all) {
       <td>${esc(e.captain)}</td>
       <td>
         <div class="row-actions">
-          <button class="icon-btn" aria-label="בטל אירוע ${esc(e.description)}" title="ביטול"
+          <button class="icon-btn" aria-label="ערוך אירוע ${esc(e.description)}" title="עריכה"
+                  onclick="editEvent('${esc(e.id)}')">✏️</button>
+          <button class="icon-btn danger" aria-label="בטל אירוע ${esc(e.description)}" title="ביטול"
                   onclick="cancelEvent('${esc(e.id)}','${esc(e.description)}')">🚫</button>
         </div>
       </td>
@@ -2670,21 +2780,137 @@ async function saveExamDate(tid, name) {
 
 // ─── FILTER RIDERS ─────────────────────────────────
 function filterRiders(query) {
-  if (STATE.riders.length) {
-    // סינון מהמצב השמור
-    const q = query.trim().toLowerCase();
-    const filtered = q ? STATE.riders.filter(r =>
+  applyRidersFilter();
+}
+
+function applyRidersFilter() {
+  const q     = (document.querySelector('#section-riders input[type="search"]')?.value || '').trim().toLowerCase();
+  const style = document.getElementById('filter-style')?.value || '';
+  const exam  = document.getElementById('filter-exam')?.value  || '';
+
+  const filtered = STATE.riders.filter(r => {
+    if (q && !(
       r.name.toLowerCase().includes(q) ||
       r.phone.includes(q) ||
       r.city.toLowerCase().includes(q) ||
       r.tid.includes(q)
-    ) : STATE.riders;
-    renderRidersTable(filtered);
-  } else {
-    // fallback — סינון HTML
-    const rows = document.querySelectorAll('#ridersBody tr');
-    const q = query.trim().toLowerCase();
-    rows.forEach(row => { row.hidden = q && !row.textContent.toLowerCase().includes(q); });
+    )) return false;
+    if (style && r.rideStyle !== style) return false;
+    if (exam) {
+      if (exam === 'תקין'     && !r.examStatus.includes('✅')) return false;
+      if (exam === 'פג תוקף' && !r.examStatus.includes('❌')) return false;
+      if (exam === 'אין בדיקה' && !r.examStatus.includes('אין')) return false;
+    }
+    return true;
+  });
+  renderRidersTable(filtered);
+}
+
+// ─── EDIT EVENT ────────────────────────────────────
+function editEvent(eventId) {
+  const ev = [...(STATE.events || []),
+              ...(STATE.allEvents?.past || []),
+              ...(STATE.allEvents?.cancelled || [])]
+    .find(e => e.id === eventId)
+    || STATE.events.find(e => e.id === eventId);
+
+  // חפש ב-allEvents אם קיים
+  let found = null;
+  if (STATE.allEvents) {
+    found = [...(STATE.allEvents.upcoming||[]),
+             ...(STATE.allEvents.past||[]),
+             ...(STATE.allEvents.cancelled||[])]
+      .find(e => e.id === eventId);
+  }
+  found = found || STATE.events.find(e => e.id === eventId);
+  if (!found) { showToast('אירוע לא נמצא', 'error'); return; }
+
+  document.getElementById('edit-event-id').value    = found.id;
+  document.getElementById('edit-ev-desc').value     = found.description;
+  document.getElementById('edit-ev-date').value     = found.date.split('/').reverse().join('-');
+  document.getElementById('edit-ev-time').value     = found.meetTime || '06:00';
+  document.getElementById('edit-ev-km').value       = found.km || 0;
+  document.getElementById('edit-ev-climb').value    = found.climb || 0;
+  document.getElementById('edit-ev-meet').value     = found.meetPoint || '';
+  document.getElementById('edit-event-error').style.display = 'none';
+
+  const sel = document.getElementById('edit-ev-captain');
+  sel.innerHTML = '<option value="">— בחר —</option>' +
+    STATE.riders.filter(r => r.rideStyle === 'קפטן' || r.permission === 'מנהל')
+      .map(r => `<option value="${esc(r.name)}" ${r.name === found.captain ? 'selected' : ''}>${esc(r.name)}</option>`).join('');
+
+  openModal('modalEditEvent');
+}
+
+async function submitEditEvent() {
+  const errEl = document.getElementById('edit-event-error');
+  errEl.style.display = 'none';
+  const eventId = document.getElementById('edit-event-id').value;
+  const desc    = document.getElementById('edit-ev-desc').value.trim();
+  const date    = document.getElementById('edit-ev-date').value;
+  if (!desc || !date) {
+    errEl.textContent = 'נא למלא תיאור ותאריך';
+    errEl.style.display = 'block'; return;
+  }
+  try {
+    await callAPI('updateEvent', {
+      eventId,
+      description: desc,
+      date,
+      km:        Number(document.getElementById('edit-ev-km').value)    || 0,
+      climb:     Number(document.getElementById('edit-ev-climb').value) || 0,
+      meetPoint: document.getElementById('edit-ev-meet').value.trim(),
+      meetTime:  document.getElementById('edit-ev-time').value,
+      captain:   document.getElementById('edit-ev-captain').value,
+    });
+    closeModal('modalEditEvent');
+    showToast(`אירוע "${desc}" עודכן ✅`, 'success');
+    await loadEvents();
+  } catch(e) {
+    errEl.textContent = 'שגיאה: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+// ─── EDIT / DELETE BIKE ────────────────────────────
+function editBike(bikeId) {
+  const b = STATE.bikes.find(x => x.id === bikeId);
+  if (!b) { showToast('אופניים לא נמצאו', 'error'); return; }
+  document.getElementById('edit-bike-id').value     = b.id;
+  document.getElementById('edit-bike-name').value   = b.name;
+  document.getElementById('edit-bike-frame').value  = b.frame;
+  document.getElementById('edit-bike-drive').value  = b.drive;
+  document.getElementById('edit-bike-error').style.display = 'none';
+  openModal('modalEditBike');
+}
+
+async function submitEditBike() {
+  const errEl = document.getElementById('edit-bike-error');
+  errEl.style.display = 'none';
+  const bikeId = document.getElementById('edit-bike-id').value;
+  const name   = document.getElementById('edit-bike-name').value.trim();
+  const frame  = document.getElementById('edit-bike-frame').value;
+  const drive  = document.getElementById('edit-bike-drive').value;
+  if (!name) { errEl.textContent = 'נא למלא שם'; errEl.style.display = 'block'; return; }
+  try {
+    await callAPI('updateBike', { bikeId, name, frame, drive });
+    closeModal('modalEditBike');
+    showToast(`אופניים "${name}" עודכנו ✅`, 'success');
+    await loadBikes();
+  } catch(e) {
+    errEl.textContent = 'שגיאה: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+async function deleteBike(bikeId, name) {
+  if (!confirm(`למחוק את האופניים "${name}"?`)) return;
+  try {
+    await callAPI('deleteBike', { bikeId });
+    showToast(`אופניים "${name}" נמחקו`, 'success');
+    await loadBikes();
+  } catch(e) {
+    showToast('שגיאה: ' + e.message, 'error');
   }
 }
 
