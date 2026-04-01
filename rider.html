@@ -609,7 +609,7 @@ body::before {
     </button>
     <button class="btn-logout"
             onclick="logout()"
-            aria-label="התנתק מהמערכת">
+            aria-label="התנתקות מהמערכת">
       יציאה
     </button>
   </div>
@@ -623,7 +623,8 @@ body::before {
        class="exam-banner"
        role="alert"
        style="display:none"
-       aria-live="polite">
+       aria-live="assertive"
+       aria-atomic="true">
     <span aria-hidden="true">⚠️</span>
     <span id="examBannerText"></span>
   </div>
@@ -646,7 +647,7 @@ body::before {
       <span id="regBlockedText"></span>
     </div>
 
-    <div id="eventsList" class="events-list" aria-live="polite" aria-busy="true">
+    <div id="eventsList" class="events-list" role="list" aria-live="polite" aria-busy="true" aria-label="רשימת רכיבות קרובות">
       <div class="skeleton"></div>
       <div class="skeleton"></div>
       <div class="skeleton" style="height:60px"></div>
@@ -660,7 +661,7 @@ body::before {
     </h1>
 
     <!-- כרטיסי סטטיסטיקה -->
-    <div id="statsCards" style="display:none">
+    <div id="statsCards" style="display:none" role="region" aria-label="סטטיסטיקות רכיבה">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
         <div class="stat-mini blue">
           <div class="stat-mini-val" id="stat-total">—</div>
@@ -719,16 +720,16 @@ body::before {
     </div>
 
     <!-- רשימת רכיבות -->
-    <div id="historyList" class="history-list" aria-live="polite" aria-busy="true">
+    <div id="historyList" class="history-list" role="list" aria-live="polite" aria-busy="true" aria-label="היסטוריית רכיבות">
       <div class="skeleton"></div>
       <div class="skeleton"></div>
     </div>
 
     <!-- דפדוף -->
     <div id="historyPager" class="pager" style="display:none" aria-label="דפדוף בהיסטוריה">
-      <button class="pager-btn" id="pagerPrev" onclick="changePage(-1)" aria-label="עמוד קודם">→</button>
+      <button class="pager-btn" id="pagerPrev" onclick="changePage(-1)" aria-label="הצג עמוד קודם">→</button>
       <span id="pagerInfo" class="pager-info"></span>
-      <button class="pager-btn" id="pagerNext" onclick="changePage(1)" aria-label="עמוד הבא">←</button>
+      <button class="pager-btn" id="pagerNext" onclick="changePage(1)" aria-label="הצג עמוד הבא">←</button>
     </div>
   </section>
 
@@ -746,13 +747,16 @@ body::before {
              class="input"
              id="phoneSearch"
              placeholder="חיפוש לפי שם או עיר…"
-             aria-label="חפש איש קשר"
+             aria-label="חיפוש איש קשר לפי שם או עיר"
+             aria-controls="contactList"
              oninput="filterContacts(this.value)">
     </div>
     <div id="contactList"
          class="contact-list"
+         role="list"
          aria-live="polite"
-         aria-busy="true">
+         aria-busy="true"
+         aria-label="רשימת אנשי קשר">
       <div class="skeleton" style="height:60px"></div>
       <div class="skeleton" style="height:60px"></div>
       <div class="skeleton" style="height:60px"></div>
@@ -762,7 +766,7 @@ body::before {
 </main>
 
 <!-- ─── BOTTOM NAV ─────────────────────── -->
-<nav class="bottom-nav" aria-label="ניווט תחתון">
+<nav class="bottom-nav" role="navigation" aria-label="ניווט תחתון">
   <button class="nav-btn active"
           id="nav-events"
           onclick="switchTab('events')"
@@ -791,7 +795,7 @@ body::before {
 <div id="modalEventDetails"
      style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);
             z-index:500;align-items:flex-end;justify-content:center;padding:0"
-     role="dialog" aria-modal="true" aria-labelledby="modal-event-title"
+     role="dialog" aria-modal="true" aria-labelledby="modal-event-title" aria-describedby="modalEventBody"
      onclick="if(event.target===this)closeEventModal()">
   <div style="background:var(--surface);border-radius:20px 20px 0 0;
               width:100%;max-width:520px;max-height:85vh;overflow-y:auto;
@@ -804,14 +808,14 @@ body::before {
       <h2 id="modal-event-title" style="font-size:1.05rem;font-weight:800"></h2>
       <button onclick="closeEventModal()"
               style="background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;padding:4px"
-              aria-label="סגור">✕</button>
+              aria-label="סגור חלון נרשמים לאירוע">✕</button>
     </div>
     <div id="modalEventBody" style="padding:16px 20px 24px"></div>
   </div>
 </div>
 
 <!-- Toast -->
-<div class="toast-area" id="toastArea" aria-live="polite" aria-atomic="false"></div>
+<div class="toast-area" id="toastArea" role="log" aria-live="polite" aria-atomic="true" aria-label="הודעות מערכת"></div>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec";

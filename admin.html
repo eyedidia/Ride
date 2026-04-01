@@ -873,46 +873,6 @@ tbody td {
     max-width: 280px;
   }
 
-  /* בדיקות ארגומטריות — כרטיסים במובייל */
-  #examsBody thead { display: none; }
-  #examsBody tr {
-    display: block;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    margin-bottom: 10px;
-    padding: 12px 14px;
-  }
-  #examsBody td {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border: none;
-    padding: 4px 0;
-    font-size: 0.82rem;
-  }
-  #examsBody td[data-label]::before {
-    content: attr(data-label) ": ";
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    font-weight: 600;
-    flex-shrink: 0;
-    margin-left: 8px;
-  }
-  #examsBody .exam-update {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 6px;
-    width: 100%;
-    padding-top: 8px;
-    margin-top: 4px;
-    border-top: 1px solid var(--border);
-  }
-  #examsBody td:last-child { display: block; }
-  #examsBody td:last-child::before { display: none; }
-  #examsBody .input-inline { width: 100%; }
-  #examsBody .exam-update .btn { width: 100%; justify-content: center; }
-
   /* צי אופניים — כרטיסים */
   #bikesBody thead { display: none !important; }
   #section-bikes table thead { display: none; }
@@ -1032,7 +992,7 @@ tbody td {
             aria-label="בדיקות ארגומטריות">
       <span class="nav-icon" aria-hidden="true">🩺</span>
       בדיקות ארגומטריות
-      <span class="badge" id="examBadge" aria-label="רוכבים דורשים תשומת לב">—</span>
+      <span class="badge" id="examBadge" role="status" aria-label="מספר רוכבים עם בדיקה שפגה תוקף">—</span>
     </button>
   </div>
 
@@ -1057,7 +1017,7 @@ tbody td {
   </div>
 
   <div class="sidebar-footer">
-    <div class="user-card" role="status" aria-label="משתמש מחובר: יוסי כהן, מנהל מערכת">
+    <div class="user-card" role="region" aria-label="משתמש מחובר: יוסי כהן, מנהל מערכת">
       <div class="user-avatar" aria-hidden="true">יכ</div>
       <div>
         <div class="user-name">יוסי כהן</div>
@@ -1092,7 +1052,7 @@ tbody td {
   <main class="content" id="main-content" tabindex="-1">
 
     <!-- ── DASHBOARD ── -->
-    <section id="section-dashboard" aria-labelledby="dash-heading">
+    <section id="section-dashboard" aria-labelledby="dash-heading" aria-live="off">
       <h1 id="dash-heading" class="sr-only">סקירה כללית</h1>
 
       <!-- Stats — מתמלאים מה-API -->
@@ -1214,7 +1174,7 @@ tbody td {
                 <th scope="col"><span class="sr-only">פעולות</span></th>
               </tr>
             </thead>
-            <tbody id="ridersBody">
+            <tbody id="ridersBody" aria-live="polite" aria-label="רשימת רוכבים">
               <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</td></tr>
             </tbody>
           </table>
@@ -1249,7 +1209,7 @@ tbody td {
                   <th scope="col">קפטן</th>
                   <th scope="col"><span class="sr-only">פעולות</span></th>
                 </tr></thead>
-                <tbody id="eventsUpcomingBody">
+                <tbody id="eventsUpcomingBody" aria-live="polite" aria-label="אירועים קרובים">
                   <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</td></tr>
                 </tbody>
               </table>
@@ -1385,7 +1345,7 @@ tbody td {
                 <th scope="col">סטטוס</th>
               </tr>
             </thead>
-            <tbody id="maintenanceBody">
+            <tbody id="maintenanceBody" aria-live="polite" aria-label="רשומות תחזוקה">
               <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</td></tr>
             </tbody>
           </table>
@@ -1398,21 +1358,10 @@ tbody td {
         <div class="panel-header">
           <h2 class="panel-title"><span aria-hidden="true">🩺</span> מעקב בדיקות ארגומטריות</h2>
         </div>
-        <div class="panel-body table-wrap">
-          <table aria-label="סטטוס בדיקות ארגומטריות לכל הרוכבים">
-            <thead>
-              <tr>
-                <th scope="col">שם</th>
-                <th scope="col">תאריך בדיקה</th>
-                <th scope="col">תוקף עד</th>
-                <th scope="col">סטטוס</th>
-                <th scope="col">עדכון</th>
-              </tr>
-            </thead>
-            <tbody id="examsBody">
-              <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</td></tr>
-            </tbody>
-          </table>
+        <div class="panel-body" style="padding:12px 16px">
+          <div id="examsBody">
+            <div style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</div>
+          </div>
         </div>
       </div>
     </section>
@@ -1424,11 +1373,11 @@ tbody td {
      MODAL — הוספת אירוע
 ═══════════════════════════ -->
 <div class="modal-backdrop" id="modalAddEvent" role="dialog" aria-modal="true"
-     aria-labelledby="modal-title-event" onclick="backdropClose(event,'modalAddEvent')">
+     aria-labelledby="modal-title-event" aria-describedby="add-event-error" onclick="backdropClose(event,'modalAddEvent')">
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-title-event">אירוע חדש</h2>
-      <button class="modal-close" onclick="closeModal('modalAddEvent')" aria-label="סגור">✕</button>
+      <button class="modal-close" onclick="closeModal('modalAddEvent')" aria-label="סגור חלון יצירת אירוע">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
@@ -1484,7 +1433,7 @@ tbody td {
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-title-bike">הוספת אופניים לצי</h2>
-      <button class="modal-close" onclick="closeModal('modalAddBike')" aria-label="סגור">✕</button>
+      <button class="modal-close" onclick="closeModal('modalAddBike')" aria-label="סגור חלון הוספת אופניים">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
@@ -1494,7 +1443,7 @@ tbody td {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="bike-new-frame">סוג שלדה *</label>
-          <select id="bike-new-frame" class="select" style="width:100%" required aria-required="true">
+          <select id="bike-new-frame" class="select" style="width:100%" required aria-required="true" aria-label="סוג שלדה">
             <option value="">— בחר —</option>
             <option>טנדם</option>
             <option>סינגל</option>
@@ -1502,7 +1451,7 @@ tbody td {
         </div>
         <div class="form-group">
           <label class="form-label" for="bike-new-drive">סוג הנעה *</label>
-          <select id="bike-new-drive" class="select" style="width:100%" required aria-required="true">
+          <select id="bike-new-drive" class="select" style="width:100%" required aria-required="true" aria-label="סוג הנעה">
             <option value="">— בחר —</option>
             <option>חשמלי</option>
             <option>רגיל</option>
@@ -1524,11 +1473,11 @@ tbody td {
      MODAL — עריכת רוכב
 ═══════════════════════════ -->
 <div class="modal-backdrop" id="modalEditRider" role="dialog" aria-modal="true"
-     aria-labelledby="modal-title-edit" onclick="backdropClose(event,'modalEditRider')">
+     aria-labelledby="modal-title-edit" aria-describedby="edit-rider-error" onclick="backdropClose(event,'modalEditRider')">
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-title-edit">עריכת פרטי רוכב</h2>
-      <button class="modal-close" onclick="closeModal('modalEditRider')" aria-label="סגור">✕</button>
+      <button class="modal-close" onclick="closeModal('modalEditRider')" aria-label="סגור חלון עריכת רוכב">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="edit-tid">
@@ -1555,13 +1504,13 @@ tbody td {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="edit-style">סגנון רכיבה</label>
-          <select id="edit-style" class="select" style="width:100%">
+          <select id="edit-style" class="select" style="width:100%" aria-label="סגנון רכיבה">
             <option>קפטן</option><option>סטוקר</option><option>סינגל</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label" for="edit-perm">הרשאה</label>
-          <select id="edit-perm" class="select" style="width:100%">
+          <select id="edit-perm" class="select" style="width:100%" aria-label="הרשאת מערכת">
             <option>משתמש</option><option>מנהל</option>
           </select>
         </div>
@@ -1583,7 +1532,7 @@ tbody td {
 <div class="modal-backdrop" id="modalAddRider"
      role="dialog"
      aria-modal="true"
-     aria-labelledby="modal-title-add"
+     aria-labelledby="modal-title-add" aria-describedby="add-rider-error"
      onclick="backdropClose(event,'modalAddRider')">
   <div class="modal">
     <div class="modal-header">
@@ -1629,7 +1578,7 @@ tbody td {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="new-gender">מין *</label>
-          <select id="new-gender" class="select" style="width:100%" required aria-required="true">
+          <select id="new-gender" class="select" style="width:100%" required aria-required="true" aria-label="מין">
             <option value="">— בחר —</option>
             <option>זכר</option>
             <option>נקבה</option>
@@ -1637,7 +1586,7 @@ tbody td {
         </div>
         <div class="form-group">
           <label class="form-label" for="new-style">סגנון רכיבה</label>
-          <select id="new-style" class="select" style="width:100%">
+          <select id="new-style" class="select" style="width:100%" aria-label="סגנון רכיבה">
             <option>סינגל</option>
             <option>קפטן</option>
             <option>סטוקר</option>
@@ -1646,7 +1595,7 @@ tbody td {
       </div>
       <div class="form-group">
         <label class="form-label" for="new-perm">הרשאת מערכת</label>
-        <select id="new-perm" class="select" style="width:100%">
+        <select id="new-perm" class="select" style="width:100%" aria-label="הרשאת מערכת">
           <option>משתמש</option>
           <option>מנהל</option>
         </select>
@@ -1674,7 +1623,7 @@ tbody td {
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-title-edit-event">עריכת אירוע</h2>
-      <button class="modal-close" onclick="closeModal('modalEditEvent')" aria-label="סגור">✕</button>
+      <button class="modal-close" onclick="closeModal('modalEditEvent')" aria-label="סגור חלון עריכת אירוע">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="edit-event-id">
@@ -1708,7 +1657,7 @@ tbody td {
       </div>
       <div class="form-group">
         <label class="form-label" for="edit-ev-captain">קפטן מוביל</label>
-        <select id="edit-ev-captain" class="select" style="width:100%">
+        <select id="edit-ev-captain" class="select" style="width:100%" aria-label="קפטן מוביל">
           <option value="">— בחר —</option>
         </select>
       </div>
@@ -1731,7 +1680,7 @@ tbody td {
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-title-edit-bike">עריכת אופניים</h2>
-      <button class="modal-close" onclick="closeModal('modalEditBike')" aria-label="סגור">✕</button>
+      <button class="modal-close" onclick="closeModal('modalEditBike')" aria-label="סגור חלון עריכת אופניים">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="edit-bike-id">
@@ -1742,13 +1691,13 @@ tbody td {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="edit-bike-frame">סוג שלדה *</label>
-          <select id="edit-bike-frame" class="select" style="width:100%">
+          <select id="edit-bike-frame" class="select" style="width:100%" aria-label="סוג שלדה">
             <option>טנדם</option><option>סינגל</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label" for="edit-bike-drive">סוג הנעה *</label>
-          <select id="edit-bike-drive" class="select" style="width:100%">
+          <select id="edit-bike-drive" class="select" style="width:100%" aria-label="סוג הנעה">
             <option>חשמלי</option><option>רגיל</option>
           </select>
         </div>
@@ -1768,11 +1717,11 @@ tbody td {
      MODAL — השבתת אופניים
 ═══════════════════════════ -->
 <div class="modal-backdrop" id="modalDisableBike" role="dialog" aria-modal="true"
-     aria-labelledby="modal-title-disable" onclick="backdropClose(event,'modalDisableBike')">
+     aria-labelledby="modal-title-disable" aria-describedby="disable-bike-error" onclick="backdropClose(event,'modalDisableBike')">
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-title-disable">השבתת אופניים</h2>
-      <button class="modal-close" onclick="closeModal('modalDisableBike')" aria-label="סגור">✕</button>
+      <button class="modal-close" onclick="closeModal('modalDisableBike')" aria-label="סגור חלון השבתת אופניים">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="disable-bike-id">
@@ -1787,7 +1736,7 @@ tbody td {
       </div>
       <div class="form-group">
         <label class="form-label" for="disable-fault">סוג תקלה / סיבת השבתה *</label>
-        <textarea id="disable-fault" class="input"
+        <textarea id="disable-fault" aria-label="סוג תקלה וסיבת ההשבתה" class="input"
                   style="height:90px;resize:vertical;padding-top:10px"
                   placeholder="תאר את התקלה או סיבת ההשבתה…"
                   required aria-required="true"></textarea>
@@ -1806,7 +1755,7 @@ tbody td {
 </div>
 
 <!-- Toast area -->
-<div class="toast-area" id="toastArea" aria-live="polite" aria-atomic="false"></div>
+<div class="toast-area" id="toastArea" role="log" aria-live="polite" aria-atomic="true" aria-label="הודעות מערכת"></div>
 
 <!-- Visually hidden helper -->
 <style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>
@@ -2161,33 +2110,49 @@ function renderAssignmentsEventSelect(events) {
 
 // ─── RENDER EXAMS TABLE ────────────────────────────
 function renderExamsTable(riders) {
-  const tbody = document.getElementById('examsBody');
+  const container = document.getElementById('examsBody');
   if (!riders.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">אין רוכבים</td></tr>`;
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted)">אין רוכבים</div>`;
     return;
   }
-  tbody.innerHTML = riders.map(r => {
+  container.innerHTML = riders.map(r => {
     const cls = r.examStatus.includes('✅') ? 'status-ok'
               : r.examStatus.includes('❌') || r.examStatus.includes('אין') ? 'status-err' : 'status-warn';
-    const examVal = r.examDate
-      ? r.examDate.split('/').reverse().join('-') : '';
-    return `<tr>
-      <td data-label="שם" class="td-name">${esc(r.name)}</td>
-      <td data-label="תאריך בדיקה">${esc(r.examDate) || '—'}</td>
-      <td data-label="תוקף עד">${esc(r.examExpiry) || '—'}</td>
-      <td data-label="סטטוס"><span class="status ${cls}" role="status">${esc(r.examStatus)}</span></td>
-      <td>
-        <div class="exam-update">
-          <label for="upd-${esc(r.tid)}" class="sr-only">תאריך בדיקה ל${esc(r.name)}</label>
-          <input type="date" id="upd-${esc(r.tid)}" class="input-inline"
-                 value="${esc(examVal)}"
-                 aria-label="תאריך בדיקה ל${esc(r.name)}">
-          <button class="btn btn-primary btn-sm"
-                  aria-label="שמור תאריך בדיקה ל${esc(r.name)}"
-                  onclick="saveExamDate('${esc(r.tid)}','${esc(r.name)}')">שמור</button>
+    const examVal = r.examDate ? r.examDate.split('/').reverse().join('-') : '';
+    return `
+    <div style="background:var(--surface);border:1px solid var(--border);
+                border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px">
+      <!-- שם -->
+      <div style="font-weight:700;font-size:0.95rem;margin-bottom:10px;
+                  padding-bottom:8px;border-bottom:1px solid var(--border)">
+        ${esc(r.name)}
+      </div>
+      <!-- שורת נתונים -->
+      <div style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:12px;font-size:0.82rem">
+        <div>
+          <span style="color:var(--text-muted)">תאריך בדיקה: </span>
+          <strong>${esc(r.examDate) || '—'}</strong>
         </div>
-      </td>
-    </tr>`;
+        <div>
+          <span style="color:var(--text-muted)">תוקף עד: </span>
+          <strong>${esc(r.examExpiry) || '—'}</strong>
+        </div>
+        <div>
+          <span class="status ${cls}" role="status">${esc(r.examStatus)}</span>
+        </div>
+      </div>
+      <!-- עדכון תאריך -->
+      <div style="display:flex;gap:8px;align-items:center">
+        <label for="upd-${esc(r.tid)}" class="sr-only">תאריך בדיקה חדש ל${esc(r.name)}</label>
+        <input type="date" id="upd-${esc(r.tid)}" class="input-inline"
+               style="flex:1;min-width:0"
+               value="${esc(examVal)}"
+               aria-label="תאריך בדיקה ל${esc(r.name)}">
+        <button class="btn btn-primary btn-sm"
+                aria-label="שמור תאריך בדיקה ל${esc(r.name)}"
+                onclick="saveExamDate('${esc(r.tid)}','${esc(r.name)}')">שמור</button>
+      </div>
+    </div>`;
   }).join('');
 }
 
@@ -2791,8 +2756,9 @@ function showLoading(on) {
   if (!el) {
     el = document.createElement('div');
     el.id = 'loadingBar';
-    el.setAttribute('role', 'status');
+    el.setAttribute('role', 'progressbar');
     el.setAttribute('aria-label', 'טוען נתונים');
+    el.setAttribute('aria-valuetext', 'טוען...');
     el.style.cssText = `position:fixed;top:0;right:0;left:0;height:3px;background:var(--accent);
       z-index:9999;transition:opacity 0.3s;transform-origin:right;`;
     document.body.prepend(el);

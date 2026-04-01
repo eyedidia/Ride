@@ -249,7 +249,7 @@ body::before {
 <body>
 
 <main>
-  <div class="card" role="main">
+  <div class="card" role="main" aria-label="כניסה לאזור האישי של קבוצת האופניים">
 
     <!-- Logo -->
     <div class="logo-wrap">
@@ -264,7 +264,7 @@ body::before {
          role="alert"
          aria-live="assertive"
          aria-atomic="true"
-         style="display:none">
+         hidden>
       <span class="alert-icon" aria-hidden="true">❌</span>
       <span id="alertErrorText"></span>
     </div>
@@ -275,7 +275,7 @@ body::before {
          role="alert"
          aria-live="assertive"
          aria-atomic="true"
-         style="display:none">
+         hidden>
       <span class="alert-icon" aria-hidden="true">⚠️</span>
       <span>אין לך בדיקה ארגומטרית בתוקף. אנא פנה למנהל המערכת לעדכון התאריך.</span>
     </div>
@@ -284,6 +284,7 @@ body::before {
     <form id="loginForm"
           novalidate
           aria-label="טופס כניסה למערכת"
+          aria-describedby="alertError alertBlocked"
           onsubmit="handleLogin(event)">
 
       <div class="form-group">
@@ -328,9 +329,10 @@ body::before {
       <button type="submit"
               id="loginBtn"
               class="btn-login"
-              aria-label="כניסה למערכת">
+              aria-label="כניסה למערכת"
+              aria-describedby="phone-hint name-hint">
         <span class="btn-text">כניסה למערכת ←</span>
-        <span class="spinner" aria-hidden="true"></span>
+        <span class="spinner" aria-hidden="true" role="presentation"></span>
       </button>
 
     </form>
@@ -372,8 +374,9 @@ async function handleLogin(e) {
     if (!data.success) { showError(data.error || 'פרטי הכניסה שגויים'); return; }
 
     const user = data.data;
+    // נקה session ישן לפני שמירת המשתמש החדש
+    sessionStorage.clear();
     sessionStorage.setItem('user', JSON.stringify(user));
-    // כולם נכנסים — חסימת הרשמה נעשית בדף הרכיבות עצמו
     window.location.href = 'rider.html';
 
   } catch (err) {
