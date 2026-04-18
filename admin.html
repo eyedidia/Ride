@@ -1079,6 +1079,9 @@ tbody td {
         </div>
       </div>
 
+      <!-- התראות יום הולדת + בדיקות -->
+      <div id="adminNotificationsArea" aria-live="polite"></div>
+
       <!-- אירועים קרובים -->
       <div class="panel">
         <div class="panel-header">
@@ -1817,7 +1820,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateDashboardStats();
     updateExamAlerts();
     renderExamsTable(STATE.riders);
-    // renderAllEventsTables נקרא כבר מתוך loadEvents
+    renderAdminNotifications();  // ← התראות
   } catch(e) {
     showToast('שגיאה בטעינת הנתונים: ' + e.message, 'error');
   } finally {
@@ -2462,6 +2465,8 @@ async function cancelEvent(eventId, name) {
 async function submitAddEvent() {
   const errEl = document.getElementById('add-event-error');
   errEl.style.display = 'none';
+  const btn = document.querySelector('#modalAddEvent .btn-primary');
+  lockBtn(btn, 'שומר...');
   const date    = document.getElementById('ev-date').value;
   const desc    = document.getElementById('ev-desc').value.trim();
   const km      = document.getElementById('ev-km').value;
@@ -2481,12 +2486,14 @@ async function submitAddEvent() {
       meetPoint: meet, meetTime: time,
       captain, status: 'פעיל'
     });
+    unlockBtn(document.querySelector('#modalAddEvent .btn-primary'));
     closeModal('modalAddEvent');
     showToast(`אירוע "${desc}" נוצר (${result.id || ''}) ✅`, 'success');
     await loadEvents();
     renderAllEventsTables(STATE.events);
     renderAssignmentsEventSelect(STATE.events);
   } catch(e) {
+    unlockBtn(document.querySelector('#modalAddEvent .btn-primary'));
     errEl.textContent = 'שגיאה: ' + e.message;
     errEl.style.display = 'block'; errEl.focus();
   }
@@ -2496,6 +2503,8 @@ async function submitAddEvent() {
 async function submitAddBike() {
   const errEl = document.getElementById('add-bike-error');
   errEl.style.display = 'none';
+  const btn = document.querySelector('#modalAddBike .btn-primary');
+  lockBtn(btn, 'שומר...');
   const name  = document.getElementById('bike-new-name').value.trim();
   const frame = document.getElementById('bike-new-frame').value;
   const drive = document.getElementById('bike-new-drive').value;
@@ -2505,10 +2514,12 @@ async function submitAddBike() {
   }
   try {
     const result = await callAPI('addBike', { name, frame, drive, status: 'תקין' });
+    unlockBtn(document.querySelector('#modalAddBike .btn-primary'));
     closeModal('modalAddBike');
     showToast(`אופניים "${name}" נוספו לצי (${result.id || ''}) ✅`, 'success');
     await loadBikes();
   } catch(e) {
+    unlockBtn(document.querySelector('#modalAddBike .btn-primary'));
     errEl.textContent = 'שגיאה: ' + e.message;
     errEl.style.display = 'block'; errEl.focus();
   }
@@ -2534,6 +2545,8 @@ function editRider(tid) {
 async function submitEditRider() {
   const errEl = document.getElementById('edit-rider-error');
   errEl.style.display = 'none';
+  const btn = document.querySelector('#modalEditRider .btn-primary');
+  lockBtn(btn, 'שומר...');
   const tid   = document.getElementById('edit-tid').value;
   const name  = document.getElementById('edit-name').value.trim();
   const phone = document.getElementById('edit-phone').value.trim();
@@ -2551,12 +2564,14 @@ async function submitEditRider() {
       permission:document.getElementById('edit-perm').value,
     });
     if (examDate) await callAPI('updateExamDate', { tid, examDate });
+    unlockBtn(document.querySelector('#modalEditRider .btn-primary'));
     closeModal('modalEditRider');
     showToast(`פרטי ${name} עודכנו ✅`, 'success');
     await loadRiders();
     updateDashboardStats();
     updateExamAlerts();
   } catch(e) {
+    unlockBtn(document.querySelector('#modalEditRider .btn-primary'));
     errEl.textContent = 'שגיאה: ' + e.message;
     errEl.style.display = 'block'; errEl.focus();
   }
@@ -2589,6 +2604,8 @@ function toggleBike(bikeId, currentStatus) {
 async function submitDisableBike() {
   const errEl  = document.getElementById('disable-bike-error');
   errEl.style.display = 'none';
+  const btn = document.querySelector('#modalDisableBike .btn-danger');
+  lockBtn(btn, 'מעבד...');
   const bikeId = document.getElementById('disable-bike-id').value;
   const fault  = document.getElementById('disable-fault').value.trim();
   if (!fault) {
@@ -2598,11 +2615,13 @@ async function submitDisableBike() {
   try {
     const bike = STATE.bikes.find(b => b.id === bikeId);
     await callAPI('disableBike', { bikeId, bikeName: bike?.name || bikeId, fault });
+    unlockBtn(document.querySelector('#modalDisableBike .btn-danger'));
     closeModal('modalDisableBike');
     showToast(`אופניים "${bike?.name || bikeId}" הושבתו 🔒`, 'success');
     await loadBikes();
     await loadMaintenance();
   } catch(e) {
+    unlockBtn(document.querySelector('#modalDisableBike .btn-danger'));
     errEl.textContent = 'שגיאה: ' + e.message;
     errEl.style.display = 'block';
   }
@@ -2735,6 +2754,7 @@ async function refreshAll() {
     updateDashboardStats();
     updateExamAlerts();
     renderExamsTable(STATE.riders);
+    renderAdminNotifications();
     // renderAllEventsTables + renderAssignmentsEventSelect נקראים מתוך loadEvents
     showToast('הנתונים עודכנו ✅', 'success');
   } catch(e) {
@@ -2764,6 +2784,98 @@ function showLoading(on) {
     document.body.prepend(el);
   }
   el.style.opacity = on ? '1' : '0';
+}
+
+// ── התראות דשבורד ─────────────────────────────────
+function renderAdminNotifications() {
+  const area = document.getElementById('adminNotificationsArea');
+  if (!area) return;
+
+  const today  = new Date(); today.setHours(0,0,0,0);
+  const banners = [];
+
+  // ── ימי הולדת השבוע ──
+  const bdayRiders = STATE.riders.filter(r => {
+    if (!r.dob) return false;
+    const dob = new Date(r.dob.split('/').reverse().join('-'));
+    const bdayThisYear = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+    const diff = Math.round((bdayThisYear - today) / 86400000);
+    return diff >= -2 && diff <= 7;
+  }).map(r => {
+    const dob  = new Date(r.dob.split('/').reverse().join('-'));
+    const bday = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+    const diff = Math.round((bday - today) / 86400000);
+    return { ...r, bdayDiff: diff };
+  }).sort((a,b) => a.bdayDiff - b.bdayDiff);
+
+  if (bdayRiders.length) {
+    const names = bdayRiders.map(r => {
+      if (r.bdayDiff === 0)      return `🎂 ${esc(r.name)} (היום!)`;
+      if (r.bdayDiff < 0)        return `🎊 ${esc(r.name)} (לפני ${Math.abs(r.bdayDiff)} ימים)`;
+      return `🎈 ${esc(r.name)} (בעוד ${r.bdayDiff} ימים)`;
+    }).join(' &nbsp;·&nbsp; ');
+
+    banners.push(`
+      <div style="background:linear-gradient(135deg,rgba(255,179,71,0.12),rgba(255,90,90,0.08));
+                  border:1px solid rgba(255,179,71,0.35);border-radius:var(--radius);
+                  padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start"
+           role="status" aria-label="ימי הולדת קרובים">
+        <span style="font-size:1.4rem" aria-hidden="true">🎂</span>
+        <div>
+          <div style="font-weight:800;font-size:0.95rem;color:var(--orange);margin-bottom:4px">
+            ימי הולדת קרובים
+          </div>
+          <div style="font-size:0.85rem;color:var(--text)">${names}</div>
+        </div>
+      </div>`);
+  }
+
+  // ── בדיקות שפוגות תוקף תוך 30 יום ──
+  const expiringRiders = STATE.riders.filter(r => {
+    if (!r.examExpiry) return false;
+    const exp  = new Date(r.examExpiry.split('/').reverse().join('-'));
+    const diff = Math.round((exp - today) / 86400000);
+    return diff > 0 && diff <= 30;
+  });
+
+  if (expiringRiders.length) {
+    banners.push(`
+      <div style="background:rgba(255,90,90,0.08);border:1px solid rgba(255,90,90,0.3);
+                  border-radius:var(--radius);padding:14px 18px;margin-bottom:16px;
+                  display:flex;gap:12px;align-items:flex-start"
+           role="alert" aria-label="בדיקות עומדות לפוג">
+        <span style="font-size:1.4rem" aria-hidden="true">🩺</span>
+        <div>
+          <div style="font-weight:800;font-size:0.95rem;color:var(--red);margin-bottom:4px">
+            ${expiringRiders.length} רוכבים עם בדיקה שפוגת תוקף תוך 30 יום
+          </div>
+          <div style="font-size:0.82rem;color:var(--text)">
+            ${expiringRiders.map(r => {
+              const exp  = new Date(r.examExpiry.split('/').reverse().join('-'));
+              const diff = Math.round((exp - today) / 86400000);
+              return `${esc(r.name)} (${diff} ימים)`;
+            }).join(' · ')}
+          </div>
+        </div>
+      </div>`);
+  }
+
+  area.innerHTML = banners.join('');
+}
+
+// ─── BUTTON LOCK — מניעת לחיצה כפולה ────────────
+function lockBtn(btnEl, loadingText = '...') {
+  if (!btnEl) return;
+  btnEl.disabled = true;
+  btnEl._origText = btnEl.innerHTML;
+  btnEl.innerHTML = `<span style="opacity:.7">${loadingText}</span>`;
+  btnEl.setAttribute('aria-busy', 'true');
+}
+function unlockBtn(btnEl) {
+  if (!btnEl) return;
+  btnEl.disabled = false;
+  btnEl.innerHTML = btnEl._origText || btnEl.innerHTML;
+  btnEl.removeAttribute('aria-busy');
 }
 
 // ─── UTILS ────────────────────────────────────────
@@ -2885,6 +2997,8 @@ function trapFocus(e) {
 async function submitAddRider() {
   const errEl = document.getElementById('add-rider-error');
   errEl.style.display = 'none';
+  const btn = document.querySelector('#modalAddRider .btn-primary');
+  lockBtn(btn, 'שומר...');
 
   const tid   = document.getElementById('new-tid').value.trim();
   const name  = document.getElementById('new-name').value.trim();
@@ -2916,11 +3030,13 @@ async function submitAddRider() {
       rideStyle:  document.getElementById('new-style').value,
       permission: document.getElementById('new-perm').value,
     });
+    unlockBtn(document.querySelector('#modalAddRider .btn-primary'));
     closeModal('modalAddRider');
     showToast(`רוכב ${name} נוסף בהצלחה ✅`, 'success');
     await loadRiders();
     updateDashboardStats();
   } catch(e) {
+    unlockBtn(document.querySelector('#modalAddRider .btn-primary'));
     errEl.textContent = 'שגיאה: ' + e.message;
     errEl.style.display = 'block';
     errEl.focus();
@@ -3030,6 +3146,8 @@ function editEvent(eventId) {
 async function submitEditEvent() {
   const errEl = document.getElementById('edit-event-error');
   errEl.style.display = 'none';
+  const btn = document.querySelector('#modalEditEvent .btn-primary');
+  lockBtn(btn, 'שומר...');
   const eventId = document.getElementById('edit-event-id').value;
   const desc    = document.getElementById('edit-ev-desc').value.trim();
   const date    = document.getElementById('edit-ev-date').value;
@@ -3048,10 +3166,12 @@ async function submitEditEvent() {
       meetTime:  document.getElementById('edit-ev-time').value,
       captain:   document.getElementById('edit-ev-captain').value,
     });
+    unlockBtn(document.querySelector('#modalEditEvent .btn-primary'));
     closeModal('modalEditEvent');
     showToast(`אירוע "${desc}" עודכן ✅`, 'success');
     await loadEvents();
   } catch(e) {
+    unlockBtn(document.querySelector('#modalEditEvent .btn-primary'));
     errEl.textContent = 'שגיאה: ' + e.message;
     errEl.style.display = 'block';
   }
@@ -3072,6 +3192,8 @@ function editBike(bikeId) {
 async function submitEditBike() {
   const errEl = document.getElementById('edit-bike-error');
   errEl.style.display = 'none';
+  const btn = document.querySelector('#modalEditBike .btn-primary');
+  lockBtn(btn, 'שומר...');
   const bikeId = document.getElementById('edit-bike-id').value;
   const name   = document.getElementById('edit-bike-name').value.trim();
   const frame  = document.getElementById('edit-bike-frame').value;
@@ -3079,10 +3201,12 @@ async function submitEditBike() {
   if (!name) { errEl.textContent = 'נא למלא שם'; errEl.style.display = 'block'; return; }
   try {
     await callAPI('updateBike', { bikeId, name, frame, drive });
+    unlockBtn(document.querySelector('#modalEditBike .btn-primary'));
     closeModal('modalEditBike');
     showToast(`אופניים "${name}" עודכנו ✅`, 'success');
     await loadBikes();
   } catch(e) {
+    unlockBtn(document.querySelector('#modalEditBike .btn-primary'));
     errEl.textContent = 'שגיאה: ' + e.message;
     errEl.style.display = 'block';
   }
