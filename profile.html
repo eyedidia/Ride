@@ -612,11 +612,25 @@ function formatDate(str) {
 
 function parseDateToInput(str) {
   if (!str) return '';
+  const s = String(str).trim();
+
   // Already YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
   // DD/MM/YYYY → YYYY-MM-DD
-  const m = str.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  const dmy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (dmy) return `${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`;
+
+  // Google Sheets JS Date string: "Mon Jan 01 1990 00:00:00 GMT+0200 (...)"
+  // or any string parseable by Date constructor
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    const y  = d.getFullYear();
+    const mo = String(d.getMonth() + 1).padStart(2,'0');
+    const dy = String(d.getDate()).padStart(2,'0');
+    return `${y}-${mo}-${dy}`;
+  }
+
   return '';
 }
 
