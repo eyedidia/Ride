@@ -437,31 +437,27 @@ function renderPage(r) {
     </div>
   </div>
 
-  <!-- שדות נעולים -->
+  <!-- פרטי חבר (תצוגה בלבד) -->
   <div class="section-card">
     <div class="section-header">
-      <span>🔒</span> פרטים שרק מנהל יכול לשנות
+      <span>📋</span> פרטי חבר
     </div>
     <div class="locked-grid">
       <div class="locked-item">
-        <div class="locked-label"><span class="lock-icon">🔒</span> שם מלא</div>
+        <div class="locked-label">שם מלא</div>
         <div class="locked-value">${esc(r.name)}</div>
       </div>
       <div class="locked-item">
-        <div class="locked-label"><span class="lock-icon">🔒</span> ת.ז.</div>
+        <div class="locked-label">ת.ז.</div>
         <div class="locked-value" style="direction:ltr;text-align:right">${esc(String(r.tid))}</div>
       </div>
       <div class="locked-item">
-        <div class="locked-label"><span class="lock-icon">🔒</span> סגנון רכיבה</div>
+        <div class="locked-label">סגנון רכיבה</div>
         <div class="locked-value">${esc(r.rideStyle || r.style || '—')}</div>
       </div>
       <div class="locked-item">
-        <div class="locked-label"><span class="lock-icon">🔒</span> הרשאת מערכת</div>
-        <div class="locked-value">${esc(r.permission || 'משתמש')}</div>
-      </div>
-      <div class="locked-item full-width">
-        <div class="locked-label"><span class="lock-icon">🔒</span> תאריך בדיקה ארגומטרית</div>
-        <div class="locked-value">${esc(examLabel)}${r.examStatus ? '  ' + r.examStatus.split(' ')[0] : ''}</div>
+        <div class="locked-label">🩺 בדיקה ארגומטרית</div>
+        <div class="locked-value">${esc(examLabel)}${r.examStatus ? '&nbsp;&nbsp;' + r.examStatus.split(' ')[0] : ''}</div>
       </div>
     </div>
   </div>
@@ -499,21 +495,11 @@ function renderPage(r) {
                style="direction:ltr;text-align:right">
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="fld-gender">⚧ מין</label>
-          <select id="fld-gender" class="select" aria-label="מין">
-            <option value="">— בחר —</option>
-            <option value="זכר"  ${genderVal === 'זכר'  ? 'selected' : ''}>זכר</option>
-            <option value="נקבה" ${genderVal === 'נקבה' ? 'selected' : ''}>נקבה</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="fld-dob">🎂 תאריך לידה</label>
-          <input type="date" id="fld-dob" class="input"
-                 value="${esc(dobForInput)}"
-                 aria-label="תאריך לידה">
-        </div>
+      <div class="form-group full">
+        <label class="form-label" for="fld-dob">🎂 תאריך לידה</label>
+        <input type="date" id="fld-dob" class="input"
+               value="${esc(dobForInput)}"
+               aria-label="תאריך לידה">
       </div>
 
       <div id="profileError" class="error-box" role="alert" aria-live="assertive"></div>
@@ -535,7 +521,6 @@ async function saveProfile() {
   const phone  = document.getElementById('fld-phone').value.trim();
   const city   = document.getElementById('fld-city').value.trim();
   const email  = document.getElementById('fld-email').value.trim();
-  const gender = document.getElementById('fld-gender').value;
   const dob    = document.getElementById('fld-dob').value;
 
   if (!phone) {
@@ -556,15 +541,14 @@ async function saveProfile() {
       phone,
       city,
       email,
-      gender,
       dob,
     });
 
     // עדכון session
-    const updated = { ...USER, phone, city, email, gender, dob };
+    const updated = { ...USER, phone, city, email, dob };
     sessionStorage.setItem('user', JSON.stringify(updated));
     USER = updated;
-    RIDER_DATA = { ...RIDER_DATA, phone, city, email, gender, dob };
+    RIDER_DATA = { ...RIDER_DATA, phone, city, email, dob };
 
     showToast('הפרטים עודכנו בהצלחה ✅', 'success');
     btn.textContent = '✅ נשמר!';
@@ -601,13 +585,21 @@ function esc(str) {
 }
 
 function formatDate(str) {
-  if (!str) return '—';
-  // DD/MM/YYYY → DD/MM/YYYY (already formatted)
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) return str;
-  // YYYY-MM-DD → DD/MM/YYYY
-  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
-  return str;
+  if (!str) return 'לא הוזן';
+  const s = String(str).trim();
+  // DD/MM/YYYY
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) return s;
+  // YYYY-MM-DD
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  // JS Date string or any parseable date
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    const day = String(d.getDate()).padStart(2,'0');
+    const mon = String(d.getMonth()+1).padStart(2,'0');
+    return `${day}/${mon}/${d.getFullYear()}`;
+  }
+  return 'לא הוזן';
 }
 
 function parseDateToInput(str) {
