@@ -1257,7 +1257,7 @@ function renderEvents(events, counts = {}) {
 
     // ── משפט אחד קריא לפרטי הרכיבה ──
     // role="text" מונע מ-VoiceOver לנווט לתוך האלמנט — הוא קורא את aria-label כולו כמשפט אחד
-    const metaLabel = `נקודת מפגש: ${ev.meetPoint}. מרחק: ${ev.km} קילומטר. עלייה: ${ev.climb} מטר. קפטן: ${ev.captain}.`;
+    const metaLabel = `נקודת מפגש: ${ev.meetPoint}. מרחק: ${ev.km} קילומטר. עלייה: ${ev.climb} מטר. קפטן למסלול: ${ev.captain}.`;
 
     // ── תיאור כפתורים לפי מצב ──
     const btnRegisteredLabel = `בטל הרשמה לרכיבה "${ev.description}" בתאריך ${formatDateHebrew(ev.date)}`;
