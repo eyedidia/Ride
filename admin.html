@@ -635,8 +635,11 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
               <tr>
                 <th scope="col">תאריך</th>
                 <th scope="col">מסלול</th>
-                <th scope="col">קילומטר</th>
-                <th scope="col">קפטן</th>
+                <th scope="col">
+                  <span aria-hidden="true">ק"מ</span>
+                  <span class="sr-only">קילומטר</span>
+                </th>
+                <th scope="col" class="hide-mobile">קפטן</th>
                 <th scope="col"><span class="sr-only">פעולות</span></th>
               </tr>
             </thead>
@@ -761,9 +764,15 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
                 <thead><tr>
                   <th scope="col">תאריך</th>
                   <th scope="col">מסלול</th>
-                  <th scope="col">קילומטר</th>
-                  <th scope="col">עלייה במטרים</th>
-                  <th scope="col">קפטן</th>
+                  <th scope="col">
+                    <span aria-hidden="true">ק"מ</span>
+                    <span class="sr-only">קילומטר</span>
+                  </th>
+                  <th scope="col" class="hide-mobile">
+                    <span aria-hidden="true">מ' עלייה</span>
+                    <span class="sr-only">מטרי עלייה</span>
+                  </th>
+                  <th scope="col" class="hide-mobile">קפטן</th>
                   <th scope="col"><span class="sr-only">פעולות</span></th>
                 </tr></thead>
                 <tbody id="eventsUpcomingBody" aria-live="polite" aria-label="אירועים קרובים">
@@ -778,8 +787,11 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
                 <thead><tr>
                   <th scope="col">תאריך</th>
                   <th scope="col">מסלול</th>
-                  <th scope="col">קילומטר</th>
-                  <th scope="col">קפטן</th>
+                  <th scope="col">
+                    <span aria-hidden="true">ק"מ</span>
+                    <span class="sr-only">קילומטר</span>
+                  </th>
+                  <th scope="col" class="hide-mobile">קפטן</th>
                 </tr></thead>
                 <tbody id="eventsPastBody">
                   <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">טוען...</td></tr>
@@ -1575,10 +1587,10 @@ function renderDashboardEvents(events) {
         </div>
       </td>
       <td>
-        <span aria-hidden="true">${esc(String(e.km))} ק"מ</span>
+        <span aria-hidden="true">${esc(String(e.km))}</span>
         <span class="sr-only">${esc(String(e.km))} קילומטר</span>
       </td>
-      <td>${esc(e.captain)}</td>
+      <td class="hide-mobile">${esc(e.captain)}</td>
       <td>
         <div class="row-actions">
           <button class="icon-btn"
@@ -1816,14 +1828,14 @@ function renderAllEventsTables(all) {
         </div>
       </td>
       <td>
-        <span aria-hidden="true">${esc(String(e.km))} ק"מ</span>
+        <span aria-hidden="true">${esc(String(e.km))}</span>
         <span class="sr-only">${esc(String(e.km))} קילומטר</span>
       </td>
-      <td>
-        <span aria-hidden="true">${esc(String(e.climb))} מ'</span>
+      <td class="hide-mobile">
+        <span aria-hidden="true">${esc(String(e.climb))}</span>
         <span class="sr-only">${esc(String(e.climb))} מטר עלייה</span>
       </td>
-      <td>${esc(e.captain)}</td>
+      <td class="hide-mobile">${esc(e.captain)}</td>
       <td>
         <div class="row-actions">
           <button class="icon-btn"
@@ -1850,7 +1862,7 @@ function renderAllEventsTables(all) {
         <span aria-hidden="true">${esc(String(e.km))} ק"מ</span>
         <span class="sr-only">${esc(String(e.km))} קילומטר</span>
       </td>
-      <td>${esc(e.captain)}</td>
+      <td class="hide-mobile">${esc(e.captain)}</td>
     </tr>`).join('')
   : `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">אין אירועים שעברו</td></tr>`;
 }
