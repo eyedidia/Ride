@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>האזור האישי שלי</title>
+<style>
+/* ─── TOKENS (same as rider.html) ───────── */
+:root {
+  --bg:        #0d0f14;
+  --surface:   #161a23;
+  --surface2:  #1e2330;
+  --border:    #2a3045;
+  --text:      #e8ecf4;
+  --muted:     #6b7a99;
+  --accent:    #4f7cff;
+  --green:     #2dd4a0;
+  --red:       #ff5a5a;
+  --yellow:    #ffce54;
+  --radius:    16px;
+  --radius-sm: 10px;
+  --font:      'Segoe UI', system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+/* ─── HEADER ─────────────────────────────── */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.back-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 38px; height: 38px;
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.back-btn:hover { background: var(--surface2); }
+
+.header-title {
+  font-size: 1rem;
+  font-weight: 700;
+  flex: 1;
+}
+
+/* ─── PAGE LAYOUT ───────────────────────── */
+.page {
+  padding: 20px 16px;
+  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+  max-width: 520px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ─── IDENTITY CARD ─────────────────────── */
+.identity-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.identity-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--green));
+}
+
+.big-avatar {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--green));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem;
+  font-weight: 800;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 20px rgba(79,124,255,0.3);
+}
+
+.identity-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.identity-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.chip-blue   { background: rgba(79,124,255,0.15); color: var(--accent); }
+.chip-green  { background: rgba(45,212,160,0.15); color: var(--green); }
+.chip-yellow { background: rgba(255,206,84,0.15); color: var(--yellow); }
+.chip-red    { background: rgba(255,90,90,0.15);  color: var(--red); }
+.chip-muted  { background: var(--surface2); color: var(--muted); }
+
+/* ─── LOCKED INFO SECTION ───────────────── */
+.section-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.section-header {
+  padding: 14px 18px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+.locked-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.locked-item {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+.locked-item:nth-child(odd) { border-left: none; }
+.locked-item:last-child, .locked-item:nth-last-child(2):nth-child(odd) {
+  border-bottom: none;
+}
+.locked-item.full-width {
+  grid-column: 1 / -1;
+  border-left: none;
+}
+
+.locked-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.lock-icon { font-size: 0.65rem; opacity: 0.7; }
+
+.locked-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ─── EDITABLE FORM ─────────────────────── */
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.form-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 380px) {
+  .form-row { grid-template-columns: 1fr; }
+  .locked-grid { grid-template-columns: 1fr; }
+  .locked-item { border-left: none !important; }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-group.full { grid-column: 1 / -1; }
+
+.form-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.input, .select {
+  width: 100%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.95rem;
+  padding: 12px 14px;
+  min-height: 48px;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.input:focus, .select:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(79,124,255,0.05);
+}
+.input::placeholder { color: var(--muted); }
+.select option { background: var(--surface2); }
+
+/* date input color fix for iOS */
+input[type="date"] { color-scheme: dark; }
+
+/* ─── SAVE BUTTON ────────────────────────── */
+.btn-save {
+  width: 100%;
+  background: linear-gradient(135deg, var(--accent), #6b93ff);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 15px;
+  min-height: 52px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  box-shadow: 0 4px 16px rgba(79,124,255,0.3);
+  letter-spacing: 0.3px;
+}
+.btn-save:hover { opacity: 0.92; }
+.btn-save:active { transform: scale(0.98); }
+.btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ─── ERROR BOX ─────────────────────────── */
+.error-box {
+  display: none;
+  background: rgba(255,90,90,0.1);
+  border: 1px solid var(--red);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  color: var(--red);
+}
+
+/* ─── TOAST ─────────────────────────────── */
+#toastArea {
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+  pointer-events: none;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+}
+.toast {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 10px 20px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  animation: toastIn 0.3s ease;
+  white-space: nowrap;
+}
+.toast.success { border-color: var(--green); color: var(--green); }
+.toast.error   { border-color: var(--red);   color: var(--red);   }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── LOADING SKELETON ──────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ─── PAGE ENTER ────────────────────────── */
+.page > * {
+  animation: fadeUp 0.35s ease both;
+}
+.page > *:nth-child(2) { animation-delay: 0.05s; }
+.page > *:nth-child(3) { animation-delay: 0.10s; }
+.page > *:nth-child(4) { animation-delay: 0.15s; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ─────────────────────────── -->
+<header class="app-header">
+  <button class="back-btn" onclick="history.back()" aria-label="חזרה">←</button>
+  <span class="header-title">⚙️ האזור האישי שלי</span>
+</header>
+
+<!-- ─── TOAST ───────────────────────────── -->
+<div id="toastArea" aria-live="assertive"></div>
+
+<!-- ─── MAIN ────────────────────────────── -->
+<main class="page" id="pageContent">
+
+  <!-- skeleton while loading -->
+  <div class="skeleton" style="height:180px" id="skeletonCard"></div>
+  <div class="skeleton" style="height:130px" id="skeletonLocked"></div>
+  <div class="skeleton" style="height:280px" id="skeletonForm"></div>
+
+</main>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec";
+
+// ── STATE ────────────────────────────────
+let USER = null;
+let RIDER_DATA = null;
+
+// ── BOOTSTRAP ───────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  const stored = sessionStorage.getItem('user');
+  if (!stored) { window.location.replace('login.html'); return; }
+  USER = JSON.parse(stored);
+
+  try {
+    // טוען נתונים עדכניים מהשרת
+    const riders = await apiGet('getAllRiders');
+    // נרמול TID לצורך השוואה
+    const myTid = String(USER.tid).replace(/^0+/, '');
+    RIDER_DATA = riders.find(r => String(r.tid).replace(/^0+/, '') === myTid);
+
+    if (!RIDER_DATA) throw new Error('לא נמצאו פרטים');
+    renderPage(RIDER_DATA);
+  } catch(e) {
+    showToast('שגיאה בטעינת הפרטים: ' + e.message, 'error');
+    // fallback לנתוני session
+    RIDER_DATA = USER;
+    renderPage(USER);
+  }
+});
+
+// ── RENDER ───────────────────────────────
+function renderPage(r) {
+  const initials = (r.name || '?').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+
+  // סטטוס בדיקה
+  const examOk    = r.examStatus && r.examStatus.includes('✅');
+  const examWarn  = r.examStatus && r.examStatus.includes('⚠️');
+  const examChipClass = examOk ? 'chip-green' : examWarn ? 'chip-yellow' : 'chip-red';
+  const examLabel = r.examDate ? formatDate(r.examDate) : 'לא הוזן';
+
+  // הרשאה
+  const isAdmin = r.permission === 'מנהל';
+
+  // מין — תצוגה
+  const genderVal = r.gender || '';
+
+  // תאריך לידה — המרה לפורמט input[type=date]
+  const dobForInput = parseDateToInput(r.dob || r.dateOfBirth || '');
+
+  document.getElementById('pageContent').innerHTML = `
+
+  <!-- כרטיס זהות -->
+  <div class="identity-card">
+    <div class="big-avatar">${esc(initials)}</div>
+    <div class="identity-name">${esc(r.name)}</div>
+    <div class="identity-chips">
+      <span class="chip chip-blue">🚴 ${esc(r.rideStyle || r.style || '—')}</span>
+      ${isAdmin
+        ? '<span class="chip chip-yellow">⭐ מנהל</span>'
+        : '<span class="chip chip-muted">👤 משתמש</span>'}
+      <span class="chip ${examChipClass}">${r.examStatus ? r.examStatus.split(' ')[0] : '❌'} בדיקה ארגומטרית</span>
+    </div>
+  </div>
+
+  <!-- שדות נעולים -->
+  <div class="section-card">
+    <div class="section-header">
+      <span>🔒</span> פרטים שרק מנהל יכול לשנות
+    </div>
+    <div class="locked-grid">
+      <div class="locked-item">
+        <div class="locked-label"><span class="lock-icon">🔒</span> שם מלא</div>
+        <div class="locked-value">${esc(r.name)}</div>
+      </div>
+      <div class="locked-item">
+        <div class="locked-label"><span class="lock-icon">🔒</span> ת.ז.</div>
+        <div class="locked-value" style="direction:ltr;text-align:right">${esc(String(r.tid))}</div>
+      </div>
+      <div class="locked-item">
+        <div class="locked-label"><span class="lock-icon">🔒</span> סגנון רכיבה</div>
+        <div class="locked-value">${esc(r.rideStyle || r.style || '—')}</div>
+      </div>
+      <div class="locked-item">
+        <div class="locked-label"><span class="lock-icon">🔒</span> הרשאת מערכת</div>
+        <div class="locked-value">${esc(r.permission || 'משתמש')}</div>
+      </div>
+      <div class="locked-item full-width">
+        <div class="locked-label"><span class="lock-icon">🔒</span> תאריך בדיקה ארגומטרית</div>
+        <div class="locked-value">${esc(examLabel)}${r.examStatus ? '  ' + r.examStatus.split(' ')[0] : ''}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- טופס עריכה -->
+  <div class="form-card">
+    <div class="section-header">
+      <span>✏️</span> פרטים שאפשר לעדכן
+    </div>
+    <div class="form-body">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="fld-phone">📱 טלפון</label>
+          <input type="tel" id="fld-phone" class="input"
+                 inputmode="tel" placeholder="050-1234567"
+                 value="${esc(r.phone || '')}"
+                 aria-label="טלפון">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fld-city">🏠 עיר מגורים</label>
+          <input type="text" id="fld-city" class="input"
+                 placeholder="תל אביב"
+                 value="${esc(r.city || '')}"
+                 aria-label="עיר מגורים">
+        </div>
+      </div>
+
+      <div class="form-group full">
+        <label class="form-label" for="fld-email">📧 דואר אלקטרוני</label>
+        <input type="email" id="fld-email" class="input"
+               inputmode="email" placeholder="name@email.com"
+               value="${esc(r.email || '')}"
+               aria-label="דואר אלקטרוני"
+               style="direction:ltr;text-align:right">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="fld-gender">⚧ מין</label>
+          <select id="fld-gender" class="select" aria-label="מין">
+            <option value="">— בחר —</option>
+            <option value="זכר"  ${genderVal === 'זכר'  ? 'selected' : ''}>זכר</option>
+            <option value="נקבה" ${genderVal === 'נקבה' ? 'selected' : ''}>נקבה</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fld-dob">🎂 תאריך לידה</label>
+          <input type="date" id="fld-dob" class="input"
+                 value="${esc(dobForInput)}"
+                 aria-label="תאריך לידה">
+        </div>
+      </div>
+
+      <div id="profileError" class="error-box" role="alert" aria-live="assertive"></div>
+
+      <button class="btn-save" id="saveBtn" onclick="saveProfile()">
+        💾 שמור שינויים
+      </button>
+
+    </div>
+  </div>
+  `;
+}
+
+// ── SAVE ─────────────────────────────────
+async function saveProfile() {
+  const errEl = document.getElementById('profileError');
+  errEl.style.display = 'none';
+
+  const phone  = document.getElementById('fld-phone').value.trim();
+  const city   = document.getElementById('fld-city').value.trim();
+  const email  = document.getElementById('fld-email').value.trim();
+  const gender = document.getElementById('fld-gender').value;
+  const dob    = document.getElementById('fld-dob').value;
+
+  if (!phone) {
+    errEl.textContent = 'נא להזין מספר טלפון';
+    errEl.style.display = 'block';
+    document.getElementById('fld-phone').focus();
+    return;
+  }
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ שומר...';
+
+  try {
+    // שולחים updateMyProfile כדי לעדכן רק שדות מותרים
+    await callAPI('updateMyProfile', {
+      tid:    String(RIDER_DATA.tid),
+      phone,
+      city,
+      email,
+      gender,
+      dob,
+    });
+
+    // עדכון session
+    const updated = { ...USER, phone, city, email, gender, dob };
+    sessionStorage.setItem('user', JSON.stringify(updated));
+    USER = updated;
+    RIDER_DATA = { ...RIDER_DATA, phone, city, email, gender, dob };
+
+    showToast('הפרטים עודכנו בהצלחה ✅', 'success');
+    btn.textContent = '✅ נשמר!';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '💾 שמור שינויים'; }, 2000);
+
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '💾 שמור שינויים';
+    errEl.textContent = 'שגיאה בשמירה: ' + e.message;
+    errEl.style.display = 'block';
+    errEl.focus();
+  }
+}
+
+// ── HELPERS ──────────────────────────────
+async function apiGet(action, params = {}) {
+  const qs  = new URLSearchParams({ action, ...params }).toString();
+  const res = await fetch(`${API_URL}?${qs}`);
+  const d   = await res.json();
+  if (!d.success) throw new Error(d.error);
+  return d.data;
+}
+
+async function callAPI(action, body = {}) {
+  const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
+  const res = await fetch(`${API_URL}?${qs}`);
+  const d   = await res.json();
+  if (!d.success) throw new Error(d.error);
+  return d.data;
+}
+
+function esc(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDate(str) {
+  if (!str) return '—';
+  // DD/MM/YYYY → DD/MM/YYYY (already formatted)
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) return str;
+  // YYYY-MM-DD → DD/MM/YYYY
+  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  return str;
+}
+
+function parseDateToInput(str) {
+  if (!str) return '';
+  // Already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  // DD/MM/YYYY → YYYY-MM-DD
+  const m = str.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  return '';
+}
+
+function showToast(message, type = 'success') {
+  const area  = document.getElementById('toastArea');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.setAttribute('role','status');
+  toast.innerHTML = `${type === 'success' ? '✅' : '❌'} ${message}`;
+  area.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+</script>
+</body>
+</html>
