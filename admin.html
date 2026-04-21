@@ -1456,8 +1456,27 @@ tbody td {
       <h1 id="exams-heading" class="sr-only">בדיקות ארגומטריות</h1>
       <div class="panel">
         <div class="panel-header">
-          <h2 class="panel-title"><span aria-hidden="true">🩺</span> מעקב בדיקות ארגומטריות</h2>
+           <h2 class="panel-title"><span aria-hidden="true">🩺</span> מעקב בדיקות ארגומטריות</h2>
+           <div class="filter-bar" style="margin-top:10px;flex-wrap:wrap">
+             <div class="search-wrap">
+               <span class="search-icon" aria-hidden="true">🔍</span>
+               <input type="search"
+                     id="exams-search"
+                     class="input"
+                     placeholder="חיפוש לפי שם…"
+                     aria-label="חפש רוכב בבדיקות"
+                     oninput="applyExamsFilter()">
+          </div>
+          <label for="exams-filter-status" class="sr-only">סנן לפי סטטוס בדיקה</label>
+          <select id="exams-filter-status" class="select" aria-label="סנן לפי סטטוס" onchange="applyExamsFilter()">
+            <option value="">כל הסטטוסים</option>
+            <option value="expired">❌ פג תוקף / אין בדיקה</option>
+            <option value="warn">⚠️ עומד לפוג</option>
+            <option value="ok">✅ תקין</option>
+          </select>
+          <span id="exams-count" style="font-size:0.8rem;color:var(--text-muted);align-self:center;white-space:nowrap"></span>
         </div>
+      </div>
         <div class="panel-body" style="padding:12px 16px">
           <div id="examsBody">
             <div style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</div>
@@ -3168,6 +3187,7 @@ async function saveExamDate(tid, name) {
     // רענון מהשרת — ממתינים שהנוסחאות ב-Sheets יתחשבו
     await new Promise(r => setTimeout(r, 800));
     await loadRiders();
+    applyExamsFilter();
     updateDashboardStats();
     updateExamAlerts();
     renderExamsTable(STATE.riders);
@@ -3176,6 +3196,34 @@ async function saveExamDate(tid, name) {
   }
 }
 
+// ─── FILTER EXAMS ──────────────────────────────────
+function applyExamsFilter() {
+  const q      = (document.getElementById('exams-search')?.value || '').trim().toLowerCase();
+  const status = document.getElementById('exams-filter-status')?.value || '';
+
+  const filtered = STATE.riders.filter(r => {
+    if (q && !r.name.toLowerCase().includes(q)) return false;
+    if (status === 'expired') {
+      if (!r.examStatus.includes('❌') && !r.examStatus.includes('אין')) return false;
+    } else if (status === 'warn') {
+      if (!r.examStatus.includes('⚠️')) return false;
+    } else if (status === 'ok') {
+      if (!r.examStatus.includes('✅')) return false;
+    }
+    return true;
+  });
+
+  // עדכון מונה
+  const countEl = document.getElementById('exams-count');
+  if (countEl) {
+    const total   = STATE.riders.length;
+    const shown   = filtered.length;
+    countEl.textContent = shown === total ? `${total} רוכבים` : `${shown} מתוך ${total}`;
+  }
+
+  renderExamsTable(STATE.riders);
+}   
+   
 // ─── FILTER RIDERS ─────────────────────────────────
 function filterRiders(query) {
   applyRidersFilter();
