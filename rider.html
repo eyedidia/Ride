@@ -1137,7 +1137,7 @@ function showPersonalNotifications() {
 // ══════════════════════════════════════════
 function renderHeader() {
   document.getElementById('headerName').textContent = user.name;
-  const roleLabel = { 'קפטן המסלול': 'רוכב קפטן', 'סטוקר': 'רוכב סטוקר', 'סינגל': 'רוכב סינגל' };
+  const roleLabel = { 'קפטן': 'רוכב קפטן', 'סטוקר': 'רוכב סטוקר', 'סינגל': 'רוכב סינגל' };
   const roleText = roleLabel[user.rideStyle] || user.rideStyle;
   document.getElementById('headerRole').textContent = roleText;
   const initials = user.name.trim().split(' ').map(w => w[0]).slice(0,2).join('');
