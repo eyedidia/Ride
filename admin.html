@@ -922,16 +922,67 @@ tbody td {
   /* Badge */
   .badge { margin-right: 4px; }
 
-  /* שיבוצים — ודא רוחב מלא */
-  #assignmentsContent,
-  #assignmentsContent .panel,
-  #assignmentsContent .panel-body,
-  #captainsBody,
+  /* ── שיבוצים — מובייל ── */
+  #section-assignments .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  #event-select-assign {
+    width: 100%;
+  }
+  #assignmentsContent {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #captainsBody {
+    padding: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+   
+  /* כל כרטיס — רוחב מלא, לא גולש */
   #captainsBody > div {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
     min-width: 0 !important;
+    margin-bottom: 10px !important;
+  }
+   
+  /* header של כרטיס — עמודה במובייל */
+  #captainsBody > div > div:first-child {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+   
+  /* select בכרטיס — רוחב מלא + iOS/Android fix */
+  #captainsBody .select,
+  #captainsBody select {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    font-size: 1rem !important;   /* מונע zoom אוטומטי ב-iOS */
+    min-height: 44px !important;  /* גודל touch מינימלי */
+  }
+   
+  /* כפתור שמור — גודל נגיש */
+  #captainsBody .btn-primary {
+    min-height: 48px;
+    font-size: 1rem;
+    justify-content: center;
+  }
+   
+  /* סטוקרים זמינים — wrap נקי */
+  #stokersList {
+    padding: 8px !important;
+    gap: 6px !important;
+  }
+  #stokersList > div {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 0.9rem;
+    padding: 10px 14px;
   }
 
   /* iOS Safari fix — כרטיסי שיבוצים */
