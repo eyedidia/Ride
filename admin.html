@@ -29,10 +29,14 @@
   --nav-w:       240px;
   --transition:  0.2s ease;
 }
-
+@media (max-width: 768px)
+   
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { font-size: 16px; scroll-behavior: smooth; }
+   /* מרווח גלילה לכותרת דביקה */
+html { scroll-padding-top: 72px; }
+.section { scroll-margin-top: 72px; }
 
 body {
   font-family: var(--font);
@@ -3012,6 +3016,7 @@ const titles   = {
 };
 
 function showSection(name, clickedBtn) {
+  window.scrollTo({ top: 0, behavior: 'instant' }); // ← הוסף שורה זו
   sections.forEach(s => {
     const el = document.getElementById('section-' + s);
     if (el) el.hidden = (s !== name);
