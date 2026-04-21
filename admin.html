@@ -785,8 +785,28 @@ tbody td {
 
   /* טפסים */
   .form-row  { grid-template-columns: 1fr; }
-  .filter-bar { flex-direction: column; align-items: stretch; }
   .search-wrap { min-width: unset; }
+  .filter-bar { flex-direction: column; align-items: stretch; }
+  
+  /* מונע את הדרופדאון של בחירת אירוע מלהרחיב את הדף */
+  #event-select-assign {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  #section-assignments .panel-header {
+    overflow: hidden;
+    min-width: 0;
+  }
+  
+  #section-assignments .filter-bar {
+    min-width: 0;
+    width: 100%;
+  }
 
   /* בדיקה ארגומטרית — טור */
   .exam-update {
