@@ -1935,7 +1935,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     ]);
     updateDashboardStats();
     updateExamAlerts();
-    renderExamsTable(STATE.riders);
+    applyExamsFilter();
     renderAdminNotifications();  // ← התראות
   } catch(e) {
     showToast('שגיאה בטעינת הנתונים: ' + e.message, 'error');
@@ -2869,7 +2869,7 @@ async function refreshAll() {
     await Promise.all([loadRiders(), loadEvents(), loadBikes()]);
     updateDashboardStats();
     updateExamAlerts();
-    renderExamsTable(STATE.riders);
+    applyExamsFilter();
     renderAdminNotifications();
     // renderAllEventsTables + renderAssignmentsEventSelect נקראים מתוך loadEvents
     showToast('הנתונים עודכנו ✅', 'success');
@@ -3187,10 +3187,9 @@ async function saveExamDate(tid, name) {
     // רענון מהשרת — ממתינים שהנוסחאות ב-Sheets יתחשבו
     await new Promise(r => setTimeout(r, 800));
     await loadRiders();
-    applyExamsFilter();
     updateDashboardStats();
     updateExamAlerts();
-    renderExamsTable(STATE.riders);
+    applyExamsFilter();
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
   }
