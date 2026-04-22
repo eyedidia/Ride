@@ -245,6 +245,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 .topbar {
@@ -739,8 +740,8 @@ tbody td {
 
 /* ── מובייל ── */
 @media (max-width: 768px) {
-  /* תוכן לא מוסתר מהסרגל העליון */
-  .content { padding-top: 70px; }
+  /* תוכן — padding רגיל, הסרגל sticky מטפל בעצמו */
+  .content { padding: 12px 12px 32px; }
   .sidebar { transform: translateX(100%); }
   .sidebar.open {
     transform: translateX(0);
@@ -918,6 +919,21 @@ tbody td {
     width: 100%;
     box-sizing: border-box;
     min-width: 0;
+  }
+  /* select בחירת אירוע — חייב להיות מוגבל */
+  #event-select-assign {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  /* הפאנל שעוטף את ה-select */
+  #section-assignments .panel-header .filter-bar {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
   }
   #captainsBody {
     padding: 8px !important;
