@@ -727,6 +727,12 @@ tbody td {
 /* ── תוכן ראשי ── */
 .content { padding: 12px; flex: 1; padding-bottom: 32px; }
 
+/* גובה topbar — מונע כיסוי תוכן */
+:root { --topbar-h: 62px; }
+@media (max-width: 768px) {
+  .content { padding-top: calc(var(--topbar-h) + 8px); }
+}
+
 /* ── מסך גדול — sidebar קבוע ── */
 @media (min-width: 769px) {
   .content { padding: 28px; }
@@ -749,7 +755,7 @@ tbody td {
   .main         { margin-right: 0; }
 
   /* Topbar */
-  .topbar { padding: 10px 10px 10px 50px; gap: 6px; flex-wrap: nowrap; }
+  .topbar { padding: 10px 14px 10px 58px; gap: 6px; flex-wrap: nowrap; }
   .page-title      { font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .page-breadcrumb { display: none; }
   .topbar-actions  { gap: 6px; flex-shrink: 0; }
@@ -900,7 +906,7 @@ tbody td {
   /* Badge */
   .badge { margin-right: 4px; }
 
-  /* שיבוצים — ודא רוחב מלא */
+  /* שיבוצים — ודא רוחב מלא, ללא גלישה */
   #assignmentsContent,
   #assignmentsContent .panel,
   #assignmentsContent .panel-body,
@@ -910,6 +916,12 @@ tbody td {
     max-width: 100% !important;
     box-sizing: border-box !important;
     min-width: 0 !important;
+    overflow: hidden !important;
+  }
+  /* אפשר גלילה רק לסלקט בתוך הכרטיס */
+  #captainsBody select,
+  #captainsBody .select {
+    overflow: visible !important;
   }
 }
 </style>
@@ -2424,7 +2436,18 @@ async function saveAssignment(captainTid, captainName) {
       await callAPI('assignBike', { eventId, tid: stokerTid, bikeId: bikeId || '' });
       await callAPI('assignPartner', { eventId, captainTid, stokerTid });
     }
+
+    // עדכון אופטימיסטי מקומי — ננעל מיד
+    const captain = assignRegs.find(r => r.tid === captainTid);
+    if (captain) {
+      if (bikeId)    captain.bike       = bikeId;
+      if (stokerTid) captain.partnerTid = stokerTid;
+    }
+
     showToast(`שיבוץ נשמר ל${captainName} ✅`, 'success');
+    renderAssignments(); // רנדר מיד עם נעילה
+
+    // טעינה מחדש ברקע לעדכון השמות
     assignRegs = await apiGet('getRegistrations', { eventId });
     renderAssignments();
   } catch(e) {
