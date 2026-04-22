@@ -2280,13 +2280,7 @@ async function loadAssignments() {
 
   try {
     const raw = await apiGet('getRegistrations', { eventId });
-    // סמן כ-saved כל מי שכבר משובץ (יש אופניים או שותף)
-    raw.forEach(r => {
-      const bv = (r.bike || '').toString().trim();
-      if ((bv && bv !== 'PRIVATE' && bv !== '—') || r.partnerTid) {
-        r.savedPartnerTid = r.partnerTid;
-      }
-    });
+    raw.forEach(r => { r._fromApi = true; }); // סומן — הגיע מה-API, לא שינוי מקומי
     assignRegs  = raw;
     assignBikes = STATE.bikes.filter(b => b.status === 'תקין');
     renderAssignments();
@@ -2349,7 +2343,7 @@ function renderAssignments() {
   captainsBody.innerHTML = captains.length ? captains.map(r => {
     const bikeVal    = (r.bike || '').toString().trim();
     const isAssigned = (bikeVal !== '' && bikeVal !== 'PRIVATE' && bikeVal !== '—')
-                    || (r.role === 'קפטן' && r.savedPartnerTid && r.savedPartnerTid !== '');
+                    || (r._fromApi && r.role === 'קפטן' && !!r.partnerTid);
     const hasPartner = r.role === 'קפטן' && r.partnerTid;
 
     if (isAssigned) {
@@ -2483,16 +2477,13 @@ async function saveAssignment(captainTid, captainName) {
       await callAPI('assignPartner', { eventId, captainTid, stokerTid });
     }
 
-    // עדכון אופטימיסטי — ננעל רק אחרי שמירה בפועל
+    // עדכון אופטימיסטי — ננעל רק אם נבחרו אופניים
     const captain = assignRegs.find(r => r.tid === captainTid);
     if (captain) {
       if (bikeId && bikeId !== 'PRIVATE' && bikeId !== '') {
         captain.bike = bikeId;
       }
-      if (stokerTid) {
-        captain.partnerTid      = stokerTid;
-        captain.savedPartnerTid = stokerTid; // ← ננעל רק כאן
-      }
+      if (stokerTid) captain.partnerTid = stokerTid;
     }
 
     showToast(`שיבוץ נשמר ל${captainName} ✅`, 'success');
@@ -2500,13 +2491,7 @@ async function saveAssignment(captainTid, captainName) {
 
     // טעינה מחדש ברקע לעדכון השמות
     const fresh = await apiGet('getRegistrations', { eventId });
-    // סמן כ-saved כל מי שיש לו bike או partnerTid בנתונים
-    fresh.forEach(r => {
-      const bv = (r.bike || '').toString().trim();
-      if ((bv && bv !== 'PRIVATE' && bv !== '—') || r.partnerTid) {
-        r.savedPartnerTid = r.partnerTid;
-      }
-    });
+    fresh.forEach(r => { r._fromApi = true; });
     assignRegs = fresh;
     renderAssignments();
   } catch(e) {
