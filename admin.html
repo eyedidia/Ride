@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+/* ═══════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════ */
 :root {
   --bg:          #0f1117;
   --surface:     #1a1d27;
@@ -28,8 +31,8 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; scroll-behavior: smooth; scroll-padding-top: 72px; }
-.section { scroll-margin-top: 72px; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
 
 body {
   font-family: var(--font);
@@ -40,20 +43,16 @@ body {
   overflow-x: hidden;
 }
 
+/* Focus visible — חובה לנגישות */
 :focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 3px;
   border-radius: 4px;
 }
 
-/* ─── SR-ONLY ───────────────────────────── */
-.sr-only {
-  position: absolute; width: 1px; height: 1px;
-  padding: 0; margin: -1px; overflow: hidden;
-  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
-}
-
-/* ─── SKIP LINK ─────────────────────────── */
+/* ═══════════════════════════════
+   SKIP LINK (נגישות)
+═══════════════════════════════ */
 .skip-link {
   position: absolute;
   top: -100px;
@@ -69,7 +68,9 @@ body {
 }
 .skip-link:focus { top: 0; }
 
-/* ─── SIDEBAR ───────────────────────────── */
+/* ═══════════════════════════════
+   SIDEBAR NAV
+═══════════════════════════════ */
 .sidebar {
   width: var(--nav-w);
   background: var(--surface);
@@ -82,146 +83,375 @@ body {
   transition: transform var(--transition);
   overflow-y: auto;
 }
-.sidebar-header { padding: 28px 20px 20px; border-bottom: 1px solid var(--border); }
-.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-.logo-icon {
-  width: 38px; height: 38px; background: var(--accent);
-  border-radius: 10px; display: flex; align-items: center;
-  justify-content: center; font-size: 20px; flex-shrink: 0;
-}
-.logo-text { font-size: 1.1rem; font-weight: 800; color: var(--text); line-height: 1.2; }
-.logo-sub  { font-size: 0.72rem; color: var(--text-muted); font-weight: 400; }
 
-.nav-section { padding: 16px 12px 8px; }
-.nav-section-label {
-  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em;
-  color: var(--text-muted); text-transform: uppercase;
-  padding: 0 8px; margin-bottom: 6px;
+.sidebar-header {
+  padding: 28px 20px 20px;
+  border-bottom: 1px solid var(--border);
 }
-.nav-item {
-  display: flex; align-items: center; gap: 10px; padding: 11px 12px;
-  border-radius: var(--radius-sm); color: var(--text-muted);
-  text-decoration: none; font-size: 0.92rem; font-weight: 500;
-  cursor: pointer; border: none; background: none; width: 100%;
-  text-align: right; transition: background var(--transition), color var(--transition);
-  position: relative; min-height: 44px;
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
 }
-.nav-item:hover, .nav-item:focus-visible { background: var(--surface2); color: var(--text); }
-.nav-item.active { background: var(--accent-glow); color: var(--accent); }
-.nav-item.active::before {
-  content: ''; position: absolute; left: 0; top: 20%; bottom: 20%;
-  width: 3px; background: var(--accent); border-radius: 2px;
-}
-.nav-icon { font-size: 1.1rem; width: 22px; text-align: center; flex-shrink: 0; }
-.badge {
-  margin-right: auto; background: var(--red); color: #fff;
-  font-size: 0.68rem; font-weight: 700; padding: 2px 7px;
-  border-radius: 20px; min-width: 20px; text-align: center;
-}
-.sidebar-footer { margin-top: auto; padding: 16px 12px; border-top: 1px solid var(--border); }
-.user-card {
-  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-  border-radius: var(--radius-sm); background: var(--surface2);
-}
-.user-avatar {
-  width: 34px; height: 34px; background: var(--accent); border-radius: 50%;
+
+.logo-icon {
+  width: 38px; height: 38px;
+  background: var(--accent);
+  border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
+  font-size: 20px;
+  flex-shrink: 0;
 }
+
+.logo-text {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.logo-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.nav-section {
+  padding: 16px 12px 8px;
+}
+
+.nav-section-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  padding: 0 8px;
+  margin-bottom: 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: right;
+  transition: background var(--transition), color var(--transition);
+  position: relative;
+}
+
+.nav-item:hover, .nav-item:focus-visible {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.nav-item.active {
+  background: var(--accent-glow);
+  color: var(--accent);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+.nav-icon { font-size: 1.1rem; width: 22px; text-align: center; flex-shrink: 0; }
+
+.badge {
+  margin-right: auto;
+  background: var(--red);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 16px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface2);
+}
+
+.user-avatar {
+  width: 34px; height: 34px;
+  background: var(--accent);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
 .user-name { font-size: 0.85rem; font-weight: 600; }
 .user-role { font-size: 0.72rem; color: var(--text-muted); }
 
+/* Mobile toggle */
 .menu-toggle {
-  display: none; position: fixed; top: 14px; right: 14px; z-index: 200;
-  background: var(--surface); border: 1px solid var(--border); color: var(--text);
-  width: 44px; height: 44px; border-radius: var(--radius-sm); font-size: 1.3rem;
-  cursor: pointer; align-items: center; justify-content: center;
-}
-.overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.6); z-index: 99;
+  display: none;
+  position: fixed;
+  top: 14px; right: 14px;
+  z-index: 200;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 44px; height: 44px;
+  border-radius: var(--radius-sm);
+  font-size: 1.3rem;
+  cursor: pointer;
+  align-items: center; justify-content: center;
 }
 
-/* ─── MAIN ──────────────────────────────── */
-.main { flex: 1; margin-left: 0; margin-right: var(--nav-w); min-height: 100vh; display: flex; flex-direction: column; }
-.topbar {
-  background: var(--surface); border-bottom: 1px solid var(--border);
-  padding: 16px 28px; display: flex; align-items: center;
-  justify-content: space-between; gap: 16px; position: sticky; top: 0; z-index: 50;
+.overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 99;
 }
+
+/* ═══════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════ */
+.main {
+  flex: 1;
+  margin-left: 0;
+  margin-right: var(--nav-w);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
 .page-title { font-size: 1.1rem; font-weight: 700; }
 .page-breadcrumb { font-size: 0.8rem; color: var(--text-muted); margin-top: 1px; }
+
 .topbar-actions { display: flex; gap: 10px; align-items: center; }
 
 .btn {
-  display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px;
-  border-radius: var(--radius-sm); font-family: var(--font); font-size: 0.88rem;
-  font-weight: 600; cursor: pointer; border: none; text-decoration: none;
-  transition: all var(--transition); min-height: 44px; min-width: 44px; white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: all var(--transition);
+  min-height: 40px;
+  white-space: nowrap;
 }
-.btn-primary { background: var(--accent); color: #fff; }
-.btn-primary:hover { background: #3a67f0; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(79,124,255,0.4); }
-.btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
-.btn-ghost:hover { background: var(--surface2); color: var(--text); }
-.btn-danger { background: transparent; color: var(--red); border: 1px solid var(--red); }
-.btn-danger:hover { background: rgba(255,90,90,0.12); }
-.btn-sm { padding: 6px 12px; font-size: 0.8rem; min-height: 44px; }
 
-/* ─── STAT CARDS ────────────────────────── */
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover { background: #3a67f0; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(79,124,255,0.4); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+.btn-danger {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid var(--red);
+}
+.btn-danger:hover { background: rgba(255,90,90,0.12); }
+
+.btn-sm { padding: 6px 12px; font-size: 0.8rem; min-height: 34px; }
+
+/* ═══════════════════════════════
+   STAT CARDS
+═══════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
 .stat-card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 20px; position: relative; overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
   transition: transform var(--transition), box-shadow var(--transition);
 }
+
 .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
 .stat-card::before {
-  content: ''; position: absolute; top: 0; right: 0;
-  width: 4px; height: 100%; border-radius: 0 var(--radius) var(--radius) 0;
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 4px; height: 100%;
+  border-radius: 0 var(--radius) var(--radius) 0;
 }
+
 .stat-card.blue::before   { background: var(--accent); }
 .stat-card.green::before  { background: var(--green); }
 .stat-card.red::before    { background: var(--red); }
 .stat-card.orange::before { background: var(--orange); }
-.stat-icon { font-size: 1.6rem; margin-bottom: 10px; display: block; }
-.stat-value { font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+
+.stat-icon {
+  font-size: 1.6rem;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
 .stat-card.blue   .stat-value { color: var(--accent); }
 .stat-card.green  .stat-value { color: var(--green); }
 .stat-card.red    .stat-value { color: var(--red); }
 .stat-card.orange .stat-value { color: var(--orange); }
+
 .stat-label { font-size: 0.82rem; color: var(--text-muted); font-weight: 500; }
 
-/* ─── PANELS ────────────────────────────── */
-.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 24px; overflow: hidden; }
-.panel-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 20px; border-bottom: 1px solid var(--border); gap: 12px; flex-wrap: wrap;
+/* ═══════════════════════════════
+   SECTIONS / PANELS
+═══════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 24px;
+  overflow: hidden;
 }
-.panel-title { font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.panel-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .panel-body { padding: 0; }
 
-/* ─── TABLE ─────────────────────────────── */
+/* ═══════════════════════════════
+   TABLE
+═══════════════════════════════ */
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
 thead th {
-  background: var(--surface2); color: var(--text-muted); font-weight: 600;
-  font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase;
-  padding: 12px 16px; text-align: right; white-space: nowrap;
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 12px 16px;
+  text-align: right;
+  white-space: nowrap;
   border-bottom: 1px solid var(--border);
 }
-tbody tr { border-bottom: 1px solid var(--border); transition: background var(--transition); }
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+}
+
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: var(--surface2); }
-tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
+
+tbody td {
+  padding: 13px 16px;
+  vertical-align: middle;
+  color: var(--text);
+}
+
 .td-name { font-weight: 600; }
 .td-sub  { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
 
-/* ─── STATUS BADGES ─────────────────────── */
+/* ═══════════════════════════════
+   BADGES / STATUS
+═══════════════════════════════ */
 .status {
-  display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px;
-  border-radius: 20px; font-size: 0.78rem; font-weight: 600; white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
-.status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+.status::before {
+  content: '';
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .status-ok    { background: rgba(45,212,160,0.15); color: var(--green); }
 .status-ok::before    { background: var(--green); }
 .status-warn  { background: rgba(255,179,71,0.15); color: var(--orange); }
@@ -230,220 +460,464 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
 .status-err::before   { background: var(--red); }
 .status-blue  { background: rgba(79,124,255,0.15); color: var(--accent); }
 .status-blue::before  { background: var(--accent); }
+
 .role-tag {
-  display: inline-block; padding: 3px 9px; border-radius: 6px; font-size: 0.76rem;
-  font-weight: 600; background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border);
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: var(--surface2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
 }
 
-/* ─── ROW ACTIONS ───────────────────────── */
-.row-actions { display: flex; gap: 6px; align-items: center; }
-.icon-btn {
-  width: 44px; height: 44px; border-radius: var(--radius-sm); border: 1px solid var(--border);
-  background: transparent; color: var(--text-muted); cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.95rem; transition: all var(--transition);
+/* ═══════════════════════════════
+   ROW ACTIONS
+═══════════════════════════════ */
+.row-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
 }
+
+.icon-btn {
+  width: 32px; height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem;
+  transition: all var(--transition);
+}
+
 .icon-btn:hover { background: var(--surface2); color: var(--text); }
 .icon-btn.danger:hover { border-color: var(--red); color: var(--red); }
 
-/* ─── FILTER BAR ────────────────────────── */
-.filter-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.search-wrap { position: relative; flex: 1; min-width: 180px; }
-.search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; font-size: 0.95rem; }
-.input {
-  width: 100%; background: var(--surface2); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); color: var(--text); font-family: var(--font);
-  font-size: 0.88rem; padding: 9px 14px 9px 36px;
-  transition: border-color var(--transition); min-height: 44px;
+/* ═══════════════════════════════
+   SEARCH / FILTER BAR
+═══════════════════════════════ */
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
 }
+
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+}
+
+.search-icon {
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+  font-size: 0.95rem;
+}
+
+.input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.88rem;
+  padding: 9px 14px 9px 36px;
+  transition: border-color var(--transition);
+  min-height: 40px;
+}
+
 .input:focus { outline: none; border-color: var(--accent); }
 .input::placeholder { color: var(--text-muted); }
+
 .select {
-  background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
-  color: var(--text); font-family: var(--font); font-size: 0.88rem;
-  padding: 9px 14px; cursor: pointer; min-height: 44px;
-  transition: border-color var(--transition); -webkit-appearance: none; appearance: none;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.88rem;
+  padding: 9px 14px;
+  cursor: pointer;
+  min-height: 40px;
+  transition: border-color var(--transition);
 }
+
 .select:focus { outline: none; border-color: var(--accent); }
 
-/* ─── MODAL ─────────────────────────────── */
-.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 500; align-items: center; justify-content: center; padding: 16px; }
-.modal-backdrop.open { display: flex; }
-.modal {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
-  box-shadow: var(--shadow); animation: slideUp 0.22s ease;
+/* ═══════════════════════════════
+   MODAL
+═══════════════════════════════ */
+.modal-backdrop {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
 }
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 0; }
+
+.modal-backdrop.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+  animation: slideUp 0.22s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 0;
+}
+
 .modal-title { font-size: 1rem; font-weight: 700; }
+
 .modal-close {
-  width: 44px; height: 44px; border-radius: var(--radius-sm); border: 1px solid var(--border);
-  background: transparent; color: var(--text-muted); cursor: pointer;
-  display: flex; align-items: center; justify-content: center; font-size: 1rem;
+  width: 34px; height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
   transition: all var(--transition);
 }
-.modal-close:hover { background: var(--surface2); color: var(--text); }
-.modal-body { padding: 20px; }
-.form-group { margin-bottom: 16px; }
-.form-label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.modal-footer { display: flex; gap: 10px; justify-content: flex-end; padding: 0 20px 20px; }
 
-/* ─── TOAST ─────────────────────────────── */
-.toast-area { position: fixed; bottom: 24px; left: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-.toast {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
-  padding: 12px 16px; font-size: 0.88rem; font-weight: 500; display: flex; align-items: center;
-  gap: 10px; box-shadow: var(--shadow); animation: toastIn 0.25s ease; pointer-events: auto; max-width: 320px;
+.modal-close:hover { background: var(--surface2); color: var(--text); }
+
+.modal-body { padding: 20px; }
+
+.form-group { margin-bottom: 16px; }
+
+.form-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
 }
-@keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 0 20px 20px;
+}
+
+/* ═══════════════════════════════
+   ALERT / TOAST
+═══════════════════════════════ */
+.toast-area {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--shadow);
+  animation: toastIn 0.25s ease;
+  pointer-events: auto;
+  max-width: 320px;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .toast.success { border-color: var(--green); }
 .toast.error   { border-color: var(--red); }
 
-/* ─── TABS ──────────────────────────────── */
-.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding: 0 20px; overflow-x: auto; }
-.tab-btn {
-  padding: 14px 16px; border: none; border-bottom: 2px solid transparent;
-  background: transparent; color: var(--text-muted); font-family: var(--font);
-  font-size: 0.88rem; font-weight: 600; cursor: pointer; white-space: nowrap;
-  transition: all var(--transition); margin-bottom: -1px; min-height: 44px;
+/* ═══════════════════════════════
+   SECTION TABS
+═══════════════════════════════ */
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  overflow-x: auto;
 }
+
+.tab-btn {
+  padding: 14px 16px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition);
+  margin-bottom: -1px;
+}
+
 .tab-btn:hover { color: var(--text); }
 .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
-/* ─── EXAM UPDATE ───────────────────────── */
-.exam-update { display: flex; align-items: center; gap: 6px; }
-.input-inline {
-  background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
-  color: var(--text); font-family: var(--font); font-size: 0.8rem; padding: 5px 8px; width: 120px;
+/* ═══════════════════════════════
+   EXAM DATE INLINE INPUT
+═══════════════════════════════ */
+.exam-update {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
+
+.input-inline {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  padding: 5px 8px;
+  width: 120px;
+}
+
 .input-inline:focus { outline: none; border-color: var(--accent); }
 
-/* ─── CONTENT ───────────────────────────── */
+/* ═══════════════════════════════
+   RESPONSIVE — MOBILE FIRST
+═══════════════════════════════ */
+
+/* ── תוכן ראשי ── */
 .content { padding: 12px; flex: 1; padding-bottom: 32px; }
 
+/* ── מסך גדול — sidebar קבוע ── */
 @media (min-width: 769px) {
   .content { padding: 28px; }
-  .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
 }
 
+/* ── מובייל ── */
 @media (max-width: 768px) {
   .sidebar { transform: translateX(100%); }
-  .sidebar.open { transform: translateX(0); box-shadow: -8px 0 32px rgba(0,0,0,0.5); }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: -8px 0 32px rgba(0,0,0,0.5);
+  }
   .overlay.open { display: block; }
   .menu-toggle  { display: flex; }
   .main         { margin-right: 0; }
-  .topbar { padding: 10px 62px 10px 10px; gap: 6px; flex-wrap: nowrap; }
+
+  /* Topbar */
+  .topbar { padding: 10px 10px 10px 50px; gap: 6px; flex-wrap: nowrap; }
   .page-title      { font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .page-breadcrumb { display: none; }
   .topbar-actions  { gap: 6px; flex-shrink: 0; }
   .topbar-actions .btn-primary { padding: 8px 10px; font-size: 0.8rem; white-space: nowrap; }
   .topbar-actions .btn-ghost.btn-sm { padding: 6px 8px; font-size: 0.8rem; }
-  .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-  .stat-card { padding: 12px 10px; min-width: 0; }
+
+  /* כרטיסי סטטיסטיקה — 2×2 תמיד, לא נחתכים */
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .stat-card {
+    padding: 12px 10px;
+    min-width: 0; /* מונע גלישה */
+  }
   .stat-icon  { font-size: 1.1rem; margin-bottom: 4px; }
   .stat-value { font-size: 1.4rem; }
   .stat-label { font-size: 0.7rem; line-height: 1.3; }
+
+  /* טבלאות */
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   thead th    { padding: 8px 8px; font-size: 0.72rem; white-space: nowrap; }
   tbody td    { padding: 10px 8px; font-size: 0.8rem; }
   .td-name    { font-size: 0.85rem; }
   .td-sub     { font-size: 0.72rem; }
+
+  /* panel */
   .panel-header { padding: 10px 12px; flex-wrap: wrap; gap: 6px; }
   .panel-title  { font-size: 0.85rem; }
+
+  /* טפסים */
   .form-row  { grid-template-columns: 1fr; }
-  .search-wrap { min-width: unset; }
   .filter-bar { flex-direction: column; align-items: stretch; }
-  #event-select-assign { width: 100%; max-width: 100%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  #section-assignments .panel-header { overflow: hidden; min-width: 0; }
-  #section-assignments .filter-bar { min-width: 0; width: 100%; }
-  .exam-update { flex-direction: column; align-items: stretch; gap: 6px; width: 100%; }
+  .search-wrap { min-width: unset; }
+
+  /* בדיקה ארגומטרית — טור */
+  .exam-update {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    width: 100%;
+  }
   .input-inline { width: 100%; min-width: 0; }
   .exam-update .btn { width: 100%; justify-content: center; }
+
+  /* modals */
   .modal { margin: 8px; max-width: calc(100vw - 16px); }
-  .icon-btn { width: 44px; height: 44px; font-size: 0.95rem; }
+
+  /* כפתורי פעולה */
+  .icon-btn { width: 36px; height: 36px; font-size: 0.95rem; }
   .row-actions { gap: 4px; }
+
+  /* סטטוסים — לא יגלשו */
   .status { font-size: 0.72rem; padding: 3px 7px; white-space: nowrap; }
   .role-tag { font-size: 0.7rem; }
-  .hide-mobile { display: none; }
-  #ridersTable thead { display: none; }
-  #ridersTable tbody tr.rider-row {
-    display: block; background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); margin-bottom: 10px; padding: 14px; position: relative;
-  }
-  #ridersTable tbody tr.rider-row td {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 4px 0; border: none; font-size: 0.85rem;
-  }
-  #ridersTable tbody tr.rider-row td:first-child {
-    flex-direction: column; align-items: flex-start;
-    margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
-  }
-  #ridersTable tbody tr.rider-row td[data-label]::before {
-    content: attr(data-label) ": "; font-size: 0.72rem; color: var(--text-muted);
-    font-weight: 600; flex-shrink: 0; margin-left: 8px;
-  }
-  #ridersTable tbody tr.rider-row td:first-child::before { display: none; }
-  #ridersTable tbody tr.rider-row td[data-label="פעולות"] {
-    justify-content: flex-end; padding-top: 10px; margin-top: 6px; border-top: 1px solid var(--border);
-  }
-  #ridersTable tbody tr.rider-row td[data-label="פעולות"]::before { display: none; }
-  .sidebar { width: 75%; max-width: 280px; }
-  #bikesBody thead { display: none !important; }
-  #section-bikes table thead { display: none; }
-  #bikesBody tr {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); margin-bottom: 8px; padding: 10px 12px;
-  }
-  #bikesBody td { border: none; padding: 2px 4px; font-size: 0.82rem; }
-  #bikesBody td:last-child { margin-right: auto; }
-  #bikesBody .btn { white-space: nowrap; }
-  .badge { margin-right: 4px; }
-  #section-assignments .filter-bar { flex-direction: column; align-items: stretch; }
-  #event-select-assign { width: 100%; }
-  #assignmentsContent { width: 100%; box-sizing: border-box; }
-  #captainsBody { padding: 8px !important; width: 100% !important; box-sizing: border-box !important; }
-  #captainsBody > div { width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; min-width: 0 !important; margin-bottom: 10px !important; }
-  #captainsBody > div > div:first-child { flex-wrap: wrap; gap: 6px; }
-  #captainsBody .select, #captainsBody select {
-    width: 100% !important; box-sizing: border-box !important;
-    -webkit-appearance: none !important; appearance: none !important;
-    font-size: 1rem !important; min-height: 44px !important;
-  }
-  #captainsBody .btn-primary { min-height: 48px; font-size: 1rem; justify-content: center; }
-  #stokersList { padding: 8px !important; gap: 6px !important; }
-  #stokersList > div { width: 100%; box-sizing: border-box; font-size: 0.9rem; padding: 10px 14px; }
-  #captainsBody > div, #captainsBody > div * { color: #e8eaf6; -webkit-text-fill-color: #e8eaf6; }
-  #captainsBody > div [style*="text-muted"], #captainsBody .select { color: #7b82a8 !important; -webkit-text-fill-color: #7b82a8 !important; }
-  #captainsBody .role-tag { color: #7b82a8 !important; -webkit-text-fill-color: #7b82a8 !important; }
-  #captainsBody .btn-primary { color: #fff !important; -webkit-text-fill-color: #fff !important; }
-  #stokersList > div { color: #e8eaf6 !important; -webkit-text-fill-color: #e8eaf6 !important; }
 }
 
+/* ── טלפונים קטנים מאוד ── */
 @media (max-width: 360px) {
   .stats-grid { gap: 6px; }
   .stat-value { font-size: 1.2rem; }
-  .topbar { padding: 8px 58px 8px 6px; }
+  .topbar { padding: 8px 6px 8px 46px; }
   .topbar-actions .btn-primary { padding: 6px 8px; font-size: 0.75rem; }
+}
+
+/* ══════════════════════════════
+   כרטיסי רוכבים במובייל
+══════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* מסתיר עמודות משניות במובייל */
+  .hide-mobile { display: none; }
+
+  /* טבלת רוכבים → כרטיסים */
+  #ridersTable thead { display: none; }
+  #ridersTable tbody tr.rider-row {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    padding: 14px;
+    position: relative;
+  }
+  #ridersTable tbody tr.rider-row td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+    border: none;
+    font-size: 0.85rem;
+  }
+  #ridersTable tbody tr.rider-row td:first-child {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  #ridersTable tbody tr.rider-row td[data-label]::before {
+    content: attr(data-label) ": ";
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+  #ridersTable tbody tr.rider-row td:first-child::before { display: none; }
+  #ridersTable tbody tr.rider-row td[data-label="פעולות"] {
+    justify-content: flex-end;
+    padding-top: 10px;
+    margin-top: 6px;
+    border-top: 1px solid var(--border);
+  }
+  #ridersTable tbody tr.rider-row td[data-label="פעולות"]::before { display: none; }
+
+  /* תפריט צד — רוחב מוגבל */
+  .sidebar {
+    width: 75%;
+    max-width: 280px;
+  }
+
+  /* צי אופניים — כרטיסים */
+  #bikesBody thead { display: none !important; }
+  #section-bikes table thead { display: none; }
+  #bikesBody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    padding: 10px 12px;
+  }
+  #bikesBody td {
+    border: none;
+    padding: 2px 4px;
+    font-size: 0.82rem;
+  }
+  #bikesBody td:last-child {
+    margin-right: auto;
+  }
+  #bikesBody .btn { white-space: nowrap; }
+
+  /* Badge */
+  .badge { margin-right: 4px; }
+
+  /* שיבוצים — ודא רוחב מלא */
+  #assignmentsContent,
+  #assignmentsContent .panel,
+  #assignmentsContent .panel-body,
+  #captainsBody,
+  #captainsBody > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+  }
 }
 </style>
 </head>
 <body>
 
-<!-- ─── SKIP LINK ──────────────────────── -->
+<!-- Skip link for screen readers -->
 <a href="#main-content" class="skip-link">דלג לתוכן הראשי</a>
-
-<!-- ─── SR-ONLY LIVE ANNOUNCER ────────── -->
-<!-- הכרזות לקורא מסך — לא גלוי ויזואלית -->
-<div id="sr-announcer"
-     class="sr-only"
-     aria-live="assertive"
-     aria-atomic="true"
-     role="status"></div>
 
 <!-- Mobile overlay -->
 <div class="overlay" id="overlay" aria-hidden="true" onclick="closeSidebar()"></div>
@@ -453,16 +927,15 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
         aria-label="פתח תפריט ניווט"
         aria-expanded="false"
         aria-controls="sidebar"
-        onclick="toggleSidebar()">
-  <span aria-hidden="true">☰</span>
-</button>
+        onclick="toggleSidebar()">☰</button>
 
 <!-- ═══════════════════════
      SIDEBAR
 ═══════════════════════════ -->
 <nav class="sidebar" id="sidebar" aria-label="תפריט ניווט ראשי">
+
   <div class="sidebar-header">
-    <a href="#" class="logo" aria-label="קבוצת אופניים — דף הבית">
+    <a href="#" class="logo" aria-label="ניהול קבוצת אופניים — דף הבית">
       <div class="logo-icon" aria-hidden="true">🚴</div>
       <div>
         <div class="logo-text">קבוצת אופניים</div>
@@ -519,9 +992,7 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
             aria-label="בדיקות ארגומטריות">
       <span class="nav-icon" aria-hidden="true">🩺</span>
       בדיקות ארגומטריות
-      <span class="badge" id="examBadge" aria-hidden="true">—</span>
-      <!-- הכרזה נגישה נפרדת — VoiceOver לא יקרא את ה-badge הויזואלי -->
-      <span class="sr-only" id="examBadgeSR"></span>
+      <span class="badge" id="examBadge" role="status" aria-label="מספר רוכבים עם בדיקה שפגה תוקף">—</span>
     </button>
   </div>
 
@@ -531,7 +1002,7 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       <span class="nav-icon" aria-hidden="true">⚙️</span>
       הגדרות
     </button>
-    <button class="nav-item"
+    <button class="nav-item btn-danger-nav"
             onclick="adminLogout()"
             aria-label="התנתקות מהמערכת">
       <span class="nav-icon" aria-hidden="true">🚪</span>
@@ -546,10 +1017,10 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
   </div>
 
   <div class="sidebar-footer">
-    <div class="user-card" role="region" aria-label="משתמש מחובר">
-      <div class="user-avatar" aria-hidden="true" id="userAvatarEl">יכ</div>
+    <div class="user-card" role="region" aria-label="משתמש מחובר: יוסי כהן, מנהל מערכת">
+      <div class="user-avatar" aria-hidden="true">יכ</div>
       <div>
-        <div class="user-name" id="userNameEl">טוען...</div>
+        <div class="user-name">יוסי כהן</div>
         <div class="user-role">מנהל מערכת</div>
       </div>
     </div>
@@ -561,72 +1032,62 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
 ═══════════════════════════ -->
 <div class="main" role="main">
 
+  <!-- Topbar -->
   <header class="topbar">
     <div>
       <div class="page-title" id="pageTitle">סקירה כללית</div>
-      <div class="page-breadcrumb" id="pageBreadcrumb">ניהול קבוצת אופניים / סקירה כללית</div>
+      <div class="page-breadcrumb" id="pageBreadcrumb" aria-label="מיקום נוכחי">ניהול קבוצת אופניים / סקירה כללית</div>
     </div>
     <div class="topbar-actions">
-      <button class="btn btn-ghost btn-sm"
-              aria-label="רענן את כל הנתונים"
-              onclick="refreshAll()">
-        <span aria-hidden="true">🔄</span> רענן
+      <button class="btn btn-ghost btn-sm" aria-label="רענן נתונים" onclick="refreshAll()">
+        🔄 רענן
       </button>
-      <button class="btn btn-primary"
-              onclick="openModal('modalAddRider')"
-              aria-label="הוסף רוכב חדש למערכת">
+      <button class="btn btn-primary" onclick="openModal('modalAddRider')" aria-label="הוסף רוכב חדש למערכת">
         + הוסף רוכב
       </button>
     </div>
   </header>
 
+  <!-- Content -->
   <main class="content" id="main-content" tabindex="-1">
 
     <!-- ── DASHBOARD ── -->
-    <section id="section-dashboard" aria-labelledby="dash-heading">
+    <section id="section-dashboard" aria-labelledby="dash-heading" aria-live="off">
       <h1 id="dash-heading" class="sr-only">סקירה כללית</h1>
 
-      <!-- כרטיסי סטטיסטיקה -->
-      <!-- כל כרטיס: stat-value מוסתר מקורא מסך, sr-only מכריז את המשפט המלא -->
+      <!-- Stats — מתמלאים מה-API -->
       <div class="stats-grid" role="list" aria-label="נתוני סיכום">
         <div class="stat-card blue" role="listitem">
           <span class="stat-icon" aria-hidden="true">👥</span>
-          <div class="stat-value" id="stat-riders" aria-hidden="true">—</div>
-          <div class="stat-label" aria-hidden="true">רוכבים פעילים</div>
-          <span class="sr-only" id="stat-riders-sr" aria-live="polite">טוען נתוני רוכבים</span>
+          <div class="stat-value" id="stat-riders" aria-label="טוען">—</div>
+          <div class="stat-label">רוכבים פעילים</div>
         </div>
         <div class="stat-card green" role="listitem">
           <span class="stat-icon" aria-hidden="true">📅</span>
-          <div class="stat-value" id="stat-events" aria-hidden="true">—</div>
-          <div class="stat-label" aria-hidden="true">אירועים קרובים</div>
-          <span class="sr-only" id="stat-events-sr" aria-live="polite">טוען נתוני אירועים</span>
+          <div class="stat-value" id="stat-events" aria-label="טוען">—</div>
+          <div class="stat-label">אירועים קרובים</div>
         </div>
         <div class="stat-card red" role="listitem">
           <span class="stat-icon" aria-hidden="true">⚠️</span>
-          <div class="stat-value" id="stat-exams" aria-hidden="true">—</div>
-          <div class="stat-label" aria-hidden="true">בדיקות שפגות תוקף</div>
-          <span class="sr-only" id="stat-exams-sr" aria-live="polite">טוען נתוני בדיקות</span>
+          <div class="stat-value" id="stat-exams" aria-label="טוען">—</div>
+          <div class="stat-label">בדיקות שפגות תוקף</div>
         </div>
         <div class="stat-card orange" role="listitem">
           <span class="stat-icon" aria-hidden="true">🚲</span>
-          <div class="stat-value" id="stat-bikes" aria-hidden="true">—</div>
-          <div class="stat-label" aria-hidden="true">אופניים זמינים</div>
-          <span class="sr-only" id="stat-bikes-sr" aria-live="polite">טוען נתוני אופניים</span>
+          <div class="stat-value" id="stat-bikes" aria-label="טוען">—</div>
+          <div class="stat-label">אופניים זמינים</div>
         </div>
       </div>
 
-      <div id="adminNotificationsArea" aria-live="polite" role="region" aria-label="התראות"></div>
+      <!-- התראות יום הולדת + בדיקות -->
+      <div id="adminNotificationsArea" aria-live="polite"></div>
 
       <!-- אירועים קרובים -->
       <div class="panel">
         <div class="panel-header">
-          <h2 class="panel-title">
-            <span aria-hidden="true">📅</span> אירועים קרובים
-          </h2>
-          <button class="btn btn-ghost btn-sm"
-                  onclick="showSection('events',this)"
-                  aria-label="הצג את כל האירועים">
-            הכל ←
+          <h2 class="panel-title"><span aria-hidden="true">📅</span> אירועים קרובים</h2>
+          <button class="btn btn-ghost btn-sm" onclick="showSection('events',this)" aria-label="הצג את כל האירועים">
+            הכל →
           </button>
         </div>
         <div class="panel-body table-wrap">
@@ -635,11 +1096,8 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
               <tr>
                 <th scope="col">תאריך</th>
                 <th scope="col">מסלול</th>
-                <th scope="col">
-                  <span aria-hidden="true">ק"מ</span>
-                  <span class="sr-only">קילומטר</span>
-                </th>
-                <th scope="col" class="hide-mobile">קפטן</th>
+                <th scope="col">ק"מ</th>
+                <th scope="col">קפטן</th>
                 <th scope="col"><span class="sr-only">פעולות</span></th>
               </tr>
             </thead>
@@ -653,9 +1111,7 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       <!-- התראות בדיקות -->
       <div class="panel">
         <div class="panel-header">
-          <h2 class="panel-title">
-            <span aria-hidden="true">🩺</span> התראות בדיקות ארגומטריות
-          </h2>
+          <h2 class="panel-title"><span aria-hidden="true">🩺</span> התראות בדיקות ארגומטריות</h2>
         </div>
         <div class="panel-body table-wrap">
           <table aria-label="רוכבים עם בדיקה שפגה תוקף או עומדת לפוג">
@@ -678,31 +1134,28 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
     <!-- ── RIDERS ── -->
     <section id="section-riders" aria-labelledby="riders-heading" hidden>
       <h1 id="riders-heading" class="sr-only">ניהול רוכבים</h1>
+
       <div class="panel">
         <div class="panel-header">
-          <h2 class="panel-title">
-            <span aria-hidden="true">👥</span> כל הרוכבים
-          </h2>
+          <h2 class="panel-title"><span aria-hidden="true">👥</span> כל הרוכבים</h2>
           <div class="filter-bar">
             <div class="search-wrap">
               <span class="search-icon" aria-hidden="true">🔍</span>
-              <label for="riders-search" class="sr-only">חפש רוכב לפי שם, טלפון, עיר</label>
-              <input type="search" id="riders-search"
+              <input type="search"
                      class="input"
                      placeholder="חיפוש לפי שם, טלפון, עיר…"
-                     aria-label="חפש רוכב לפי שם, טלפון או עיר"
-                     aria-controls="ridersBody"
+                     aria-label="חפש רוכב"
                      oninput="filterRiders(this.value)">
             </div>
             <label for="filter-style" class="sr-only">סנן לפי סגנון רכיבה</label>
-            <select id="filter-style" class="select" onchange="applyRidersFilter()">
+            <select id="filter-style" class="select" aria-label="סנן לפי סגנון רכיבה" onchange="applyRidersFilter()">
               <option value="">כל הסגנונות</option>
               <option>קפטן</option>
               <option>סטוקר</option>
               <option>סינגל</option>
             </select>
             <label for="filter-exam" class="sr-only">סנן לפי סטטוס בדיקה</label>
-            <select id="filter-exam" class="select" onchange="applyRidersFilter()">
+            <select id="filter-exam" class="select" aria-label="סנן לפי סטטוס בדיקה" onchange="applyRidersFilter()">
               <option value="">כל הסטטוסים</option>
               <option>תקין</option>
               <option>פג תוקף</option>
@@ -711,7 +1164,7 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
           </div>
         </div>
         <div class="panel-body table-wrap">
-          <table id="ridersTable" aria-label="טבלת רוכבים">
+          <table id="ridersTable" aria-label="טבלת רוכבים" aria-live="polite">
             <thead>
               <tr>
                 <th scope="col">שם</th>
@@ -737,26 +1190,16 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       <h1 id="events-heading" class="sr-only">ניהול אירועים</h1>
       <div class="panel">
         <div class="panel-header">
-          <h2 class="panel-title">
-            <span aria-hidden="true">📅</span> כל האירועים
-          </h2>
-          <button class="btn btn-primary"
-                  aria-label="צור אירוע חדש"
-                  onclick="openModal('modalAddEvent')">
+          <h2 class="panel-title"><span aria-hidden="true">📅</span> כל האירועים</h2>
+          <button class="btn btn-primary" aria-label="צור אירוע חדש" onclick="openModal('modalAddEvent')">
             + אירוע חדש
           </button>
         </div>
         <div class="panel-body">
           <div class="tabs" role="tablist" aria-label="סינון אירועים לפי סטטוס">
-            <button class="tab-btn active" role="tab" aria-selected="true"
-                    id="tab-upcoming" aria-controls="tabp-upcoming"
-                    onclick="switchTab(this,'tabp-upcoming')">קרובים</button>
-            <button class="tab-btn" role="tab" aria-selected="false"
-                    id="tab-past" aria-controls="tabp-past"
-                    onclick="switchTab(this,'tabp-past')">עברו</button>
-            <button class="tab-btn" role="tab" aria-selected="false"
-                    id="tab-cancelled" aria-controls="tabp-cancelled"
-                    onclick="switchTab(this,'tabp-cancelled')">בוטלו</button>
+            <button class="tab-btn active" role="tab" aria-selected="true"  id="tab-upcoming" aria-controls="tabp-upcoming" onclick="switchTab(this,'tabp-upcoming')">קרובים</button>
+            <button class="tab-btn"        role="tab" aria-selected="false" id="tab-past"     aria-controls="tabp-past"     onclick="switchTab(this,'tabp-past')">עברו</button>
+            <button class="tab-btn"        role="tab" aria-selected="false" id="tab-cancelled" aria-controls="tabp-cancelled" onclick="switchTab(this,'tabp-cancelled')">בוטלו</button>
           </div>
           <div id="tabp-upcoming" class="tab-panel active" role="tabpanel" aria-labelledby="tab-upcoming">
             <div class="table-wrap">
@@ -764,15 +1207,9 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
                 <thead><tr>
                   <th scope="col">תאריך</th>
                   <th scope="col">מסלול</th>
-                  <th scope="col">
-                    <span aria-hidden="true">ק"מ</span>
-                    <span class="sr-only">קילומטר</span>
-                  </th>
-                  <th scope="col" class="hide-mobile">
-                    <span aria-hidden="true">מ' עלייה</span>
-                    <span class="sr-only">מטרי עלייה</span>
-                  </th>
-                  <th scope="col" class="hide-mobile">קפטן</th>
+                  <th scope="col">ק"מ</th>
+                  <th scope="col">עליות</th>
+                  <th scope="col">קפטן</th>
                   <th scope="col"><span class="sr-only">פעולות</span></th>
                 </tr></thead>
                 <tbody id="eventsUpcomingBody" aria-live="polite" aria-label="אירועים קרובים">
@@ -787,11 +1224,8 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
                 <thead><tr>
                   <th scope="col">תאריך</th>
                   <th scope="col">מסלול</th>
-                  <th scope="col">
-                    <span aria-hidden="true">ק"מ</span>
-                    <span class="sr-only">קילומטר</span>
-                  </th>
-                  <th scope="col" class="hide-mobile">קפטן</th>
+                  <th scope="col">ק"מ</th>
+                  <th scope="col">קפטן</th>
                 </tr></thead>
                 <tbody id="eventsPastBody">
                   <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">טוען...</td></tr>
@@ -800,7 +1234,7 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
             </div>
           </div>
           <div id="tabp-cancelled" class="tab-panel" role="tabpanel" aria-labelledby="tab-cancelled">
-            <p style="padding:20px;color:var(--text-muted);text-align:center">אין אירועים מבוטלים</p>
+            <p style="padding:20px;color:var(--text-muted);text-align:center;">אין אירועים מבוטלים</p>
           </div>
         </div>
       </div>
@@ -809,16 +1243,14 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
     <!-- ── ASSIGNMENTS ── -->
     <section id="section-assignments" aria-labelledby="assign-heading" hidden>
       <h1 id="assign-heading" class="sr-only">שיבוצים</h1>
+
+      <!-- בחירת אירוע -->
       <div class="panel">
         <div class="panel-header">
-          <h2 class="panel-title">
-            <span aria-hidden="true">🔗</span> שיבוץ רוכבים לאירוע
-          </h2>
+          <h2 class="panel-title"><span aria-hidden="true">🔗</span> שיבוץ רוכבים לאירוע</h2>
           <div class="filter-bar">
             <label for="event-select-assign" class="sr-only">בחר אירוע לשיבוץ</label>
-            <select id="event-select-assign" class="select"
-                    aria-label="בחר אירוע לשיבוץ"
-                    onchange="loadAssignments()">
+            <select id="event-select-assign" class="select" aria-label="בחר אירוע לשיבוץ" onchange="loadAssignments()">
               <option value="">— בחר אירוע —</option>
             </select>
           </div>
@@ -826,12 +1258,12 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       </div>
 
       <div id="assignmentsContent" style="display:none">
+
+        <!-- קפטנים + סינגלים — כרטיסים -->
         <div class="panel">
           <div class="panel-header">
-            <h3 class="panel-title">
-              <span aria-hidden="true">👑</span> קפטנים וסינגלים
-            </h3>
-            <span id="captainsCount" style="font-size:0.8rem;color:var(--text-muted)" aria-live="polite"></span>
+            <h3 class="panel-title"><span aria-hidden="true">👑</span> קפטנים וסינגלים</h3>
+            <span id="captainsCount" style="font-size:0.8rem;color:var(--text-muted)"></span>
           </div>
           <div class="panel-body">
             <div id="captainsBody" style="padding:12px 16px;width:100%;box-sizing:border-box">
@@ -840,20 +1272,19 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
           </div>
         </div>
 
+        <!-- טבלת סטוקרים זמינים -->
         <div class="panel">
           <div class="panel-header">
-            <h3 class="panel-title">
-              <span aria-hidden="true">🤝</span> סטוקרים זמינים
-            </h3>
-            <span id="stokersCount" style="font-size:0.8rem;color:var(--text-muted)" aria-live="polite"></span>
+            <h3 class="panel-title"><span aria-hidden="true">🤝</span> סטוקרים זמינים</h3>
+            <span id="stokersCount" style="font-size:0.8rem;color:var(--text-muted)"></span>
           </div>
           <div class="panel-body">
-            <div id="stokersList" style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px"
-                 role="list" aria-label="סטוקרים זמינים לשיבוץ">
+            <div id="stokersList" style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px">
               <span style="color:var(--text-muted);font-size:0.85rem">בחר אירוע</span>
             </div>
           </div>
         </div>
+
       </div>
     </section>
 
@@ -862,12 +1293,8 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       <h1 id="bikes-heading" class="sr-only">צי אופניים</h1>
       <div class="panel">
         <div class="panel-header">
-          <h2 class="panel-title">
-            <span aria-hidden="true">🚲</span> צי אופניים
-          </h2>
-          <button class="btn btn-primary"
-                  aria-label="הוסף אופניים חדשים לצי"
-                  onclick="openModal('modalAddBike')">
+          <h2 class="panel-title"><span aria-hidden="true">🚲</span> צי אופניים</h2>
+          <button class="btn btn-primary" aria-label="הוסף אופניים חדשים לצי" onclick="openModal('modalAddBike')">
             + הוסף אופניים
           </button>
         </div>
@@ -896,19 +1323,17 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       <h1 id="maint-heading" class="sr-only">תחזוקת אופניים</h1>
       <div class="panel">
         <div class="panel-header">
-          <h2 class="panel-title">
-            <span aria-hidden="true">🔧</span> היסטוריית תחזוקה
-          </h2>
+          <h2 class="panel-title"><span aria-hidden="true">🔧</span> היסטוריית תחזוקה</h2>
           <div class="filter-bar">
             <label for="maint-filter-bike" class="sr-only">סנן לפי אופניים</label>
-            <select id="maint-filter-bike" class="select" onchange="applyMaintenanceFilter()">
+            <select id="maint-filter-bike" class="select" aria-label="סנן לפי אופניים" onchange="applyMaintenanceFilter()">
               <option value="">כל האופניים</option>
             </select>
-            <label for="maint-filter-status" class="sr-only">סנן לפי סטטוס תחזוקה</label>
-            <select id="maint-filter-status" class="select" onchange="applyMaintenanceFilter()">
-              <option value="בתיקון">בתיקון כעת</option>
+            <label for="maint-filter-status" class="sr-only">סנן לפי סטטוס</label>
+            <select id="maint-filter-status" class="select" aria-label="סנן לפי סטטוס" onchange="applyMaintenanceFilter()">
+              <option value="בתיקון">🔧 בתיקון כעת</option>
               <option value="">הכל</option>
-              <option value="תוקן">תוקנו</option>
+              <option value="תוקן">✅ תוקנו</option>
             </select>
           </div>
         </div>
@@ -936,32 +1361,10 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       <h1 id="exams-heading" class="sr-only">בדיקות ארגומטריות</h1>
       <div class="panel">
         <div class="panel-header">
-          <h2 class="panel-title">
-            <span aria-hidden="true">🩺</span> מעקב בדיקות ארגומטריות
-          </h2>
-          <div class="filter-bar" style="margin-top:10px;flex-wrap:wrap">
-            <div class="search-wrap">
-              <span class="search-icon" aria-hidden="true">🔍</span>
-              <label for="exams-search" class="sr-only">חפש רוכב בבדיקות</label>
-              <input type="search" id="exams-search" class="input"
-                     placeholder="חיפוש לפי שם…"
-                     aria-label="חפש רוכב לפי שם"
-                     oninput="applyExamsFilter()">
-            </div>
-            <label for="exams-filter-status" class="sr-only">סנן לפי סטטוס בדיקה</label>
-            <select id="exams-filter-status" class="select" onchange="applyExamsFilter()">
-              <option value="">כל הסטטוסים</option>
-              <option value="expired">פג תוקף / אין בדיקה</option>
-              <option value="warn">עומד לפוג</option>
-              <option value="ok">תקין</option>
-            </select>
-            <span id="exams-count"
-                  style="font-size:0.8rem;color:var(--text-muted);align-self:center;white-space:nowrap"
-                  aria-live="polite"></span>
-          </div>
+          <h2 class="panel-title"><span aria-hidden="true">🩺</span> מעקב בדיקות ארגומטריות</h2>
         </div>
         <div class="panel-body" style="padding:12px 16px">
-          <div id="examsBody" aria-live="polite" aria-label="רשימת בדיקות">
+          <div id="examsBody">
             <div style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</div>
           </div>
         </div>
@@ -971,18 +1374,15 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
   </main>
 </div>
 
-<!-- ═══ MODALS ══════════════════════════════════════ -->
-
-<!-- הוספת אירוע -->
+<!-- ═══════════════════════
+     MODAL — הוספת אירוע
+═══════════════════════════ -->
 <div class="modal-backdrop" id="modalAddEvent" role="dialog" aria-modal="true"
-     aria-labelledby="modal-title-event" onclick="backdropClose(event,'modalAddEvent')">
+     aria-labelledby="modal-title-event" aria-describedby="add-event-error" onclick="backdropClose(event,'modalAddEvent')">
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-title-event">אירוע חדש</h2>
-      <button class="modal-close" onclick="closeModal('modalAddEvent')"
-              aria-label="סגור חלון יצירת אירוע">
-        <span aria-hidden="true">✕</span>
-      </button>
+      <button class="modal-close" onclick="closeModal('modalAddEvent')" aria-label="סגור חלון יצירת אירוע">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
@@ -1001,11 +1401,11 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label" for="ev-km">אורך בקילומטרים</label>
+          <label class="form-label" for="ev-km">אורך (ק"מ)</label>
           <input type="number" id="ev-km" class="input" placeholder="45" min="0">
         </div>
         <div class="form-group">
-          <label class="form-label" for="ev-climb">עלייה במטרים</label>
+          <label class="form-label" for="ev-climb">עליות (מטר)</label>
           <input type="number" id="ev-climb" class="input" placeholder="800" min="0">
         </div>
       </div>
@@ -1015,7 +1415,7 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       </div>
       <div class="form-group">
         <label class="form-label" for="ev-captain">קפטן מוביל</label>
-        <select id="ev-captain" class="select" style="width:100%">
+        <select id="ev-captain" class="select" style="width:100%" aria-label="בחר קפטן מוביל">
           <option value="">— בחר —</option>
         </select>
       </div>
@@ -1025,21 +1425,20 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modalAddEvent')">ביטול</button>
-      <button class="btn btn-primary" onclick="submitAddEvent()">צור אירוע</button>
+      <button class="btn btn-primary" onclick="submitAddEvent()" aria-label="שמור אירוע חדש">💾 צור אירוע</button>
     </div>
   </div>
 </div>
 
-<!-- הוספת אופניים -->
+<!-- ═══════════════════════
+     MODAL — הוספת אופניים
+═══════════════════════════ -->
 <div class="modal-backdrop" id="modalAddBike" role="dialog" aria-modal="true"
      aria-labelledby="modal-title-bike" onclick="backdropClose(event,'modalAddBike')">
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-title-bike">הוספת אופניים לצי</h2>
-      <button class="modal-close" onclick="closeModal('modalAddBike')"
-              aria-label="סגור חלון הוספת אופניים">
-        <span aria-hidden="true">✕</span>
-      </button>
+      <button class="modal-close" onclick="closeModal('modalAddBike')" aria-label="סגור חלון הוספת אופניים">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
@@ -1049,7 +1448,7 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="bike-new-frame">סוג שלדה *</label>
-          <select id="bike-new-frame" class="select" style="width:100%" required aria-required="true">
+          <select id="bike-new-frame" class="select" style="width:100%" required aria-required="true" aria-label="סוג שלדה">
             <option value="">— בחר —</option>
             <option>טנדם</option>
             <option>סינגל</option>
@@ -1057,7 +1456,7 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
         </div>
         <div class="form-group">
           <label class="form-label" for="bike-new-drive">סוג הנעה *</label>
-          <select id="bike-new-drive" class="select" style="width:100%" required aria-required="true">
+          <select id="bike-new-drive" class="select" style="width:100%" required aria-required="true" aria-label="סוג הנעה">
             <option value="">— בחר —</option>
             <option>חשמלי</option>
             <option>רגיל</option>
@@ -1070,21 +1469,20 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modalAddBike')">ביטול</button>
-      <button class="btn btn-primary" onclick="submitAddBike()">הוסף לצי</button>
+      <button class="btn btn-primary" onclick="submitAddBike()" aria-label="שמור אופניים חדשים">💾 הוסף לצי</button>
     </div>
   </div>
 </div>
 
-<!-- עריכת רוכב -->
+<!-- ═══════════════════════
+     MODAL — עריכת רוכב
+═══════════════════════════ -->
 <div class="modal-backdrop" id="modalEditRider" role="dialog" aria-modal="true"
-     aria-labelledby="modal-title-edit" onclick="backdropClose(event,'modalEditRider')">
+     aria-labelledby="modal-title-edit" aria-describedby="edit-rider-error" onclick="backdropClose(event,'modalEditRider')">
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-title-edit">עריכת פרטי רוכב</h2>
-      <button class="modal-close" onclick="closeModal('modalEditRider')"
-              aria-label="סגור חלון עריכת רוכב">
-        <span aria-hidden="true">✕</span>
-      </button>
+      <button class="modal-close" onclick="closeModal('modalEditRider')" aria-label="סגור חלון עריכת רוכב">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="edit-tid">
@@ -1111,13 +1509,13 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="edit-style">סגנון רכיבה</label>
-          <select id="edit-style" class="select" style="width:100%">
+          <select id="edit-style" class="select" style="width:100%" aria-label="סגנון רכיבה">
             <option>קפטן</option><option>סטוקר</option><option>סינגל</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label" for="edit-perm">הרשאה</label>
-          <select id="edit-perm" class="select" style="width:100%">
+          <select id="edit-perm" class="select" style="width:100%" aria-label="הרשאת מערכת">
             <option>משתמש</option><option>מנהל</option>
           </select>
         </div>
@@ -1132,40 +1530,39 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modalEditRider')">ביטול</button>
-      <button class="btn btn-primary" onclick="submitEditRider()">שמור שינויים</button>
+      <button class="btn btn-primary" onclick="submitEditRider()" aria-label="שמור שינויים">💾 שמור</button>
     </div>
   </div>
 </div>
-
-<!-- הוספת רוכב -->
-<div class="modal-backdrop" id="modalAddRider" role="dialog" aria-modal="true"
-     aria-labelledby="modal-title-add" onclick="backdropClose(event,'modalAddRider')">
+<div class="modal-backdrop" id="modalAddRider"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="modal-title-add" aria-describedby="add-rider-error"
+     onclick="backdropClose(event,'modalAddRider')">
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-title-add">הוספת רוכב חדש</h2>
-      <button class="modal-close" onclick="closeModal('modalAddRider')"
-              aria-label="סגור חלון הוספת רוכב">
-        <span aria-hidden="true">✕</span>
-      </button>
+      <button class="modal-close" onclick="closeModal('modalAddRider')" aria-label="סגור חלון הוספת רוכב">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="new-tid">תעודת זהות *</label>
           <input type="text" id="new-tid" class="input" placeholder="123456789"
-                 required aria-required="true" inputmode="numeric" maxlength="9"
-                 aria-describedby="new-tid-hint">
-          <span id="new-tid-hint" class="sr-only">9 ספרות בלבד</span>
+                 required aria-required="true"
+                 inputmode="numeric" maxlength="9">
         </div>
         <div class="form-group">
           <label class="form-label" for="new-name">שם מלא *</label>
-          <input type="text" id="new-name" class="input" placeholder="ישראל ישראלי" required aria-required="true">
+          <input type="text" id="new-name" class="input" placeholder="ישראל ישראלי"
+                 required aria-required="true">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="new-phone">טלפון *</label>
-          <input type="tel" id="new-phone" class="input" placeholder="050-1234567" required aria-required="true">
+          <input type="tel" id="new-phone" class="input" placeholder="050-1234567"
+                 required aria-required="true">
         </div>
         <div class="form-group">
           <label class="form-label" for="new-email">אימייל</label>
@@ -1175,7 +1572,8 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="new-city">עיר *</label>
-          <input type="text" id="new-city" class="input" placeholder="תל אביב" required aria-required="true">
+          <input type="text" id="new-city" class="input" placeholder="תל אביב"
+                 required aria-required="true">
         </div>
         <div class="form-group">
           <label class="form-label" for="new-dob">תאריך לידה *</label>
@@ -1185,7 +1583,7 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="new-gender">מין *</label>
-          <select id="new-gender" class="select" style="width:100%" required aria-required="true">
+          <select id="new-gender" class="select" style="width:100%" required aria-required="true" aria-label="מין">
             <option value="">— בחר —</option>
             <option>זכר</option>
             <option>נקבה</option>
@@ -1193,38 +1591,44 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
         </div>
         <div class="form-group">
           <label class="form-label" for="new-style">סגנון רכיבה</label>
-          <select id="new-style" class="select" style="width:100%">
-            <option>סינגל</option><option>קפטן</option><option>סטוקר</option>
+          <select id="new-style" class="select" style="width:100%" aria-label="סגנון רכיבה">
+            <option>סינגל</option>
+            <option>קפטן</option>
+            <option>סטוקר</option>
           </select>
         </div>
       </div>
       <div class="form-group">
         <label class="form-label" for="new-perm">הרשאת מערכת</label>
-        <select id="new-perm" class="select" style="width:100%">
-          <option>משתמש</option><option>מנהל</option>
+        <select id="new-perm" class="select" style="width:100%" aria-label="הרשאת מערכת">
+          <option>משתמש</option>
+          <option>מנהל</option>
         </select>
       </div>
+
       <div id="add-rider-error" role="alert" aria-live="assertive"
            style="display:none;background:rgba(255,90,90,0.1);border:1px solid var(--red);
-                  border-radius:8px;padding:10px 14px;font-size:0.85rem;color:var(--red);margin-top:8px"></div>
+                  border-radius:8px;padding:10px 14px;font-size:0.85rem;color:var(--red);margin-top:8px">
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modalAddRider')">ביטול</button>
-      <button class="btn btn-primary" onclick="submitAddRider()">הוסף רוכב</button>
+      <button class="btn btn-primary" onclick="submitAddRider()" aria-label="שמור רוכב חדש">
+        💾 הוסף רוכב
+      </button>
     </div>
   </div>
 </div>
 
-<!-- עריכת אירוע -->
+<!-- ═══════════════════════
+     MODAL — עריכת אירוע
+═══════════════════════════ -->
 <div class="modal-backdrop" id="modalEditEvent" role="dialog" aria-modal="true"
      aria-labelledby="modal-title-edit-event" onclick="backdropClose(event,'modalEditEvent')">
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-title-edit-event">עריכת אירוע</h2>
-      <button class="modal-close" onclick="closeModal('modalEditEvent')"
-              aria-label="סגור חלון עריכת אירוע">
-        <span aria-hidden="true">✕</span>
-      </button>
+      <button class="modal-close" onclick="closeModal('modalEditEvent')" aria-label="סגור חלון עריכת אירוע">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="edit-event-id">
@@ -1244,11 +1648,11 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label" for="edit-ev-km">קילומטרים</label>
+          <label class="form-label" for="edit-ev-km">ק"מ</label>
           <input type="number" id="edit-ev-km" class="input" min="0">
         </div>
         <div class="form-group">
-          <label class="form-label" for="edit-ev-climb">עלייה במטרים</label>
+          <label class="form-label" for="edit-ev-climb">עליות (מ')</label>
           <input type="number" id="edit-ev-climb" class="input" min="0">
         </div>
       </div>
@@ -1258,31 +1662,30 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       </div>
       <div class="form-group">
         <label class="form-label" for="edit-ev-captain">קפטן מוביל</label>
-        <select id="edit-ev-captain" class="select" style="width:100%">
+        <select id="edit-ev-captain" class="select" style="width:100%" aria-label="קפטן מוביל">
           <option value="">— בחר —</option>
         </select>
       </div>
-      <div id="edit-event-error" role="alert" aria-live="assertive"
-           style="display:none;background:rgba(255,90,90,0.1);border:1px solid var(--red);
-                  border-radius:8px;padding:10px 14px;font-size:0.85rem;color:var(--red);margin-top:8px"></div>
+      <div id="edit-event-error" role="alert" style="display:none;background:rgba(255,90,90,0.1);
+           border:1px solid var(--red);border-radius:8px;padding:10px 14px;
+           font-size:0.85rem;color:var(--red);margin-top:8px"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modalEditEvent')">ביטול</button>
-      <button class="btn btn-primary" onclick="submitEditEvent()">שמור שינויים</button>
+      <button class="btn btn-primary" onclick="submitEditEvent()">💾 שמור שינויים</button>
     </div>
   </div>
 </div>
 
-<!-- עריכת אופניים -->
+<!-- ═══════════════════════
+     MODAL — עריכת אופניים
+═══════════════════════════ -->
 <div class="modal-backdrop" id="modalEditBike" role="dialog" aria-modal="true"
      aria-labelledby="modal-title-edit-bike" onclick="backdropClose(event,'modalEditBike')">
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-title-edit-bike">עריכת אופניים</h2>
-      <button class="modal-close" onclick="closeModal('modalEditBike')"
-              aria-label="סגור חלון עריכת אופניים">
-        <span aria-hidden="true">✕</span>
-      </button>
+      <button class="modal-close" onclick="closeModal('modalEditBike')" aria-label="סגור חלון עריכת אופניים">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="edit-bike-id">
@@ -1293,44 +1696,43 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="edit-bike-frame">סוג שלדה *</label>
-          <select id="edit-bike-frame" class="select" style="width:100%">
+          <select id="edit-bike-frame" class="select" style="width:100%" aria-label="סוג שלדה">
             <option>טנדם</option><option>סינגל</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label" for="edit-bike-drive">סוג הנעה *</label>
-          <select id="edit-bike-drive" class="select" style="width:100%">
+          <select id="edit-bike-drive" class="select" style="width:100%" aria-label="סוג הנעה">
             <option>חשמלי</option><option>רגיל</option>
           </select>
         </div>
       </div>
-      <div id="edit-bike-error" role="alert" aria-live="assertive"
-           style="display:none;background:rgba(255,90,90,0.1);border:1px solid var(--red);
-                  border-radius:8px;padding:10px 14px;font-size:0.85rem;color:var(--red);margin-top:8px"></div>
+      <div id="edit-bike-error" role="alert" style="display:none;background:rgba(255,90,90,0.1);
+           border:1px solid var(--red);border-radius:8px;padding:10px 14px;
+           font-size:0.85rem;color:var(--red);margin-top:8px"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modalEditBike')">ביטול</button>
-      <button class="btn btn-primary" onclick="submitEditBike()">שמור</button>
+      <button class="btn btn-primary" onclick="submitEditBike()">💾 שמור</button>
     </div>
   </div>
 </div>
 
-<!-- השבתת אופניים -->
+<!-- ═══════════════════════
+     MODAL — השבתת אופניים
+═══════════════════════════ -->
 <div class="modal-backdrop" id="modalDisableBike" role="dialog" aria-modal="true"
-     aria-labelledby="modal-title-disable" onclick="backdropClose(event,'modalDisableBike')">
+     aria-labelledby="modal-title-disable" aria-describedby="disable-bike-error" onclick="backdropClose(event,'modalDisableBike')">
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-title-disable">השבתת אופניים</h2>
-      <button class="modal-close" onclick="closeModal('modalDisableBike')"
-              aria-label="סגור חלון השבתת אופניים">
-        <span aria-hidden="true">✕</span>
-      </button>
+      <button class="modal-close" onclick="closeModal('modalDisableBike')" aria-label="סגור חלון השבתת אופניים">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="disable-bike-id">
-      <div role="note" style="background:rgba(255,90,90,0.08);border:1px solid rgba(255,90,90,0.3);
+      <div style="background:rgba(255,90,90,0.08);border:1px solid rgba(255,90,90,0.3);
                   border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:0.85rem;color:var(--red)">
-        האופניים יועברו למצב מושבת ותיפתח רשומת תחזוקה
+        ⚠️ האופניים יועברו למצב מושבת ותיפתח רשומת תחזוקה
       </div>
       <div class="form-group">
         <label class="form-label" for="disable-bike-name">אופניים</label>
@@ -1339,141 +1741,115 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text); }
       </div>
       <div class="form-group">
         <label class="form-label" for="disable-fault">סוג תקלה / סיבת השבתה *</label>
-        <textarea id="disable-fault" class="input"
+        <textarea id="disable-fault" aria-label="סוג תקלה וסיבת ההשבתה" class="input"
                   style="height:90px;resize:vertical;padding-top:10px"
                   placeholder="תאר את התקלה או סיבת ההשבתה…"
                   required aria-required="true"></textarea>
       </div>
-      <div id="disable-bike-error" role="alert" aria-live="assertive"
+      <div id="disable-bike-error" role="alert"
            style="display:none;background:rgba(255,90,90,0.1);border:1px solid var(--red);
                   border-radius:8px;padding:10px 14px;font-size:0.85rem;color:var(--red);margin-top:8px"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modalDisableBike')">ביטול</button>
-      <button class="btn btn-danger" onclick="submitDisableBike()"
-              style="border:none;background:var(--red);color:#fff"
-              aria-label="אשר השבתת אופניים">
-        השבת אופניים
+      <button class="btn btn-danger" onclick="submitDisableBike()" style="border:none;background:var(--red);color:#fff">
+        🔒 השבת אופניים
       </button>
     </div>
   </div>
 </div>
 
-<!-- ─── TOAST ─────────────────────────── -->
-<!-- role="log" צובר הודעות; assertive לשגיאות בלבד (מטופל ב-JS) -->
-<div class="toast-area" id="toastArea"
-     role="log"
-     aria-live="polite"
-     aria-atomic="false"
-     aria-label="הודעות מערכת"></div>
+<!-- Toast area -->
+<div class="toast-area" id="toastArea" role="log" aria-live="polite" aria-atomic="true" aria-label="הודעות מערכת"></div>
+
+<!-- Visually hidden helper -->
+<style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>
 
 <script>
+// ─── CONFIG ────────────────────────────────────────
 const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec";
 
-// ══════════════════════════════════════════
-// ACCESSIBILITY HELPERS
-// ══════════════════════════════════════════
-
-// announce — הכרזה מיידית לקורא מסך
-function announce(message) {
-  const el = document.getElementById('sr-announcer');
-  el.textContent = '';
-  requestAnimationFrame(() => { el.textContent = message; });
-}
-
-// ── FOCUS TRAP למודאלים ──────────────────
-let _modalLastFocus = null;
-
-function trapFocus(e) {
-  if (e.key === 'Escape') {
-    document.querySelectorAll('.modal-backdrop.open').forEach(m => {
-      const id = m.id;
-      closeModal(id);
-    });
-    return;
-  }
-  if (e.key !== 'Tab') return;
-  const modal = document.querySelector('.modal-backdrop.open .modal');
-  if (!modal) return;
-  const focusable = Array.from(modal.querySelectorAll(
-    'input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])'
-  ));
-  if (!focusable.length) return;
-  const first = focusable[0], last = focusable[focusable.length - 1];
-  if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
-  else            { if (document.activeElement === last)  { e.preventDefault(); first.focus(); } }
-}
-
-// ══════════════════════════════════════════
-// GUARD
-// ══════════════════════════════════════════
+// ─── GUARD — מנהלים בלבד ───────────────────────────
 (function() {
   const stored = sessionStorage.getItem('user');
   if (!stored) { window.location.replace('login.html'); return; }
   const u = JSON.parse(stored);
   if (u.permission !== 'מנהל') { window.location.replace('rider.html'); return; }
+  // עדכון כרטיס משתמש בסרגל הצד
   document.addEventListener('DOMContentLoaded', () => {
-    const nameEl   = document.getElementById('userNameEl');
-    const avatarEl = document.getElementById('userAvatarEl');
+    const nameEl   = document.querySelector('.user-name');
+    const roleEl   = document.querySelector('.user-role');
+    const avatarEl = document.querySelector('.user-avatar');
     if (nameEl)   nameEl.textContent   = u.name;
+    if (roleEl)   roleEl.textContent   = 'מנהל מערכת';
     if (avatarEl) avatarEl.textContent = u.name.trim().split(' ').map(w=>w[0]).slice(0,2).join('');
     const userCard = document.querySelector('.user-card');
     if (userCard) userCard.setAttribute('aria-label', `משתמש מחובר: ${u.name}, מנהל מערכת`);
   });
 })();
 
-// ══════════════════════════════════════════
-// API
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// DATA LAYER — טעינה מה-API בטעינת הדף
+// ══════════════════════════════════════════════════
+
+// קריאה ל-Apps Script (doGet — קריאה)
 async function apiGet(action, params = {}) {
-  const qs  = new URLSearchParams({ action, ...params }).toString();
-  const res = await fetch(`${API_URL}?${qs}`);
-  const d   = await res.json();
-  if (!d.success) throw new Error(d.error);
-  return d.data;
-}
-async function callAPI(action, body = {}) {
-  const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
-  const res = await fetch(`${API_URL}?${qs}`);
-  const d   = await res.json();
-  if (!d.success) throw new Error(d.error);
-  return d.data;
+  const qs   = new URLSearchParams({ action, ...params }).toString();
+  const res  = await fetch(`${API_URL}?${qs}`);
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error);
+  return data.data;
 }
 
-// ══════════════════════════════════════════
-// BOOTSTRAP
-// ══════════════════════════════════════════
+// קריאה ל-Apps Script (doGet — כתיבה עם data=JSON)
+async function callAPI(action, body = {}) {
+  const qs   = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
+  const res  = await fetch(`${API_URL}?${qs}`);
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error);
+  return data.data;
+}
+
+// ─── BOOTSTRAP — רץ בטעינת הדף ─────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   showLoading(true);
   try {
-    await Promise.all([ loadRiders(), loadEvents(), loadBikes() ]);
+    await Promise.all([
+      loadRiders(),
+      loadEvents(),
+      loadBikes(),
+    ]);
     updateDashboardStats();
     updateExamAlerts();
-    applyExamsFilter();
-    renderAdminNotifications();
+    renderExamsTable(STATE.riders);
+    renderAdminNotifications();  // ← התראות
   } catch(e) {
     showToast('שגיאה בטעינת הנתונים: ' + e.message, 'error');
-    announce('שגיאה בטעינת הנתונים: ' + e.message);
   } finally {
     showLoading(false);
   }
 });
 
-// ══════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════
-const STATE = { riders: [], events: [], bikes: [], allEvents: null };
+// ─── מצב אפליקציה ────────────────────────────────
+const STATE = { riders: [], events: [], bikes: [] };
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // LOADERS
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
+
 async function loadRiders() {
+  // Apps Script: doGet?action=getAllRiders (endpoint מנהל)
+  // כרגע נשתמש ב-getPhoneBook ונרחיב — בגרסת מנהל
+  // הקוד הבא ירוץ כשה-API_URL מוגדר:
+  if (!API_URL) return; // אם אין URL — שומר נתוני דוגמה
   const riders = await apiGet('getAllRiders');
   STATE.riders = riders;
   renderRidersTable(riders);
   updateExamAlerts();
 }
+
 async function loadEvents() {
+  if (!API_URL) return;
   const all = await apiGet('getAllEvents');
   STATE.events    = all.upcoming || [];
   STATE.allEvents = all;
@@ -1481,88 +1857,79 @@ async function loadEvents() {
   renderAssignmentsEventSelect(STATE.events);
   renderAllEventsTables(all);
 }
+
 async function loadBikes() {
+  if (!API_URL) return;
   const bikes = await apiGet('getBikes');
   STATE.bikes = bikes;
   renderBikesTable(bikes);
 }
 
-// ══════════════════════════════════════════
-// RENDERERS — טבלת רוכבים
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// RENDERERS
+// ══════════════════════════════════════════════════
+
+// ─── טבלת רוכבים ─────────────────────────────────
 function renderRidersTable(riders) {
   const tbody = document.getElementById('ridersBody');
   if (!riders.length) {
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted)">אין רוכבים רשומים</td></tr>`;
-    announce('אין רוכבים רשומים');
     return;
   }
-
   tbody.innerHTML = riders.map(r => {
-    // סטטוס בדיקה — טקסט בלי אמוג'י לקורא מסך
-    const examClass  = r.examStatus.includes('✅') ? 'status-ok'
-                     : r.examStatus.includes('❌') ? 'status-err' : 'status-warn';
-    const examTextSR = r.examStatus.includes('✅') ? 'תקין'
-                     : r.examStatus.includes('❌') ? 'פג תוקף'
-                     : r.examStatus.includes('⚠️') ? 'עומד לפוג' : 'אין בדיקה';
-    const permClass  = 'status-blue';
-    const permTextSR = r.permission === 'מנהל' ? 'מנהל' : 'משתמש';
-
-    // תיאור השורה כולה — role="text" למנוע ניווט פנימי
-    const rowLabel = `${r.name}, ${r.city}, גיל ${r.age}, ${r.rideStyle}, הרשאה: ${permTextSR}, בדיקה: ${examTextSR}`;
-
+    const examClass = r.examStatus.includes('✅') ? 'status-ok'
+                    : r.examStatus.includes('❌') ? 'status-err' : 'status-warn';
+    const permClass = r.permission === 'מנהל' ? 'status-blue' : 'status-blue';
     return `
-    <tr class="rider-row" aria-label="${esc(rowLabel)}">
+    <tr class="rider-row">
       <td data-label="שם">
-        <!-- role="text" — VoiceOver קורא כמשפט אחד -->
-        <div role="text" aria-label="${esc(r.name)}, ${esc(r.phone)}, ${esc(r.city)}, גיל ${esc(r.age)}">
-          <div class="td-name" aria-hidden="true">${esc(r.name)}</div>
-          <div class="td-sub" aria-hidden="true">${esc(r.phone)}</div>
-          <div class="td-sub" aria-hidden="true">${esc(r.city)} · גיל ${esc(r.age)}</div>
-        </div>
+        <div class="td-name">${esc(r.name)}</div>
+        <div class="td-sub">${esc(r.phone)}</div>
+        <div class="td-sub">${esc(r.city)} · גיל ${esc(r.age)}</div>
       </td>
-      <td data-label="טלפון" class="hide-mobile" aria-hidden="true">${esc(r.phone)}</td>
-      <td data-label="עיר"   class="hide-mobile" aria-hidden="true">${esc(r.city)}</td>
-      <td data-label="גיל"   class="hide-mobile" aria-hidden="true">${esc(r.age)}</td>
-      <td data-label="סגנון">
-        <span class="role-tag">${esc(r.rideStyle)}</span>
-      </td>
-      <td data-label="הרשאה">
-        <!-- aria-label על span כולל רק טקסט, ללא אמוג'י -->
-        <span class="status ${permClass}" aria-label="הרשאה: ${esc(permTextSR)}">
-          <span aria-hidden="true">${esc(r.permission)}</span>
-        </span>
-      </td>
-      <td data-label="בדיקה">
-        <span class="status ${examClass}" aria-label="סטטוס בדיקה: ${esc(examTextSR)}">
-          <span aria-hidden="true">${esc(r.examStatus)}</span>
-        </span>
-      </td>
+      <td data-label="טלפון" class="hide-mobile">${esc(r.phone)}</td>
+      <td data-label="עיר" class="hide-mobile">${esc(r.city)}</td>
+      <td data-label="גיל" class="hide-mobile">${esc(r.age)}</td>
+      <td data-label="סגנון"><span class="role-tag">${esc(r.rideStyle)}</span></td>
+      <td data-label="הרשאה"><span class="status ${permClass}">${esc(r.permission)}</span></td>
+      <td data-label="בדיקה"><span class="status ${examClass}" role="status">${esc(r.examStatus)}</span></td>
       <td data-label="פעולות">
         <div class="row-actions">
-          <button class="icon-btn"
-                  aria-label="ערוך פרטי רוכב ${esc(r.name)}"
-                  data-rider-tid="${esc(r.tid)}"
-                  data-rider-action="edit"
-                  onclick="editRider('${esc(r.tid)}')">
-            <span aria-hidden="true">✏️</span>
-          </button>
-          <button class="icon-btn danger"
-                  aria-label="מחק רוכב ${esc(r.name)}"
-                  onclick="deleteRider('${esc(r.tid)}','${esc(r.name)}')">
-            <span aria-hidden="true">🗑️</span>
-          </button>
+          <button class="icon-btn" aria-label="ערוך פרטי רוכב ${esc(r.name)}" title="עריכה" onclick="editRider('${esc(r.tid)}')">✏️</button>
+          <button class="icon-btn danger" aria-label="מחק רוכב ${esc(r.name)}" title="מחיקה" onclick="deleteRider('${esc(r.tid)}','${esc(r.name)}')">🗑️</button>
         </div>
       </td>
     </tr>`;
   }).join('');
-
-  announce(`נטענו ${riders.length} רוכבים`);
 }
 
-// ══════════════════════════════════════════
-// RENDERERS — אירועים בדשבורד
-// ══════════════════════════════════════════
+// ─── טבלת אירועים ────────────────────────────────
+function renderEventsTable(events) {
+  const tbody = document.querySelector('#tabp-upcoming table tbody');
+  if (!tbody) return;
+  if (!events.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted)">אין אירועים קרובים</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = events.map(e => `
+    <tr>
+      <td><strong>${esc(e.date)}</strong><div class="td-sub">${esc(e.meetTime)}</div></td>
+      <td><div class="td-name">${esc(e.description)}</div><div class="td-sub">${esc(e.meetPoint)}</div></td>
+      <td>${esc(String(e.km))}</td>
+      <td>${esc(String(e.climb))} מ'</td>
+      <td>—</td>
+      <td>${esc(e.captain)}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" aria-label="ערוך אירוע ${esc(e.description)}" title="עריכה">✏️</button>
+          <button class="icon-btn" aria-label="הרשמות לאירוע ${esc(e.description)}" title="הרשמות" onclick="loadRegistrations('${esc(e.id)}')">👥</button>
+          <button class="icon-btn danger" aria-label="בטל אירוע ${esc(e.description)}" title="ביטול">🚫</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+// ─── אירועים בדשבורד ─────────────────────────────
 function renderDashboardEvents(events) {
   const tbody = document.getElementById('dashEventsBody');
   if (!tbody) return;
@@ -1573,94 +1940,67 @@ function renderDashboardEvents(events) {
   }
   tbody.innerHTML = upcoming.map(e => `
     <tr>
-      <td>
-        <!-- role="text" — תאריך + שעה כמשפט אחד -->
-        <div role="text" aria-label="${esc(formatDateHebrew(e.date))}, שעת מפגש ${esc(e.meetTime)}">
-          <strong aria-hidden="true">${esc(e.date)}</strong>
-          <div class="td-sub" aria-hidden="true">${esc(e.meetTime)}</div>
-        </div>
-      </td>
-      <td>
-        <div role="text" aria-label="${esc(e.description)}, נקודת מפגש: ${esc(e.meetPoint)}">
-          <div class="td-name" aria-hidden="true">${esc(e.description)}</div>
-          <div class="td-sub"  aria-hidden="true">${esc(e.meetPoint)}</div>
-        </div>
-      </td>
-      <td>
-        <span aria-hidden="true">${esc(String(e.km))}</span>
-        <span class="sr-only">${esc(String(e.km))} קילומטר</span>
-      </td>
-      <td class="hide-mobile">${esc(e.captain)}</td>
+      <td><strong>${esc(e.date)}</strong><div class="td-sub">${esc(e.meetTime)}</div></td>
+      <td><div class="td-name">${esc(e.description)}</div><div class="td-sub">${esc(e.meetPoint)}</div></td>
+      <td>${esc(String(e.km))} ק"מ</td>
+      <td>${esc(e.captain)}</td>
       <td>
         <div class="row-actions">
-          <button class="icon-btn"
-                  aria-label="עבור לעריכת אירוע ${esc(e.description)}"
-                  onclick="showSection('events',this)">
-            <span aria-hidden="true">✏️</span>
-          </button>
-          <button class="icon-btn"
-                  aria-label="הצג הרשמות לאירוע ${esc(e.description)}"
-                  onclick="loadRegistrations('${esc(e.id)}')">
-            <span aria-hidden="true">👁️</span>
-          </button>
+          <button class="icon-btn" aria-label="ערוך אירוע ${esc(e.description)}" onclick="showSection('events',this)">✏️</button>
+          <button class="icon-btn" aria-label="הרשמות לאירוע ${esc(e.description)}" onclick="loadRegistrations('${esc(e.id)}')">👁️</button>
         </div>
       </td>
     </tr>`).join('');
 }
 
-// ══════════════════════════════════════════
-// RENDERERS — טבלת אופניים
-// ══════════════════════════════════════════
+// ─── טבלת אופניים ────────────────────────────────
 function renderBikesTable(bikes) {
   const tbody = document.querySelector('#section-bikes table tbody');
   if (!tbody) return;
   tbody.innerHTML = bikes.map(b => {
     const isPrivate   = b.id === 'PRIVATE';
     const statusClass = b.status === 'תקין' ? 'status-ok' : 'status-err';
-    const statusLabel = b.status === 'תקין' ? 'תקין' : 'מושבת';
-    const statusDisp  = b.status === 'תקין' ? 'תקין' : 'מושבת';
+    const statusLabel = b.status === 'תקין' ? '✅ תקין' : '🔧 מושבת';
     return `
     <tr ${isPrivate ? 'style="background:rgba(255,242,204,0.06)"' : ''}>
-      <td>${isPrivate
-        ? `<strong>${esc(b.id)}</strong>`
-        : `<button style="background:none;border:none;cursor:pointer;color:var(--accent);
-                          font-weight:700;font-size:0.88rem;text-align:right;padding:0"
-                   aria-label="פתח היסטוריית תחזוקה של ${esc(b.name)}"
-                   onclick="openBikeHistory('${esc(b.id)}','${esc(b.name)}')">${esc(b.id)}</button>`}
+      <td>
+        ${isPrivate
+          ? `<strong>${esc(b.id)}</strong>`
+          : `<button style="background:none;border:none;cursor:pointer;color:var(--accent);
+                            font-weight:700;font-size:0.88rem;text-align:right;padding:0"
+                     aria-label="פתח היסטוריית תחזוקה של ${esc(b.name)}"
+                     onclick="openBikeHistory('${esc(b.id)}','${esc(b.name)}')">
+               ${esc(b.id)}
+             </button>`}
       </td>
-      <td>${isPrivate
-        ? esc(b.name)
-        : `<button style="background:none;border:none;cursor:pointer;color:var(--text);
-                          font-weight:600;font-size:0.88rem;text-align:right;padding:0;
-                          text-decoration:underline;text-underline-offset:3px"
-                   aria-label="פתח היסטוריית תחזוקה של ${esc(b.name)}"
-                   onclick="openBikeHistory('${esc(b.id)}','${esc(b.name)}')">${esc(b.name)}</button>`}
+      <td>
+        ${isPrivate
+          ? esc(b.name)
+          : `<button style="background:none;border:none;cursor:pointer;color:var(--text);
+                            font-weight:600;font-size:0.88rem;text-align:right;padding:0;
+                            text-decoration:underline;text-underline-offset:3px"
+                     aria-label="פתח היסטוריית תחזוקה של ${esc(b.name)}"
+                     onclick="openBikeHistory('${esc(b.id)}','${esc(b.name)}')">
+               ${esc(b.name)}
+             </button>`}
       </td>
       <td>${esc(b.frame)}</td>
       <td>${esc(b.drive)}</td>
-      <td>
-        <span class="status ${statusClass}" aria-label="סטטוס: ${isPrivate ? 'תמיד זמין' : esc(statusLabel)}">
-          <span aria-hidden="true">${isPrivate ? 'תמיד זמין' : statusDisp}</span>
-        </span>
-      </td>
+      <td><span class="status ${statusClass}" role="status">${isPrivate ? 'תמיד זמין' : statusLabel}</span></td>
       <td>
         <div class="row-actions">
           ${isPrivate ? '' : `
             <button class="icon-btn"
-                    aria-label="ערוך אופניים ${esc(b.name)}"
-                    onclick="editBike('${esc(b.id)}')">
-              <span aria-hidden="true">✏️</span>
-            </button>
+                    aria-label="ערוך אופניים ${esc(b.name)}" title="עריכה"
+                    onclick="editBike('${esc(b.id)}')">✏️</button>
             <button class="btn ${b.status === 'תקין' ? 'btn-ghost' : 'btn-primary'} btn-sm"
                     aria-label="${b.status === 'תקין' ? 'השבת' : 'הפעל מחדש'} אופניים ${esc(b.name)}"
                     onclick="toggleBike('${esc(b.id)}','${b.status}')">
               ${b.status === 'תקין' ? 'השבת' : 'הפעל מחדש'}
             </button>
             <button class="icon-btn danger"
-                    aria-label="מחק אופניים ${esc(b.name)}"
-                    onclick="deleteBike('${esc(b.id)}','${esc(b.name)}')">
-              <span aria-hidden="true">🗑️</span>
-            </button>
+                    aria-label="מחק אופניים ${esc(b.name)}" title="מחיקה"
+                    onclick="deleteBike('${esc(b.id)}','${esc(b.name)}')">🗑️</button>
           `}
         </div>
       </td>
@@ -1668,48 +2008,54 @@ function renderBikesTable(bikes) {
   }).join('');
 }
 
-// ══════════════════════════════════════════
-// STAT CARDS — עדכון עם sr-only
-// ══════════════════════════════════════════
+// ─── כרטיסי סטטיסטיקה ───────────────────────────
 function updateDashboardStats() {
-  const riders       = STATE.riders;
-  const events       = STATE.events;
+  const riders      = STATE.riders;
+  const events      = STATE.events;
   const expiredCount = riders.filter(r =>
     r.examStatus && (r.examStatus.includes('❌') || r.examStatus.includes('אין'))
   ).length;
   const availBikes = STATE.bikes.filter(b => b.status === 'תקין' && b.id !== 'PRIVATE').length;
 
-  // עדכון ויזואלי + sr-only כמשפט שלם
-  const updates = [
-    { vis: 'stat-riders', sr: 'stat-riders-sr', val: riders.length,  label: `${riders.length} רוכבים פעילים` },
-    { vis: 'stat-events', sr: 'stat-events-sr', val: events.length,  label: `${events.length} אירועים קרובים` },
-    { vis: 'stat-exams',  sr: 'stat-exams-sr',  val: expiredCount,   label: `${expiredCount} בדיקות שפגות תוקף` },
-    { vis: 'stat-bikes',  sr: 'stat-bikes-sr',  val: availBikes,     label: `${availBikes} אופניים זמינים` },
+  // עדכון לפי ID ישיר — לא תלוי בסדר DOM
+  const set = (id, val, label) => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = val; el.setAttribute('aria-label', label); }
+  };
+  // ה-IDs בה-HTML הם stat-riders, stat-events, stat-exams, stat-bikes
+  // אם לא קיימים — נסה לפי querySelectorAll כ-fallback
+  const cards = document.querySelectorAll('.stat-card .stat-value');
+  const vals  = [riders.length, events.length, expiredCount, availBikes];
+  const labels = [
+    `${riders.length} רוכבים פעילים`,
+    `${events.length} אירועים קרובים`,
+    `${expiredCount} בדיקות שפגות תוקף`,
+    `${availBikes} אופניים זמינים`
   ];
-  updates.forEach(u => {
-    const vis = document.getElementById(u.vis);
-    const sr  = document.getElementById(u.sr);
-    if (vis) vis.textContent = u.val;
-    if (sr)  sr.textContent  = u.label;
+  cards.forEach((el, i) => {
+    if (i < vals.length) {
+      el.textContent = vals[i];
+      el.setAttribute('aria-label', labels[i]);
+    }
   });
 
-  // Badge — ויזואלי בלבד, sr-only נפרד
-  const badge   = document.getElementById('examBadge');
-  const badgeSR = document.getElementById('examBadgeSR');
+  const badge = document.getElementById('examBadge');
   if (badge) {
-    badge.textContent    = expiredCount || '';
-    badge.style.display  = expiredCount > 0 ? 'inline-block' : 'none';
-  }
-  if (badgeSR) {
-    badgeSR.textContent = expiredCount > 0
-      ? `${expiredCount} רוכבים דורשים תשומת לב בנושא בדיקות`
-      : '';
+    badge.textContent = expiredCount || '';
+    badge.style.display = expiredCount > 0 ? 'inline-block' : 'none';
+    badge.setAttribute('aria-label', `${expiredCount} רוכבים דורשים תשומת לב`);
   }
 }
 
-// ══════════════════════════════════════════
-// EXAM ALERTS TABLE
-// ══════════════════════════════════════════
+function setStatCard(index, value, ariaLabel) {
+  const cards = document.querySelectorAll('.stat-card .stat-value');
+  if (cards[index]) {
+    cards[index].textContent = value;
+    cards[index].setAttribute('aria-label', ariaLabel);
+  }
+}
+
+// ─── התראות בדיקות ───────────────────────────────
 function updateExamAlerts() {
   const tbody = document.getElementById('dashExamsBody');
   if (!tbody) return;
@@ -1717,40 +2063,57 @@ function updateExamAlerts() {
     r.examStatus && (r.examStatus.includes('❌') || r.examStatus.includes('⚠️') || r.examStatus.includes('אין'))
   );
   if (!alerts.length) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">כל הבדיקות תקינות</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">✅ כל הבדיקות תקינות</td></tr>`;
     return;
   }
   tbody.innerHTML = alerts.map(r => {
-    const cls    = r.examStatus.includes('❌') || r.examStatus.includes('אין') ? 'status-err' : 'status-warn';
-    const textSR = r.examStatus.includes('❌') ? 'פג תוקף'
-                 : r.examStatus.includes('אין') ? 'אין בדיקה' : 'עומד לפוג';
+    const cls = r.examStatus.includes('❌') || r.examStatus.includes('אין') ? 'status-err' : 'status-warn';
     return `
     <tr>
       <td class="td-name">${esc(r.name)}</td>
       <td>${esc(r.city)}</td>
-      <td>
-        <span class="status ${cls}" aria-label="סטטוס בדיקה: ${esc(textSR)}">
-          <span aria-hidden="true">${esc(r.examStatus)}</span>
-        </span>
-      </td>
+      <td><span class="status ${cls}" role="status">${esc(r.examStatus)}</span></td>
       <td>
         <div class="exam-update">
-          <label for="exam-${esc(r.tid)}" class="sr-only">תאריך בדיקה חדש עבור ${esc(r.name)}</label>
-          <input type="date" id="exam-${esc(r.tid)}" class="input-inline">
+          <label for="exam-${esc(r.tid)}" class="sr-only">תאריך בדיקה חדש ל${esc(r.name)}</label>
+          <input type="date" id="exam-${esc(r.tid)}" class="input-inline" aria-label="תאריך בדיקה חדש ל${esc(r.name)}">
           <button class="btn btn-primary btn-sm"
-                  aria-label="שמור תאריך בדיקה חדש עבור ${esc(r.name)}"
-                  onclick="saveExamDate('${esc(r.tid)}','${esc(r.name)}')">
-            שמור
-          </button>
+                  aria-label="שמור תאריך בדיקה חדש ל${esc(r.name)}"
+                  onclick="saveExamDate('${esc(r.tid)}','${esc(r.name)}')">שמור</button>
         </div>
       </td>
     </tr>`;
   }).join('');
 }
 
-// ══════════════════════════════════════════
-// RENDER EXAMS TABLE
-// ══════════════════════════════════════════
+// ─── select אירועים בשיבוצים ─────────────────────
+function renderAssignmentsEventSelect(events) {
+  const sel = document.getElementById('event-select-assign');
+  if (!sel) return;
+  const upcoming = events.filter(e => {
+    const d = new Date(e.date.split('/').reverse().join('-'));
+    return d >= new Date();
+  });
+  // מיון עולה לפי תאריך
+  upcoming.sort((a,b) => new Date(a.date.split('/').reverse().join('-')) - new Date(b.date.split('/').reverse().join('-')));
+
+  sel.innerHTML = '<option value="">— בחר אירוע —</option>' +
+    upcoming.map(e =>
+      `<option value="${esc(e.id)}">${esc(e.date)} — ${esc(e.description)}</option>`
+    ).join('');
+
+  // בחר אוטומטית את הראשון
+  if (upcoming.length) {
+    sel.value = upcoming[0].id;
+    loadAssignments();
+  }
+}
+
+// ══════════════════════════════════════════════════
+// ACTIONS
+// ══════════════════════════════════════════════════
+
+// ─── RENDER EXAMS TABLE ────────────────────────────
 function renderExamsTable(riders) {
   const container = document.getElementById('examsBody');
   if (!riders.length) {
@@ -1758,96 +2121,66 @@ function renderExamsTable(riders) {
     return;
   }
   container.innerHTML = riders.map(r => {
-    const cls    = r.examStatus.includes('✅') ? 'status-ok'
-                 : (r.examStatus.includes('❌') || r.examStatus.includes('אין')) ? 'status-err' : 'status-warn';
-    const textSR = r.examStatus.includes('✅') ? 'תקין'
-                 : r.examStatus.includes('❌') ? 'פג תוקף'
-                 : r.examStatus.includes('אין') ? 'אין בדיקה' : 'עומד לפוג';
+    const cls = r.examStatus.includes('✅') ? 'status-ok'
+              : r.examStatus.includes('❌') || r.examStatus.includes('אין') ? 'status-err' : 'status-warn';
     const examVal = r.examDate ? r.examDate.split('/').reverse().join('-') : '';
     return `
     <div style="background:var(--surface);border:1px solid var(--border);
-                border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px"
-         role="group"
-         aria-label="${esc(r.name)}, בדיקה: ${esc(textSR)}">
+                border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px">
+      <!-- שם -->
       <div style="font-weight:700;font-size:0.95rem;margin-bottom:10px;
                   padding-bottom:8px;border-bottom:1px solid var(--border)">
         ${esc(r.name)}
       </div>
-      <!-- role="text" — שורת נתונים כמשפט אחד -->
-      <div role="text"
-           aria-label="תאריך בדיקה: ${esc(r.examDate || 'לא ידוע')}, תוקף עד: ${esc(r.examExpiry || 'לא ידוע')}, סטטוס: ${esc(textSR)}"
-           style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:12px;font-size:0.82rem">
-        <div aria-hidden="true">
+      <!-- שורת נתונים -->
+      <div style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:12px;font-size:0.82rem">
+        <div>
           <span style="color:var(--text-muted)">תאריך בדיקה: </span>
           <strong>${esc(r.examDate) || '—'}</strong>
         </div>
-        <div aria-hidden="true">
+        <div>
           <span style="color:var(--text-muted)">תוקף עד: </span>
           <strong>${esc(r.examExpiry) || '—'}</strong>
         </div>
-        <span class="status ${cls}" aria-hidden="true">
-          <span aria-hidden="true">${esc(r.examStatus)}</span>
-        </span>
+        <div>
+          <span class="status ${cls}" role="status">${esc(r.examStatus)}</span>
+        </div>
       </div>
+      <!-- עדכון תאריך -->
       <div style="display:flex;gap:8px;align-items:center">
-        <label for="upd-${esc(r.tid)}" class="sr-only">עדכן תאריך בדיקה עבור ${esc(r.name)}</label>
+        <label for="upd-${esc(r.tid)}" class="sr-only">תאריך בדיקה חדש ל${esc(r.name)}</label>
         <input type="date" id="upd-${esc(r.tid)}" class="input-inline"
                style="flex:1;min-width:0"
-               value="${esc(examVal)}">
+               value="${esc(examVal)}"
+               aria-label="תאריך בדיקה ל${esc(r.name)}">
         <button class="btn btn-primary btn-sm"
-                aria-label="שמור תאריך בדיקה עבור ${esc(r.name)}"
-                onclick="saveExamDate('${esc(r.tid)}','${esc(r.name)}')">
-          שמור
-        </button>
+                aria-label="שמור תאריך בדיקה ל${esc(r.name)}"
+                onclick="saveExamDate('${esc(r.tid)}','${esc(r.name)}')">שמור</button>
       </div>
     </div>`;
   }).join('');
 }
 
-// ══════════════════════════════════════════
-// RENDER EVENTS TABLES
-// ══════════════════════════════════════════
+// ─── RENDER EVENTS TABLES ──────────────────────────
 function renderAllEventsTables(all) {
-  const upcoming  = all.upcoming  || all;
+  const upcoming  = all.upcoming  || all; // תמיכה בשני פורמטים
   const past      = all.past      || [];
   const cancelled = all.cancelled || [];
 
   const upTbody = document.getElementById('eventsUpcomingBody');
   upTbody.innerHTML = upcoming.length ? upcoming.map(e => `
     <tr>
-      <td>
-        <div role="text" aria-label="${esc(formatDateHebrew(e.date))}, שעה ${esc(e.meetTime)}">
-          <strong aria-hidden="true">${esc(e.date)}</strong>
-          <div class="td-sub" aria-hidden="true">${esc(e.meetTime)}</div>
-        </div>
-      </td>
-      <td>
-        <div role="text" aria-label="${esc(e.description)}, נקודת מפגש: ${esc(e.meetPoint)}">
-          <div class="td-name" aria-hidden="true">${esc(e.description)}</div>
-          <div class="td-sub"  aria-hidden="true">${esc(e.meetPoint)}</div>
-        </div>
-      </td>
-      <td>
-        <span aria-hidden="true">${esc(String(e.km))}</span>
-        <span class="sr-only">${esc(String(e.km))} קילומטר</span>
-      </td>
-      <td class="hide-mobile">
-        <span aria-hidden="true">${esc(String(e.climb))}</span>
-        <span class="sr-only">${esc(String(e.climb))} מטר עלייה</span>
-      </td>
-      <td class="hide-mobile">${esc(e.captain)}</td>
+      <td><strong>${esc(e.date)}</strong><div class="td-sub">${esc(e.meetTime)}</div></td>
+      <td><div class="td-name">${esc(e.description)}</div><div class="td-sub">${esc(e.meetPoint)}</div></td>
+      <td>${esc(String(e.km))}</td>
+      <td>${esc(String(e.climb))} מ'</td>
+      <td>${esc(e.captain)}</td>
       <td>
         <div class="row-actions">
-          <button class="icon-btn"
-                  aria-label="ערוך אירוע ${esc(e.description)}"
-                  onclick="editEvent('${esc(e.id)}')">
-            <span aria-hidden="true">✏️</span>
-          </button>
-          <button class="icon-btn danger"
-                  aria-label="בטל אירוע ${esc(e.description)}"
-                  onclick="cancelEvent('${esc(e.id)}','${esc(e.description)}')">
-            <span aria-hidden="true">🚫</span>
-          </button>
+          <button class="icon-btn" aria-label="ערוך אירוע ${esc(e.description)}" title="עריכה"
+                  onclick="editEvent('${esc(e.id)}')">✏️</button>
+          <button class="icon-btn danger" aria-label="בטל אירוע ${esc(e.description)}" title="ביטול"
+                  onclick="cancelEvent('${esc(e.id)}','${esc(e.description)}')">🚫</button>
         </div>
       </td>
     </tr>`).join('')
@@ -1858,61 +2191,67 @@ function renderAllEventsTables(all) {
     <tr>
       <td>${esc(e.date)}</td>
       <td>${esc(e.description)}</td>
-      <td>
-        <span aria-hidden="true">${esc(String(e.km))} ק"מ</span>
-        <span class="sr-only">${esc(String(e.km))} קילומטר</span>
-      </td>
-      <td class="hide-mobile">${esc(e.captain)}</td>
+      <td>${esc(String(e.km))} ק"מ</td>
+      <td>${esc(e.captain)}</td>
     </tr>`).join('')
   : `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">אין אירועים שעברו</td></tr>`;
+
+  const cancelTbody = document.getElementById('tabp-cancelled');
+  if (cancelTbody) {
+    cancelTbody.innerHTML = cancelled.length
+      ? `<div class="table-wrap"><table><thead><tr>
+           <th>תאריך</th><th>מסלול</th>
+         </tr></thead><tbody>${cancelled.map(e => `
+           <tr><td>${esc(e.date)}</td><td>${esc(e.description)}</td></tr>`).join('')}
+         </tbody></table></div>`
+      : `<p style="padding:20px;color:var(--text-muted);text-align:center">אין אירועים מבוטלים</p>`;
+  }
 }
 
-// ══════════════════════════════════════════
-// ASSIGNMENTS
-// ══════════════════════════════════════════
-function renderAssignmentsEventSelect(events) {
-  const sel = document.getElementById('event-select-assign');
-  if (!sel) return;
-  const upcoming = events.filter(e => {
-    const d = new Date(e.date.split('/').reverse().join('-'));
-    return d >= new Date();
-  }).sort((a,b) => new Date(a.date.split('/').reverse().join('-')) - new Date(b.date.split('/').reverse().join('-')));
-
-  sel.innerHTML = '<option value="">— בחר אירוע —</option>' +
-    upcoming.map(e => `<option value="${esc(e.id)}">${esc(formatDateHebrew(e.date))} — ${esc(e.description)}</option>`).join('');
-
-  if (upcoming.length) { sel.value = upcoming[0].id; loadAssignments(); }
-}
-
-let assignRegs = [], assignBikes = [];
+// ─── LOAD ASSIGNMENTS ──────────────────────────────
+let assignRegs  = []; // כל הנרשמים לאירוע
+let assignBikes = []; // אופניים זמינים
 
 async function loadAssignments() {
   const eventId = document.getElementById('event-select-assign').value;
-  if (!eventId) { document.getElementById('assignmentsContent').style.display = 'none'; return; }
+  if (!eventId) {
+    document.getElementById('assignmentsContent').style.display = 'none';
+    return;
+  }
+
   document.getElementById('assignmentsContent').style.display = 'block';
   document.getElementById('captainsBody').innerHTML =
-    `<p style="text-align:center;padding:16px;color:var(--text-muted)">טוען...</p>`;
+    `<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text-muted)">טוען...</td></tr>`;
+  document.getElementById('stokersList').innerHTML =
+    `<span style="color:var(--text-muted);font-size:0.85rem">טוען...</span>`;
+
   try {
     assignRegs  = await apiGet('getRegistrations', { eventId });
     assignBikes = STATE.bikes.filter(b => b.status === 'תקין');
     renderAssignments();
-    announce('שיבוצים נטענו');
   } catch(e) {
     document.getElementById('captainsBody').innerHTML =
-      `<p style="text-align:center;padding:16px;color:var(--red)">שגיאה: ${esc(e.message)}</p>`;
-    announce('שגיאה בטעינת שיבוצים');
+      `<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--red)">שגיאה: ${esc(e.message)}</td></tr>`;
   }
 }
 
 function renderAssignments() {
   const captains = assignRegs.filter(r => r.role === 'קפטן' || r.role === 'סינגל');
   const stokers  = assignRegs.filter(r => r.role === 'סטוקר');
-  const assignedStokerTids = new Set(captains.map(c => c.partnerTid).filter(Boolean));
-  const availableStokers   = stokers.filter(s => !assignedStokerTids.has(s.tid));
 
-  document.getElementById('captainsCount').textContent = `${captains.length} רוכבים`;
-  document.getElementById('stokersCount').textContent  = `${availableStokers.length} זמינים מתוך ${stokers.length}`;
+  // מי שכבר שובץ כשותף — לא מופיע במלאי
+  const assignedStokerTids = new Set(
+    captains.map(c => c.partnerTid).filter(Boolean)
+  );
+  const availableStokers = stokers.filter(s => !assignedStokerTids.has(s.tid));
 
+  // עדכון ספירות
+  document.getElementById('captainsCount').textContent =
+    `${captains.length} רוכבים`;
+  document.getElementById('stokersCount').textContent =
+    `${availableStokers.length} זמינים מתוך ${stokers.length}`;
+
+  // ── טבלת קפטנים + סינגלים ──
   const bikeOpts = (selected, role) => {
     const filtered = assignBikes.filter(b => {
       if (b.id === 'PRIVATE') return true;
@@ -1921,20 +2260,27 @@ function renderAssignments() {
       return true;
     });
     return filtered.map(b =>
-      `<option value="${esc(b.id)}" ${b.id === selected ? 'selected' : ''}>${esc(b.name)}${b.frame && b.id !== 'PRIVATE' ? ` (${esc(b.frame)})` : ''}</option>`
+      `<option value="${esc(b.id)}" ${b.id === selected ? 'selected' : ''}>
+        ${esc(b.name)}${b.frame && b.id !== 'PRIVATE' ? ` (${esc(b.frame)})` : ''}
+      </option>`
     ).join('');
   };
 
   const stokerOpts = (currentPartnerTid, currentPartnerName) => {
+    // בנה רשימה: סטוקרים זמינים + הסטוקר הנוכחי המשובץ (אם קיים)
     const allOptions = [...stokers];
+    // אם יש שותף משובץ שכבר לא בטבלה — הוסף אותו ידנית
     if (currentPartnerTid && !stokers.find(s => s.tid === currentPartnerTid)) {
       allOptions.unshift({ tid: currentPartnerTid, name: currentPartnerName || currentPartnerTid, role: 'סטוקר' });
     }
     return `<option value="">— ללא שותף —</option>` +
       allOptions.map(s => {
         const alreadyAssigned = assignedStokerTids.has(s.tid) && s.tid !== currentPartnerTid;
-        return `<option value="${esc(s.tid)}" ${s.tid === currentPartnerTid ? 'selected' : ''} ${alreadyAssigned ? 'disabled' : ''}>
-          ${esc(s.name)}${alreadyAssigned ? ' (משובץ)' : ''}</option>`;
+        return `<option value="${esc(s.tid)}"
+                         ${s.tid === currentPartnerTid ? 'selected' : ''}
+                         ${alreadyAssigned ? 'disabled' : ''}>
+                  ${esc(s.name)}${alreadyAssigned ? ' (משובץ)' : ''}
+                </option>`;
       }).join('');
   };
 
@@ -1942,15 +2288,13 @@ function renderAssignments() {
   captainsBody.innerHTML = captains.length ? captains.map(r => {
     const isAssigned = r.bike && r.bike !== 'PRIVATE' && r.bike !== '—' && r.bike !== '';
     const hasPartner = r.role === 'קפטן' && r.partnerTid;
-    const cardLabel  = isAssigned
-      ? `${r.name}, ${r.role}, משובץ לאופניים ${r.bike}${hasPartner ? ', שותף: ' + (r.partner || r.partnerTid) : ''}`
-      : `${r.name}, ${r.role}, ממתין לשיבוץ`;
 
     if (isAssigned) {
+      // ── כרטיס נעול — שיבוץ קיים ──
       return `
-      <div style="background:var(--surface2);border:2px solid var(--green);border-radius:var(--radius-sm);
-                  padding:14px;margin-bottom:12px;width:100%;box-sizing:border-box;min-width:0"
-           role="group" aria-label="${esc(cardLabel)}">
+      <div style="background:var(--surface2);border:2px solid var(--green);
+                  border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;
+                  width:100%;box-sizing:border-box;min-width:0">
         <div style="display:flex;align-items:center;justify-content:space-between;
                     margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
           <div>
@@ -1958,31 +2302,29 @@ function renderAssignments() {
             <div style="margin-top:3px"><span class="role-tag">${esc(r.role)}</span></div>
           </div>
           <span style="font-size:0.75rem;background:rgba(45,212,160,0.15);color:var(--green);
-                       padding:3px 9px;border-radius:20px;font-weight:700"
-                aria-hidden="true">משובץ</span>
+                       padding:3px 9px;border-radius:20px;font-weight:700">✅ משובץ</span>
         </div>
-        <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:6px" aria-hidden="true">
-          ${esc(r.bike)}${hasPartner ? ` · ${esc(r.partner || r.partnerTid)}` : ''}
+        <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:6px">
+          🚲 ${esc(r.bike)}${hasPartner ? ` &nbsp;·&nbsp; 🤝 ${esc(r.partner || r.partnerTid)}` : ''}
         </div>
         <div style="display:flex;gap:8px;margin-top:10px">
           <button class="btn btn-ghost btn-sm" style="flex:1"
-                  aria-label="ערוך את שיבוץ ${esc(r.name)}"
-                  onclick="editAssignment('${esc(r.tid)}')">
-            ערוך שיבוץ
-          </button>
+                  onclick="editAssignment('${esc(r.tid)}')">✏️ עריכה</button>
           <button class="btn btn-sm" style="flex:1;background:rgba(255,90,90,0.15);color:var(--red);border:1px solid rgba(255,90,90,0.3)"
-                  aria-label="פרק את השיבוץ של ${esc(r.name)}"
-                  onclick="unassignCaptain('${esc(document.getElementById('event-select-assign').value)}','${esc(r.tid)}','${esc(r.name)}')">
-            פרק שיבוץ
+                  onclick="unassignCaptain('${esc(r.tid)}','${esc(r.name)}')">
+            🔓 פרק שיבוץ
           </button>
         </div>
       </div>`;
     }
 
+    // ── כרטיס פתוח — ממתין לשיבוץ ──
     return `
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
-                padding:14px;margin-bottom:12px;width:100%;box-sizing:border-box;min-width:0"
-         role="group" aria-label="${esc(cardLabel)}">
+    <div style="background:var(--surface2);border:1px solid var(--border);
+                border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;
+                width:100%;box-sizing:border-box;min-width:0">
+
+      <!-- שם ותפקיד -->
       <div style="display:flex;align-items:center;justify-content:space-between;
                   margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">
         <div>
@@ -1991,46 +2333,50 @@ function renderAssignments() {
         </div>
       </div>
 
+      <!-- אופניים -->
       <div style="margin-bottom:10px">
-        <label for="bike-${esc(r.tid)}" style="display:block;font-size:0.72rem;color:var(--text-muted);font-weight:600;margin-bottom:4px">
-          אופניים עבור ${esc(r.name)}
-        </label>
+        <div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;margin-bottom:4px">אופניים</div>
+        <label for="bike-${esc(r.tid)}" class="sr-only">אופניים ל${esc(r.name)}</label>
         <select class="select" id="bike-${esc(r.tid)}" style="width:100%"
+                aria-label="אופניים ל${esc(r.name)}"
                 onchange="updatePartnerBike('${esc(r.tid)}')">
           ${bikeOpts(r.bike, r.role)}
         </select>
       </div>
 
+      <!-- סטוקר שותף (קפטן בלבד) -->
       ${r.role === 'קפטן' ? `
       <div style="margin-bottom:12px">
-        <label for="stoker-${esc(r.tid)}" style="display:block;font-size:0.72rem;color:var(--text-muted);font-weight:600;margin-bottom:4px">
-          סטוקר שותף עבור ${esc(r.name)}
-        </label>
+        <div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;margin-bottom:4px">סטוקר שותף</div>
+        <label for="stoker-${esc(r.tid)}" class="sr-only">סטוקר ל${esc(r.name)}</label>
         <select class="select" id="stoker-${esc(r.tid)}" style="width:100%"
+                aria-label="סטוקר שותף ל${esc(r.name)}"
                 onchange="onStokerChange('${esc(r.tid)}')">
           ${stokerOpts(r.partnerTid || '', r.partner || '')}
         </select>
       </div>` : ''}
 
+      <!-- כפתור שמור -->
       <button class="btn btn-primary" style="width:100%;justify-content:center"
-              aria-label="שמור שיבוץ עבור ${esc(r.name)}"
-              onclick="saveAssignment('${esc(document.getElementById('event-select-assign').value)}','${esc(r.tid)}','${esc(r.name)}')">
-        שמור שיבוץ
+              aria-label="שמור שיבוץ ל${esc(r.name)}"
+              onclick="saveAssignment('${esc(r.tid)}','${esc(r.name)}')">
+        💾 שמור שיבוץ
       </button>
     </div>`;
   }).join('')
-  : `<p style="text-align:center;padding:20px;color:var(--text-muted)">אין קפטנים או סינגלים רשומים</p>`;
+  : `<p style="text-align:center;padding:20px;color:var(--text-muted)">אין קפטנים/סינגלים רשומים</p>`;
 
-  // מלאי סטוקרים
+  // ── מלאי סטוקרים זמינים ──
   const stokersList = document.getElementById('stokersList');
   stokersList.innerHTML = availableStokers.length
     ? availableStokers.map(s => `
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:0.85rem;font-weight:600"
-             role="listitem"
-             aria-label="סטוקר זמין: ${esc(s.name)}">
-          ${esc(s.name)}
+        <div style="background:var(--surface2);border:1px solid var(--border);
+                    border-radius:8px;padding:8px 12px;font-size:0.85rem;font-weight:600">
+          🤝 ${esc(s.name)}
         </div>`).join('')
-    : `<span style="color:var(--text-muted);font-size:0.85rem">${stokers.length ? 'כל הסטוקרים שובצו' : 'אין סטוקרים רשומים'}</span>`;
+    : `<span style="color:var(--text-muted);font-size:0.85rem">
+         ${stokers.length ? 'כל הסטוקרים שובצו ✅' : 'אין סטוקרים רשומים'}
+       </span>`;
 }
 
 function editAssignment(captainTid) {
@@ -2040,73 +2386,89 @@ function editAssignment(captainTid) {
 }
 
 function onStokerChange(captainTid) {
+  // כשבוחרים סטוקר — מסמן אותו כמשובץ ומרנדר מחדש
+  const sel = document.getElementById('stoker-' + captainTid);
+  if (!sel) return;
+  const selectedTid = sel.value;
+
+  // עדכון partnerTid במערך המקומי
   const captain = assignRegs.find(r => r.tid === captainTid);
-  if (captain) captain.partnerTid = document.getElementById('stoker-' + captainTid)?.value;
+  if (captain) captain.partnerTid = selectedTid;
+
+  // סטוקר ישן — שחרר אם שונה
   renderAssignments();
 }
 
 function updatePartnerBike(captainTid) {
+  // כשמשנים אופניים — מעדכן גם את האופניים של הסטוקר המשובץ
   const captain = assignRegs.find(r => r.tid === captainTid);
-  if (!captain?.partnerTid) return;
+  if (!captain || !captain.partnerTid) return;
   const partnerBikeEl = document.getElementById('bike-' + captain.partnerTid);
   const captainBikeEl = document.getElementById('bike-' + captainTid);
-  if (partnerBikeEl && captainBikeEl) partnerBikeEl.value = captainBikeEl.value;
+  if (partnerBikeEl && captainBikeEl) {
+    partnerBikeEl.value = captainBikeEl.value;
+  }
 }
 
-async function saveAssignment(eventId, captainTid, captainName) {
+async function saveAssignment(captainTid, captainName) {
+  const eventId = document.getElementById('event-select-assign').value;
+  if (!eventId) { showToast('לא נבחר אירוע', 'error'); return; }
+
   const bikeId    = document.getElementById('bike-' + captainTid)?.value;
   const stokerSel = document.getElementById('stoker-' + captainTid);
   const stokerTid = stokerSel ? stokerSel.value : '';
+
   try {
     if (bikeId) await callAPI('assignBike', { eventId, tid: captainTid, bikeId });
     if (stokerTid) {
       await callAPI('assignBike', { eventId, tid: stokerTid, bikeId: bikeId || '' });
       await callAPI('assignPartner', { eventId, captainTid, stokerTid });
     }
-    announce(`שיבוץ נשמר עבור ${captainName}`);
-    showToast(`שיבוץ נשמר עבור ${captainName}`, 'success');
+    showToast(`שיבוץ נשמר ל${captainName} ✅`, 'success');
     assignRegs = await apiGet('getRegistrations', { eventId });
     renderAssignments();
   } catch(e) {
-    announce('שגיאה בשמירת שיבוץ: ' + e.message);
     showToast('שגיאה: ' + e.message, 'error');
   }
 }
 
-async function unassignCaptain(eventId, captainTid, captainName) {
+async function unassignCaptain(captainTid, captainName) {
+  const eventId = document.getElementById('event-select-assign').value;
+  if (!eventId) { showToast('לא נבחר אירוע', 'error'); return; }
   if (!confirm(`לפרק את השיבוץ של ${captainName}?`)) return;
   try {
-    const captain    = assignRegs.find(r => r.tid === captainTid);
-    const partnerTid = captain?.partnerTid || '';
-    const partnerName= captain?.partner    || '';
+    // מצא את ה-partnerTid הנוכחי לפני הפירוק
+    const captain = assignRegs.find(r => r.tid === captainTid);
+    const partnerTid  = captain?.partnerTid  || '';
+    const partnerName = captain?.partner || '';
+
+    // פרק שיבוץ — מנקה עמודות G+I ומחזיר סטוקר לטבלה
     await callAPI('unassignPartner', { eventId, captainTid, stokerTid: partnerTid, stokerName: partnerName });
+    // אפס אופניים לקפטן
     await callAPI('assignBike', { eventId, tid: captainTid, bikeId: 'PRIVATE' });
-    announce(`שיבוץ ${captainName} פורק`);
+
     showToast(`שיבוץ ${captainName} פורק`, 'success');
     assignRegs = await apiGet('getRegistrations', { eventId });
     renderAssignments();
   } catch(e) {
-    announce('שגיאה בפירוק שיבוץ: ' + e.message);
     showToast('שגיאה: ' + e.message, 'error');
   }
 }
 
-// ══════════════════════════════════════════
-// EVENTS CRUD
-// ══════════════════════════════════════════
+// ─── CANCEL EVENT ───────────────────────────────────
 async function cancelEvent(eventId, name) {
   if (!confirm(`לבטל את האירוע "${name}"?`)) return;
   try {
     await callAPI('cancelEvent', { eventId });
-    announce(`האירוע "${name}" בוטל`);
     showToast(`האירוע "${name}" בוטל`, 'success');
     await loadEvents();
+    renderAllEventsTables(STATE.events);
   } catch(e) {
-    announce('שגיאה: ' + e.message);
     showToast('שגיאה: ' + e.message, 'error');
   }
 }
 
+// ─── ADD EVENT ──────────────────────────────────────
 async function submitAddEvent() {
   const errEl = document.getElementById('add-event-error');
   errEl.style.display = 'none';
@@ -2114,34 +2476,37 @@ async function submitAddEvent() {
   lockBtn(btn, 'שומר...');
   const date    = document.getElementById('ev-date').value;
   const desc    = document.getElementById('ev-desc').value.trim();
+  const km      = document.getElementById('ev-km').value;
+  const climb   = document.getElementById('ev-climb').value;
+  const meet    = document.getElementById('ev-meet').value.trim();
+  const time    = document.getElementById('ev-time').value;
+  const captain = document.getElementById('ev-captain').value;
+
   if (!date || !desc) {
     errEl.textContent = 'נא למלא תאריך ותיאור מסלול';
-    errEl.style.display = 'block'; errEl.focus();
-    unlockBtn(btn); return;
+    errEl.style.display = 'block'; errEl.focus(); return;
   }
   try {
     const result = await callAPI('addEvent', {
       date, description: desc,
-      km: Number(document.getElementById('ev-km').value)||0,
-      climb: Number(document.getElementById('ev-climb').value)||0,
-      meetPoint: document.getElementById('ev-meet').value.trim(),
-      meetTime: document.getElementById('ev-time').value,
-      captain: document.getElementById('ev-captain').value,
-      status: 'פעיל'
+      km: Number(km)||0, climb: Number(climb)||0,
+      meetPoint: meet, meetTime: time,
+      captain, status: 'פעיל'
     });
+    unlockBtn(document.querySelector('#modalAddEvent .btn-primary'));
     closeModal('modalAddEvent');
-    announce(`אירוע "${desc}" נוצר בהצלחה`);
-    showToast(`אירוע "${desc}" נוצר`, 'success');
+    showToast(`אירוע "${desc}" נוצר (${result.id || ''}) ✅`, 'success');
     await loadEvents();
+    renderAllEventsTables(STATE.events);
+    renderAssignmentsEventSelect(STATE.events);
   } catch(e) {
+    unlockBtn(document.querySelector('#modalAddEvent .btn-primary'));
     errEl.textContent = 'שגיאה: ' + e.message;
     errEl.style.display = 'block'; errEl.focus();
-  } finally { unlockBtn(btn); }
+  }
 }
 
-// ══════════════════════════════════════════
-// BIKES CRUD
-// ══════════════════════════════════════════
+// ─── ADD BIKE ───────────────────────────────────────
 async function submitAddBike() {
   const errEl = document.getElementById('add-bike-error');
   errEl.style.display = 'none';
@@ -2152,24 +2517,69 @@ async function submitAddBike() {
   const drive = document.getElementById('bike-new-drive').value;
   if (!name || !frame || !drive) {
     errEl.textContent = 'נא למלא את כל השדות';
-    errEl.style.display = 'block'; errEl.focus();
-    unlockBtn(btn); return;
+    errEl.style.display = 'block'; errEl.focus(); return;
   }
   try {
-    await callAPI('addBike', { name, frame, drive, status: 'תקין' });
+    const result = await callAPI('addBike', { name, frame, drive, status: 'תקין' });
+    unlockBtn(document.querySelector('#modalAddBike .btn-primary'));
     closeModal('modalAddBike');
-    announce(`אופניים "${name}" נוספו לצי`);
-    showToast(`אופניים "${name}" נוספו לצי`, 'success');
+    showToast(`אופניים "${name}" נוספו לצי (${result.id || ''}) ✅`, 'success');
     await loadBikes();
-    updateDashboardStats();
   } catch(e) {
+    unlockBtn(document.querySelector('#modalAddBike .btn-primary'));
     errEl.textContent = 'שגיאה: ' + e.message;
     errEl.style.display = 'block'; errEl.focus();
-  } finally { unlockBtn(btn); }
+  }
 }
 
+// ─── EDIT RIDER ─────────────────────────────────────
+async function submitEditRider() {
+  const errEl = document.getElementById('edit-rider-error');
+  errEl.style.display = 'none';
+  const btn = document.querySelector('#modalEditRider .btn-primary');
+  lockBtn(btn, 'שומר...');
+  const tid   = document.getElementById('edit-tid').value;
+  const name  = document.getElementById('edit-name').value.trim();
+  const phone = document.getElementById('edit-phone').value.trim();
+  if (!name || !phone) {
+    errEl.textContent = 'שם וטלפון הם שדות חובה';
+    errEl.style.display = 'block'; errEl.focus(); return;
+  }
+  const examDate = document.getElementById('edit-exam').value;
+  try {
+    await callAPI('updateRider', {
+      tid, name, phone,
+      email:     document.getElementById('edit-email').value.trim(),
+      city:      document.getElementById('edit-city').value.trim(),
+      rideStyle: document.getElementById('edit-style').value,
+      permission:document.getElementById('edit-perm').value,
+    });
+    if (examDate) await callAPI('updateExamDate', { tid, examDate });
+    unlockBtn(document.querySelector('#modalEditRider .btn-primary'));
+    closeModal('modalEditRider');
+    showToast(`פרטי ${name} עודכנו ✅`, 'success');
+    await loadRiders();
+    updateDashboardStats();
+    updateExamAlerts();
+  } catch(e) {
+    unlockBtn(document.querySelector('#modalEditRider .btn-primary'));
+    errEl.textContent = 'שגיאה: ' + e.message;
+    errEl.style.display = 'block'; errEl.focus();
+  }
+}
+async function loadRegistrations(eventId) {
+  try {
+    const regs = await apiGet('getRegistrations', { eventId });
+    showToast(`נטענו ${regs.length} הרשמות לאירוע`, 'success');
+  } catch(e) {
+    showToast('שגיאה בטעינת הרשמות: ' + e.message, 'error');
+  }
+}
+
+// ─── DISABLE / ENABLE BIKE ─────────────────────────
 function toggleBike(bikeId, currentStatus) {
   if (currentStatus === 'תקין') {
+    // פתח מודל השבתה
     const bike = STATE.bikes.find(b => b.id === bikeId);
     document.getElementById('disable-bike-id').value   = bikeId;
     document.getElementById('disable-bike-name').value = bike ? bike.name : bikeId;
@@ -2177,34 +2587,35 @@ function toggleBike(bikeId, currentStatus) {
     document.getElementById('disable-bike-error').style.display = 'none';
     openModal('modalDisableBike');
   } else {
+    // הפעל מחדש — ישירות
     enableBike(bikeId);
   }
 }
 
 async function submitDisableBike() {
-  const errEl = document.getElementById('disable-bike-error');
+  const errEl  = document.getElementById('disable-bike-error');
   errEl.style.display = 'none';
-  const btn   = document.querySelector('#modalDisableBike .btn-danger');
+  const btn = document.querySelector('#modalDisableBike .btn-danger');
   lockBtn(btn, 'מעבד...');
   const bikeId = document.getElementById('disable-bike-id').value;
   const fault  = document.getElementById('disable-fault').value.trim();
   if (!fault) {
     errEl.textContent = 'נא לתאר את סיבת ההשבתה';
-    errEl.style.display = 'block'; errEl.focus();
-    unlockBtn(btn); return;
+    errEl.style.display = 'block'; return;
   }
   try {
     const bike = STATE.bikes.find(b => b.id === bikeId);
     await callAPI('disableBike', { bikeId, bikeName: bike?.name || bikeId, fault });
+    unlockBtn(document.querySelector('#modalDisableBike .btn-danger'));
     closeModal('modalDisableBike');
-    announce(`אופניים "${bike?.name || bikeId}" הושבתו`);
-    showToast(`אופניים "${bike?.name || bikeId}" הושבתו`, 'success');
+    showToast(`אופניים "${bike?.name || bikeId}" הושבתו 🔒`, 'success');
     await loadBikes();
     await loadMaintenance();
   } catch(e) {
+    unlockBtn(document.querySelector('#modalDisableBike .btn-danger'));
     errEl.textContent = 'שגיאה: ' + e.message;
     errEl.style.display = 'block';
-  } finally { unlockBtn(btn); }
+  }
 }
 
 async function enableBike(bikeId) {
@@ -2212,260 +2623,16 @@ async function enableBike(bikeId) {
   if (!confirm(`להפעיל מחדש את "${bike?.name || bikeId}"?`)) return;
   try {
     await callAPI('enableBike', { bikeId });
-    announce(`אופניים "${bike?.name || bikeId}" הופעלו מחדש`);
-    showToast(`אופניים "${bike?.name || bikeId}" הופעלו מחדש`, 'success');
+    showToast(`אופניים "${bike?.name || bikeId}" הופעלו מחדש ✅`, 'success');
     await loadBikes();
     await loadMaintenance();
   } catch(e) {
-    announce('שגיאה: ' + e.message);
     showToast('שגיאה: ' + e.message, 'error');
   }
 }
 
-function editBike(bikeId) {
-  const b = STATE.bikes.find(x => x.id === bikeId);
-  if (!b) { showToast('אופניים לא נמצאו', 'error'); return; }
-  document.getElementById('edit-bike-id').value    = b.id;
-  document.getElementById('edit-bike-name').value  = b.name;
-  document.getElementById('edit-bike-frame').value = b.frame;
-  document.getElementById('edit-bike-drive').value = b.drive;
-  document.getElementById('edit-bike-error').style.display = 'none';
-  openModal('modalEditBike');
-}
-
-async function submitEditBike() {
-  const errEl  = document.getElementById('edit-bike-error');
-  errEl.style.display = 'none';
-  const btn    = document.querySelector('#modalEditBike .btn-primary');
-  lockBtn(btn, 'שומר...');
-  const bikeId = document.getElementById('edit-bike-id').value;
-  const name   = document.getElementById('edit-bike-name').value.trim();
-  const frame  = document.getElementById('edit-bike-frame').value;
-  const drive  = document.getElementById('edit-bike-drive').value;
-  if (!name) { errEl.textContent = 'נא למלא שם'; errEl.style.display = 'block'; unlockBtn(btn); return; }
-  try {
-    await callAPI('updateBike', { bikeId, name, frame, drive });
-    closeModal('modalEditBike');
-    announce(`אופניים "${name}" עודכנו`);
-    showToast(`אופניים "${name}" עודכנו`, 'success');
-    await loadBikes();
-  } catch(e) {
-    errEl.textContent = 'שגיאה: ' + e.message;
-    errEl.style.display = 'block';
-  } finally { unlockBtn(btn); }
-}
-
-async function deleteBike(bikeId, name) {
-  if (!confirm(`למחוק את האופניים "${name}"?`)) return;
-  try {
-    await callAPI('deleteBike', { bikeId });
-    announce(`אופניים "${name}" נמחקו`);
-    showToast(`אופניים "${name}" נמחקו`, 'success');
-    await loadBikes();
-  } catch(e) {
-    announce('שגיאה: ' + e.message);
-    showToast('שגיאה: ' + e.message, 'error');
-  }
-}
-
-// ══════════════════════════════════════════
-// RIDERS CRUD
-// ══════════════════════════════════════════
-function editRider(tid) {
-  const r = STATE.riders.find(x => x.tid === tid);
-  if (!r) { showToast('רוכב לא נמצא', 'error'); return; }
-  document.getElementById('edit-tid').value   = r.tid;
-  document.getElementById('edit-name').value  = r.name;
-  document.getElementById('edit-phone').value = r.phone;
-  document.getElementById('edit-email').value = r.email  || '';
-  document.getElementById('edit-city').value  = r.city   || '';
-  document.getElementById('edit-style').value = r.rideStyle;
-  document.getElementById('edit-perm').value  = r.permission;
-  if (r.examDate && r.examDate !== '—') {
-    const [d,m,y] = r.examDate.split('/');
-    document.getElementById('edit-exam').value = `${y}-${m}-${d}`;
-  } else {
-    document.getElementById('edit-exam').value = '';
-  }
-  document.getElementById('edit-rider-error').style.display = 'none';
-  openModal('modalEditRider');
-}
-
-async function submitEditRider() {
-  const errEl = document.getElementById('edit-rider-error');
-  errEl.style.display = 'none';
-  const btn   = document.querySelector('#modalEditRider .btn-primary');
-  lockBtn(btn, 'שומר...');
-  const tid   = document.getElementById('edit-tid').value;
-  const name  = document.getElementById('edit-name').value.trim();
-  const phone = document.getElementById('edit-phone').value.trim();
-  if (!name || !phone) {
-    errEl.textContent = 'שם וטלפון הם שדות חובה';
-    errEl.style.display = 'block'; errEl.focus();
-    unlockBtn(btn); return;
-  }
-  const examDate = document.getElementById('edit-exam').value;
-  try {
-    await callAPI('updateRider', {
-      tid, name, phone,
-      email:      document.getElementById('edit-email').value.trim(),
-      city:       document.getElementById('edit-city').value.trim(),
-      rideStyle:  document.getElementById('edit-style').value,
-      permission: document.getElementById('edit-perm').value,
-    });
-    if (examDate) await callAPI('updateExamDate', { tid, examDate });
-    closeModal('modalEditRider');
-    announce(`פרטי ${name} עודכנו בהצלחה`);
-    showToast(`פרטי ${name} עודכנו`, 'success');
-    await loadRiders();
-    updateDashboardStats();
-    updateExamAlerts();
-  } catch(e) {
-    errEl.textContent = 'שגיאה: ' + e.message;
-    errEl.style.display = 'block'; errEl.focus();
-  } finally { unlockBtn(btn); }
-}
-
-async function submitAddRider() {
-  const errEl = document.getElementById('add-rider-error');
-  errEl.style.display = 'none';
-  const btn   = document.querySelector('#modalAddRider .btn-primary');
-  lockBtn(btn, 'שומר...');
-  const tid    = document.getElementById('new-tid').value.trim();
-  const name   = document.getElementById('new-name').value.trim();
-  const phone  = document.getElementById('new-phone').value.trim();
-  const city   = document.getElementById('new-city').value.trim();
-  const dob    = document.getElementById('new-dob').value;
-  const gender = document.getElementById('new-gender').value;
-
-  if (!tid || !name || !phone || !city || !dob || !gender) {
-    errEl.textContent = 'נא למלא את כל השדות המסומנים בכוכבית';
-    errEl.style.display = 'block'; errEl.focus();
-    unlockBtn(btn); return;
-  }
-  if (!/^\d{9}$/.test(tid)) {
-    errEl.textContent = 'תעודת זהות חייבת להכיל בדיוק 9 ספרות';
-    errEl.style.display = 'block'; errEl.focus();
-    unlockBtn(btn); return;
-  }
-  try {
-    await callAPI('addRider', {
-      tid, name, phone,
-      email:      document.getElementById('new-email').value.trim(),
-      city, dob, gender,
-      rideStyle:  document.getElementById('new-style').value,
-      permission: document.getElementById('new-perm').value,
-    });
-    closeModal('modalAddRider');
-    announce(`רוכב ${name} נוסף בהצלחה`);
-    showToast(`רוכב ${name} נוסף`, 'success');
-    await loadRiders();
-    updateDashboardStats();
-  } catch(e) {
-    errEl.textContent = 'שגיאה: ' + e.message;
-    errEl.style.display = 'block'; errEl.focus();
-  } finally { unlockBtn(btn); }
-}
-
-async function deleteRider(tid, name) {
-  if (!confirm(`למחוק את ${name}?`)) return;
-  try {
-    await callAPI('deleteRider', { tid });
-    announce(`רוכב ${name} נמחק`);
-    showToast(`רוכב ${name} נמחק`, 'success');
-    await loadRiders();
-    updateDashboardStats();
-  } catch(e) {
-    announce('שגיאה: ' + e.message);
-    showToast('שגיאה: ' + e.message, 'error');
-  }
-}
-
-// ══════════════════════════════════════════
-// EXAM DATE
-// ══════════════════════════════════════════
-async function saveExamDate(tid, name) {
-  const input = document.getElementById('upd-' + tid) || document.getElementById('exam-' + tid);
-  if (!input) { showToast('שגיאה: שדה תאריך לא נמצא', 'error'); return; }
-  const dateVal = input.value;
-  if (!dateVal) { showToast('נא לבחור תאריך', 'error'); input.focus(); return; }
-  try {
-    await callAPI('updateExamDate', { tid, examDate: dateVal });
-    announce(`תאריך הבדיקה עודכן עבור ${name}`);
-    showToast(`תאריך הבדיקה עודכן עבור ${name}`, 'success');
-    await new Promise(r => setTimeout(r, 800));
-    await loadRiders();
-    updateDashboardStats();
-    updateExamAlerts();
-    applyExamsFilter();
-  } catch(e) {
-    announce('שגיאה: ' + e.message);
-    showToast('שגיאה: ' + e.message, 'error');
-  }
-}
-
-// ══════════════════════════════════════════
-// EVENT EDIT
-// ══════════════════════════════════════════
-function editEvent(eventId) {
-  let found = null;
-  if (STATE.allEvents) {
-    found = [...(STATE.allEvents.upcoming||[]), ...(STATE.allEvents.past||[]), ...(STATE.allEvents.cancelled||[])]
-      .find(e => e.id === eventId);
-  }
-  found = found || STATE.events.find(e => e.id === eventId);
-  if (!found) { showToast('אירוע לא נמצא', 'error'); return; }
-  document.getElementById('edit-event-id').value  = found.id;
-  document.getElementById('edit-ev-desc').value   = found.description;
-  document.getElementById('edit-ev-date').value   = found.date.split('/').reverse().join('-');
-  document.getElementById('edit-ev-time').value   = found.meetTime || '06:00';
-  document.getElementById('edit-ev-km').value     = found.km    || 0;
-  document.getElementById('edit-ev-climb').value  = found.climb || 0;
-  document.getElementById('edit-ev-meet').value   = found.meetPoint || '';
-  document.getElementById('edit-event-error').style.display = 'none';
-  const sel = document.getElementById('edit-ev-captain');
-  sel.innerHTML = '<option value="">— בחר —</option>' +
-    STATE.riders.filter(r => r.rideStyle === 'קפטן' || r.permission === 'מנהל')
-      .map(r => `<option value="${esc(r.name)}" ${r.name === found.captain ? 'selected' : ''}>${esc(r.name)}</option>`).join('');
-  openModal('modalEditEvent');
-}
-
-async function submitEditEvent() {
-  const errEl = document.getElementById('edit-event-error');
-  errEl.style.display = 'none';
-  const btn   = document.querySelector('#modalEditEvent .btn-primary');
-  lockBtn(btn, 'שומר...');
-  const eventId = document.getElementById('edit-event-id').value;
-  const desc    = document.getElementById('edit-ev-desc').value.trim();
-  const date    = document.getElementById('edit-ev-date').value;
-  if (!desc || !date) {
-    errEl.textContent = 'נא למלא תיאור ותאריך';
-    errEl.style.display = 'block'; errEl.focus();
-    unlockBtn(btn); return;
-  }
-  try {
-    await callAPI('updateEvent', {
-      eventId, description: desc, date,
-      km:        Number(document.getElementById('edit-ev-km').value)    || 0,
-      climb:     Number(document.getElementById('edit-ev-climb').value) || 0,
-      meetPoint: document.getElementById('edit-ev-meet').value.trim(),
-      meetTime:  document.getElementById('edit-ev-time').value,
-      captain:   document.getElementById('edit-ev-captain').value,
-    });
-    closeModal('modalEditEvent');
-    announce(`אירוע "${desc}" עודכן`);
-    showToast(`אירוע "${desc}" עודכן`, 'success');
-    await loadEvents();
-  } catch(e) {
-    errEl.textContent = 'שגיאה: ' + e.message;
-    errEl.style.display = 'block';
-  } finally { unlockBtn(btn); }
-}
-
-// ══════════════════════════════════════════
-// MAINTENANCE
-// ══════════════════════════════════════════
-let allMaintenanceRecords = [];
+// ─── MAINTENANCE ───────────────────────────────────
+let allMaintenanceRecords = []; // cache לכל הרשומות
 
 async function loadMaintenance() {
   const tbody = document.getElementById('maintenanceBody');
@@ -2491,15 +2658,17 @@ function applyMaintenanceFilter() {
   renderMaintenanceTable(filtered);
 }
 
+// לחיצה על שם אופניים — מעבר לתחזוקה מסוננת לאותם אופניים + כל המצבים
 function openBikeHistory(bikeId, bikeName) {
+  // עבור לסקשן תחזוקה
   showSection('maintenance', document.querySelector('.nav-item[onclick*="maintenance"]'));
+  // אחרי טעינה — הגדר פילטרים
   loadMaintenance().then(() => {
     const bikeSel   = document.getElementById('maint-filter-bike');
     const statusSel = document.getElementById('maint-filter-status');
     if (bikeSel)   bikeSel.value   = bikeId;
-    if (statusSel) statusSel.value = '';
+    if (statusSel) statusSel.value = '';       // כל המצבים
     applyMaintenanceFilter();
-    announce(`מציג היסטוריית תחזוקה של ${bikeName}`);
   });
 }
 
@@ -2512,22 +2681,16 @@ function renderMaintenanceTable(records) {
   tbody.innerHTML = records.map(r => {
     const isOpen  = r.status === 'בתיקון';
     const stCls   = isOpen ? 'status-err' : 'status-ok';
-    const stLabel = isOpen ? 'בתיקון' : 'תוקן';
+    const stLabel = isOpen ? '🔧 בתיקון' : '✅ תוקן';
     return `<tr>
       <td>
-        <div role="text" aria-label="${esc(r.bikeName)}, מזהה: ${esc(r.bikeId)}">
-          <div class="td-name" aria-hidden="true">${esc(r.bikeName)}</div>
-          <div class="td-sub"  aria-hidden="true">${esc(r.bikeId)}</div>
-        </div>
+        <div class="td-name">${esc(r.bikeName)}</div>
+        <div class="td-sub">${esc(r.bikeId)}</div>
       </td>
       <td style="max-width:220px;white-space:pre-wrap">${esc(r.fault)}</td>
       <td>${esc(r.dateIn)  || '—'}</td>
       <td>${esc(r.dateOut) || (isOpen ? '<span style="color:var(--orange)">בתיקון</span>' : '—')}</td>
-      <td>
-        <span class="status ${stCls}" aria-label="סטטוס: ${esc(stLabel)}">
-          <span aria-hidden="true">${stLabel}</span>
-        </span>
-      </td>
+      <td><span class="status ${stCls}">${stLabel}</span></td>
     </tr>`;
   }).join('');
 }
@@ -2542,46 +2705,123 @@ function populateMaintenanceBikeFilter() {
     ).join('');
 }
 
-// ══════════════════════════════════════════
-// ADMIN NOTIFICATIONS
-// ══════════════════════════════════════════
+function editRider(tid) {
+  const r = STATE.riders.find(x => x.tid === tid);
+  if (!r) { showToast('רוכב לא נמצא ב-STATE — נסה לרענן', 'error'); return; }
+  document.getElementById('edit-tid').value   = r.tid;
+  document.getElementById('edit-name').value  = r.name;
+  document.getElementById('edit-phone').value = r.phone;
+  document.getElementById('edit-email').value = r.email  || '';
+  document.getElementById('edit-city').value  = r.city   || '';
+  document.getElementById('edit-style').value = r.rideStyle;
+  document.getElementById('edit-perm').value  = r.permission;
+  // המרת תאריך DD/MM/YYYY → YYYY-MM-DD לשדה input date
+  if (r.examDate && r.examDate !== '—') {
+    const [d,m,y] = r.examDate.split('/');
+    document.getElementById('edit-exam').value = `${y}-${m}-${d}`;
+  } else {
+    document.getElementById('edit-exam').value = '';
+  }
+  document.getElementById('edit-rider-error').style.display = 'none';
+  openModal('modalEditRider');
+}
+
+async function deleteRider(tid, name) {
+  if (!confirm(`למחוק את ${name}?`)) return;
+  try {
+    await callAPI('deleteRider', { tid });
+    await loadRiders();
+    showToast(`רוכב ${name} נמחק`, 'success');
+  } catch(e) {
+    showToast('שגיאה: ' + e.message, 'error');
+  }
+}
+
+// ─── רענן ─────────────────────────────────────────
+async function refreshAll() {
+  showLoading(true);
+  try {
+    await Promise.all([loadRiders(), loadEvents(), loadBikes()]);
+    updateDashboardStats();
+    updateExamAlerts();
+    renderExamsTable(STATE.riders);
+    renderAdminNotifications();
+    // renderAllEventsTables + renderAssignmentsEventSelect נקראים מתוך loadEvents
+    showToast('הנתונים עודכנו ✅', 'success');
+  } catch(e) {
+    showToast('שגיאה ברענון: ' + e.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ─── LOGOUT ────────────────────────────────────────
+function adminLogout() {
+  sessionStorage.removeItem('user');
+  window.location.replace('login.html');
+}
+
+// ─── LOADING INDICATOR ───────────────────────────
+function showLoading(on) {
+  let el = document.getElementById('loadingBar');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'loadingBar';
+    el.setAttribute('role', 'progressbar');
+    el.setAttribute('aria-label', 'טוען נתונים');
+    el.setAttribute('aria-valuetext', 'טוען...');
+    el.style.cssText = `position:fixed;top:0;right:0;left:0;height:3px;background:var(--accent);
+      z-index:9999;transition:opacity 0.3s;transform-origin:right;`;
+    document.body.prepend(el);
+  }
+  el.style.opacity = on ? '1' : '0';
+}
+
+// ── התראות דשבורד ─────────────────────────────────
 function renderAdminNotifications() {
   const area = document.getElementById('adminNotificationsArea');
   if (!area) return;
+
   const today  = new Date(); today.setHours(0,0,0,0);
   const banners = [];
 
+  // ── ימי הולדת השבוע ──
   const bdayRiders = STATE.riders.filter(r => {
     if (!r.dob) return false;
-    const dob  = new Date(r.dob.split('/').reverse().join('-'));
-    const bday = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
-    const diff = Math.round((bday - today) / 86400000);
+    const dob = new Date(r.dob.split('/').reverse().join('-'));
+    const bdayThisYear = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+    const diff = Math.round((bdayThisYear - today) / 86400000);
     return diff >= -2 && diff <= 7;
   }).map(r => {
     const dob  = new Date(r.dob.split('/').reverse().join('-'));
     const bday = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
-    return { ...r, bdayDiff: Math.round((bday - today) / 86400000) };
+    const diff = Math.round((bday - today) / 86400000);
+    return { ...r, bdayDiff: diff };
   }).sort((a,b) => a.bdayDiff - b.bdayDiff);
 
   if (bdayRiders.length) {
     const names = bdayRiders.map(r => {
-      if (r.bdayDiff === 0) return `${esc(r.name)} (היום)`;
-      if (r.bdayDiff < 0)  return `${esc(r.name)} (לפני ${Math.abs(r.bdayDiff)} ימים)`;
-      return `${esc(r.name)} (בעוד ${r.bdayDiff} ימים)`;
-    }).join(' · ');
+      if (r.bdayDiff === 0)      return `🎂 ${esc(r.name)} (היום!)`;
+      if (r.bdayDiff < 0)        return `🎊 ${esc(r.name)} (לפני ${Math.abs(r.bdayDiff)} ימים)`;
+      return `🎈 ${esc(r.name)} (בעוד ${r.bdayDiff} ימים)`;
+    }).join(' &nbsp;·&nbsp; ');
+
     banners.push(`
       <div style="background:linear-gradient(135deg,rgba(255,179,71,0.12),rgba(255,90,90,0.08));
                   border:1px solid rgba(255,179,71,0.35);border-radius:var(--radius);
                   padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start"
-           role="status" aria-label="ימי הולדת קרובים: ${names.replace(/<[^>]+>/g,'')}">
+           role="status" aria-label="ימי הולדת קרובים">
         <span style="font-size:1.4rem" aria-hidden="true">🎂</span>
         <div>
-          <div style="font-weight:800;font-size:0.95rem;color:var(--orange);margin-bottom:4px">ימי הולדת קרובים</div>
+          <div style="font-weight:800;font-size:0.95rem;color:var(--orange);margin-bottom:4px">
+            ימי הולדת קרובים
+          </div>
           <div style="font-size:0.85rem;color:var(--text)">${names}</div>
         </div>
       </div>`);
   }
 
+  // ── בדיקות שפוגות תוקף תוך 30 יום ──
   const expiringRiders = STATE.riders.filter(r => {
     if (!r.examExpiry) return false;
     const exp  = new Date(r.examExpiry.split('/').reverse().join('-'));
@@ -2590,22 +2830,23 @@ function renderAdminNotifications() {
   });
 
   if (expiringRiders.length) {
-    const names = expiringRiders.map(r => {
-      const exp  = new Date(r.examExpiry.split('/').reverse().join('-'));
-      const diff = Math.round((exp - today) / 86400000);
-      return `${esc(r.name)} (${diff} ימים)`;
-    }).join(' · ');
     banners.push(`
       <div style="background:rgba(255,90,90,0.08);border:1px solid rgba(255,90,90,0.3);
                   border-radius:var(--radius);padding:14px 18px;margin-bottom:16px;
                   display:flex;gap:12px;align-items:flex-start"
-           role="alert" aria-label="${expiringRiders.length} רוכבים עם בדיקה שפוגת תוקף תוך 30 יום: ${names.replace(/<[^>]+>/g,'')}">
+           role="alert" aria-label="בדיקות עומדות לפוג">
         <span style="font-size:1.4rem" aria-hidden="true">🩺</span>
         <div>
           <div style="font-weight:800;font-size:0.95rem;color:var(--red);margin-bottom:4px">
             ${expiringRiders.length} רוכבים עם בדיקה שפוגת תוקף תוך 30 יום
           </div>
-          <div style="font-size:0.82rem;color:var(--text)">${names}</div>
+          <div style="font-size:0.82rem;color:var(--text)">
+            ${expiringRiders.map(r => {
+              const exp  = new Date(r.examExpiry.split('/').reverse().join('-'));
+              const diff = Math.round((exp - today) / 86400000);
+              return `${esc(r.name)} (${diff} ימים)`;
+            }).join(' · ')}
+          </div>
         </div>
       </div>`);
   }
@@ -2613,72 +2854,39 @@ function renderAdminNotifications() {
   area.innerHTML = banners.join('');
 }
 
-// ══════════════════════════════════════════
-// FILTERS
-// ══════════════════════════════════════════
-async function loadRegistrations(eventId) {
-  try {
-    const regs = await apiGet('getRegistrations', { eventId });
-    announce(`נטענו ${regs.length} הרשמות לאירוע`);
-    showToast(`נטענו ${regs.length} הרשמות לאירוע`, 'success');
-  } catch(e) {
-    showToast('שגיאה: ' + e.message, 'error');
-  }
+// ─── BUTTON LOCK — מניעת לחיצה כפולה ────────────
+function lockBtn(btnEl, loadingText = '...') {
+  if (!btnEl) return;
+  btnEl.disabled = true;
+  btnEl._origText = btnEl.innerHTML;
+  btnEl.innerHTML = `<span style="opacity:.7">${loadingText}</span>`;
+  btnEl.setAttribute('aria-busy', 'true');
+}
+function unlockBtn(btnEl) {
+  if (!btnEl) return;
+  btnEl.disabled = false;
+  btnEl.innerHTML = btnEl._origText || btnEl.innerHTML;
+  btnEl.removeAttribute('aria-busy');
 }
 
-function filterRiders() { applyRidersFilter(); }
-function applyRidersFilter() {
-  const q     = (document.getElementById('riders-search')?.value || '').trim().toLowerCase();
-  const style = document.getElementById('filter-style')?.value || '';
-  const exam  = document.getElementById('filter-exam')?.value  || '';
-  const filtered = STATE.riders.filter(r => {
-    if (q && !(r.name.toLowerCase().includes(q) || r.phone.includes(q) || r.city.toLowerCase().includes(q) || r.tid.includes(q))) return false;
-    if (style && r.rideStyle !== style) return false;
-    if (exam) {
-      if (exam === 'תקין'      && !r.examStatus.includes('✅')) return false;
-      if (exam === 'פג תוקף'  && !r.examStatus.includes('❌')) return false;
-      if (exam === 'אין בדיקה' && !r.examStatus.includes('אין')) return false;
-    }
-    return true;
-  });
-  renderRidersTable(filtered);
-  announce(`נמצאו ${filtered.length} רוכבים`);
+// ─── UTILS ────────────────────────────────────────
+function esc(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function applyExamsFilter() {
-  const q      = (document.getElementById('exams-search')?.value || '').trim().toLowerCase();
-  const status = document.getElementById('exams-filter-status')?.value || '';
-  const filtered = STATE.riders.filter(r => {
-    if (q && !r.name.toLowerCase().includes(q)) return false;
-    if (status === 'expired') { if (!r.examStatus.includes('❌') && !r.examStatus.includes('אין')) return false; }
-    else if (status === 'warn') { if (!r.examStatus.includes('⚠️')) return false; }
-    else if (status === 'ok')   { if (!r.examStatus.includes('✅')) return false; }
-    return true;
-  });
-  const countEl = document.getElementById('exams-count');
-  if (countEl) {
-    const shown = filtered.length, total = STATE.riders.length;
-    countEl.textContent = shown === total ? `${total} רוכבים` : `${shown} מתוך ${total}`;
-  }
-  renderExamsTable(filtered);
-}
-
-// ══════════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════════
+// ─── NAV ───────────────────────────────────────────
 const sections = ['dashboard','riders','events','assignments','bikes','maintenance','exams'];
 const titles   = {
-  dashboard:   ['סקירה כללית',         'ניהול קבוצת אופניים / סקירה כללית'],
-  riders:      ['ניהול רוכבים',        'ניהול קבוצת אופניים / רוכבים'],
-  events:      ['ניהול אירועים',       'ניהול קבוצת אופניים / אירועים'],
-  assignments: ['שיבוצים',             'ניהול קבוצת אופניים / שיבוצים'],
-  bikes:       ['צי אופניים',          'ניהול קבוצת אופניים / צי אופניים'],
-  maintenance: ['תחזוקה',              'ניהול קבוצת אופניים / תחזוקה'],
-  exams:       ['בדיקות ארגומטריות',   'ניהול קבוצת אופניים / בדיקות'],
+  dashboard:   ['סקירה כללית',   'ניהול קבוצת אופניים / סקירה כללית'],
+  riders:      ['ניהול רוכבים',  'ניהול קבוצת אופניים / רוכבים'],
+  events:      ['ניהול אירועים', 'ניהול קבוצת אופניים / אירועים'],
+  assignments: ['שיבוצים',       'ניהול קבוצת אופניים / שיבוצים'],
+  bikes:       ['צי אופניים',    'ניהול קבוצת אופניים / צי אופניים'],
+  maintenance: ['תחזוקה',        'ניהול קבוצת אופניים / תחזוקה'],
+  exams:       ['בדיקות ארגומטריות','ניהול קבוצת אופניים / בדיקות'],
 };
 
 function showSection(name, clickedBtn) {
-  window.scrollTo({ top: 0, behavior: 'instant' });
   sections.forEach(s => {
     const el = document.getElementById('section-' + s);
     if (el) el.hidden = (s !== name);
@@ -2693,18 +2901,14 @@ function showSection(name, clickedBtn) {
   }
   document.getElementById('pageTitle').textContent      = titles[name][0];
   document.getElementById('pageBreadcrumb').textContent = titles[name][1];
-
-  // הכרזה על מעבר לאגף + העברת focus
-  announce(`עברת ל${titles[name][0]}`);
   document.getElementById('main-content').focus();
-
+  // סוגר תפריט במובייל תמיד
   closeSidebar();
+  // טעינה עצלה לתחזוקה
   if (name === 'maintenance') loadMaintenance();
 }
 
-// ══════════════════════════════════════════
-// SIDEBAR
-// ══════════════════════════════════════════
+// ─── MOBILE SIDEBAR ────────────────────────────────
 function toggleSidebar() {
   const sb  = document.getElementById('sidebar');
   const ov  = document.getElementById('overlay');
@@ -2713,9 +2917,10 @@ function toggleSidebar() {
   ov.classList.toggle('open', open);
   btn.setAttribute('aria-expanded', open);
   btn.setAttribute('aria-label', open ? 'סגור תפריט ניווט' : 'פתח תפריט ניווט');
-  if (open) { ov.setAttribute('aria-hidden','false'); sb.querySelector('.nav-item')?.focus(); }
+  if (open) { ov.setAttribute('aria-hidden','false'); sb.querySelector('.nav-item').focus(); }
   else       { ov.setAttribute('aria-hidden','true'); }
 }
+
 function closeSidebar() {
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('overlay').classList.remove('open');
@@ -2724,115 +2929,300 @@ function closeSidebar() {
   btn.setAttribute('aria-label','פתח תפריט ניווט');
 }
 
-// ══════════════════════════════════════════
-// TABS
-// ══════════════════════════════════════════
+// ─── TABS ──────────────────────────────────────────
 function switchTab(btn, panelId) {
   const panel = btn.closest('.panel');
   panel.querySelectorAll('.tab-btn').forEach(b => {
-    b.classList.remove('active'); b.setAttribute('aria-selected','false');
+    b.classList.remove('active');
+    b.setAttribute('aria-selected','false');
   });
   panel.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   btn.setAttribute('aria-selected','true');
   document.getElementById(panelId).classList.add('active');
-  announce(`לשונית ${btn.textContent.trim()} נבחרה`);
 }
 
-// ══════════════════════════════════════════
-// MODAL
-// ══════════════════════════════════════════
+// ─── MODAL ─────────────────────────────────────────
+let lastFocus = null;
+
 function openModal(id) {
+  // אכלוס תפריט קפטנים בטופס אירוע
   if (id === 'modalAddEvent') {
     const sel = document.getElementById('ev-captain');
     sel.innerHTML = '<option value="">— בחר —</option>' +
       STATE.riders.filter(r => r.rideStyle === 'קפטן' || r.permission === 'מנהל')
         .map(r => `<option value="${esc(r.name)}">${esc(r.name)}</option>`).join('');
   }
-  _modalLastFocus = document.activeElement;
+  lastFocus = document.activeElement;
   const m = document.getElementById(id);
   m.classList.add('open');
-  // focus לשדה הראשון (או כפתור סגירה)
-  setTimeout(() => {
-    const firstFocus = m.querySelector('input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button');
-    if (firstFocus) firstFocus.focus();
-  }, 50);
+  const firstInput = m.querySelector('input, select, button');
+  if (firstInput) firstInput.focus();
   document.addEventListener('keydown', trapFocus);
-  announce('נפתח חלון ' + (m.querySelector('.modal-title')?.textContent || ''));
 }
 
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
   document.removeEventListener('keydown', trapFocus);
-  announce('החלון נסגר');
-  // החזרת focus לאלמנט שפתח את המודאל
-  if (_modalLastFocus) { _modalLastFocus.focus(); _modalLastFocus = null; }
+  if (lastFocus) lastFocus.focus();
 }
 
 function backdropClose(e, id) {
   if (e.target === e.currentTarget) closeModal(id);
 }
 
-// ══════════════════════════════════════════
-// UTILS
-// ══════════════════════════════════════════
-async function refreshAll() {
-  showLoading(true);
-  announce('מרענן נתונים...');
-  try {
-    await Promise.all([loadRiders(), loadEvents(), loadBikes()]);
-    updateDashboardStats(); updateExamAlerts(); applyExamsFilter(); renderAdminNotifications();
-    announce('הנתונים עודכנו');
-    showToast('הנתונים עודכנו', 'success');
-  } catch(e) {
-    announce('שגיאה ברענון: ' + e.message);
-    showToast('שגיאה ברענון: ' + e.message, 'error');
-  } finally { showLoading(false); }
-}
-
-function adminLogout() {
-  sessionStorage.removeItem('user');
-  window.location.replace('login.html');
-}
-
-function showLoading(on) {
-  let el = document.getElementById('loadingBar');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'loadingBar';
-    el.setAttribute('role', 'progressbar');
-    el.setAttribute('aria-label', 'טוען נתונים');
-    el.setAttribute('aria-valuetext', 'טוען...');
-    el.style.cssText = `position:fixed;top:0;right:0;left:0;height:3px;background:var(--accent);z-index:9999;transition:opacity 0.3s;`;
-    document.body.prepend(el);
+function trapFocus(e) {
+  if (e.key !== 'Tab') {
+    if (e.key === 'Escape') { document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open')); }
+    return;
   }
-  el.style.opacity = on ? '1' : '0';
+  const modal = document.querySelector('.modal-backdrop.open .modal');
+  if (!modal) return;
+  const focusable = modal.querySelectorAll('input, select, textarea, button, [tabindex]:not([tabindex="-1"])');
+  const first = focusable[0], last = focusable[focusable.length - 1];
+  if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
+  else            { if (document.activeElement === last)  { e.preventDefault(); first.focus(); } }
 }
 
-function lockBtn(btnEl, loadingText = 'מעבד...') {
-  if (!btnEl) return;
-  btnEl.disabled = true;
-  btnEl._origText = btnEl.innerHTML;
-  btnEl.innerHTML = `<span>${loadingText}</span>`;
-  btnEl.setAttribute('aria-busy', 'true');
-}
-function unlockBtn(btnEl) {
-  if (!btnEl) return;
-  btnEl.disabled = false;
-  btnEl.innerHTML = btnEl._origText || btnEl.innerHTML;
-  btnEl.removeAttribute('aria-busy');
+// ─── ADD RIDER ─────────────────────────────────────
+async function submitAddRider() {
+  const errEl = document.getElementById('add-rider-error');
+  errEl.style.display = 'none';
+  const btn = document.querySelector('#modalAddRider .btn-primary');
+  lockBtn(btn, 'שומר...');
+
+  const tid   = document.getElementById('new-tid').value.trim();
+  const name  = document.getElementById('new-name').value.trim();
+  const phone = document.getElementById('new-phone').value.trim();
+  const city  = document.getElementById('new-city').value.trim();
+  const dob   = document.getElementById('new-dob').value;
+  const gender= document.getElementById('new-gender').value;
+
+  if (!tid || !name || !phone || !city || !dob || !gender) {
+    errEl.textContent = 'נא למלא את כל השדות המסומנים בכוכבית (*)';
+    errEl.style.display = 'block';
+    errEl.focus();
+    return;
+  }
+
+  if (!/^\d{9}$/.test(tid)) {
+    errEl.textContent = 'תעודת זהות חייבת להכיל בדיוק 9 ספרות';
+    errEl.style.display = 'block';
+    errEl.focus();
+    return;
+  }
+
+  try {
+    await callAPI('addRider', {
+      tid, name,
+      phone: document.getElementById('new-phone').value.trim(),
+      email: document.getElementById('new-email').value.trim(),
+      city, dob, gender,
+      rideStyle:  document.getElementById('new-style').value,
+      permission: document.getElementById('new-perm').value,
+    });
+    unlockBtn(document.querySelector('#modalAddRider .btn-primary'));
+    closeModal('modalAddRider');
+    showToast(`רוכב ${name} נוסף בהצלחה ✅`, 'success');
+    await loadRiders();
+    updateDashboardStats();
+  } catch(e) {
+    unlockBtn(document.querySelector('#modalAddRider .btn-primary'));
+    errEl.textContent = 'שגיאה: ' + e.message;
+    errEl.style.display = 'block';
+    errEl.focus();
+  }
 }
 
-// dd/mm/yyyy → "15 באפריל 2026"
-function formatDateHebrew(str) {
-  const months = ['','ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
-  const [d,m,y] = (str||'').split('/');
-  if (!d||!m||!y) return str||'';
-  return `${parseInt(d)} ב${months[parseInt(m)]} ${y}`;
+// ─── EXAM DATE ─────────────────────────────────────
+async function saveExamDate(tid, name) {
+  // מחפש לפי שני סוגי prefix אפשריים
+  const input = document.getElementById('upd-' + tid)
+             || document.getElementById('exam-' + tid);
+
+  if (!input) {
+    showToast('שגיאה: שדה תאריך לא נמצא', 'error');
+    return;
+  }
+
+  // חשוב: .value (property) ולא getAttribute
+  const dateVal = input.value;
+  if (!dateVal || dateVal === '') {
+    showToast('נא לבחור תאריך בדיקה', 'error');
+    input.focus();
+    return;
+  }
+
+  // המרה ל-ISO: input type=date מחזיר YYYY-MM-DD
+  const examDate = dateVal; // כבר בפורמט הנכון ל-API
+
+  try {
+    await callAPI('updateExamDate', { tid, examDate });
+    showToast(`תאריך הבדיקה עודכן ל${name} ✅`, 'success');
+    // רענון מהשרת — ממתינים שהנוסחאות ב-Sheets יתחשבו
+    await new Promise(r => setTimeout(r, 800));
+    await loadRiders();
+    updateDashboardStats();
+    updateExamAlerts();
+    renderExamsTable(STATE.riders);
+  } catch(e) {
+    showToast('שגיאה: ' + e.message, 'error');
+  }
 }
 
-function esc(str) {
-  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+// ─── FILTER RIDERS ─────────────────────────────────
+function filterRiders(query) {
+  applyRidersFilter();
+}
+
+function applyRidersFilter() {
+  const q     = (document.querySelector('#section-riders input[type="search"]')?.value || '').trim().toLowerCase();
+  const style = document.getElementById('filter-style')?.value || '';
+  const exam  = document.getElementById('filter-exam')?.value  || '';
+
+  const filtered = STATE.riders.filter(r => {
+    if (q && !(
+      r.name.toLowerCase().includes(q) ||
+      r.phone.includes(q) ||
+      r.city.toLowerCase().includes(q) ||
+      r.tid.includes(q)
+    )) return false;
+    if (style && r.rideStyle !== style) return false;
+    if (exam) {
+      if (exam === 'תקין'     && !r.examStatus.includes('✅')) return false;
+      if (exam === 'פג תוקף' && !r.examStatus.includes('❌')) return false;
+      if (exam === 'אין בדיקה' && !r.examStatus.includes('אין')) return false;
+    }
+    return true;
+  });
+  renderRidersTable(filtered);
+}
+
+// ─── EDIT EVENT ────────────────────────────────────
+function editEvent(eventId) {
+  const ev = [...(STATE.events || []),
+              ...(STATE.allEvents?.past || []),
+              ...(STATE.allEvents?.cancelled || [])]
+    .find(e => e.id === eventId)
+    || STATE.events.find(e => e.id === eventId);
+
+  // חפש ב-allEvents אם קיים
+  let found = null;
+  if (STATE.allEvents) {
+    found = [...(STATE.allEvents.upcoming||[]),
+             ...(STATE.allEvents.past||[]),
+             ...(STATE.allEvents.cancelled||[])]
+      .find(e => e.id === eventId);
+  }
+  found = found || STATE.events.find(e => e.id === eventId);
+  if (!found) { showToast('אירוע לא נמצא', 'error'); return; }
+
+  document.getElementById('edit-event-id').value    = found.id;
+  document.getElementById('edit-ev-desc').value     = found.description;
+  document.getElementById('edit-ev-date').value     = found.date.split('/').reverse().join('-');
+  document.getElementById('edit-ev-time').value     = found.meetTime || '06:00';
+  document.getElementById('edit-ev-km').value       = found.km || 0;
+  document.getElementById('edit-ev-climb').value    = found.climb || 0;
+  document.getElementById('edit-ev-meet').value     = found.meetPoint || '';
+  document.getElementById('edit-event-error').style.display = 'none';
+
+  const sel = document.getElementById('edit-ev-captain');
+  sel.innerHTML = '<option value="">— בחר —</option>' +
+    STATE.riders.filter(r => r.rideStyle === 'קפטן' || r.permission === 'מנהל')
+      .map(r => `<option value="${esc(r.name)}" ${r.name === found.captain ? 'selected' : ''}>${esc(r.name)}</option>`).join('');
+
+  openModal('modalEditEvent');
+}
+
+async function submitEditEvent() {
+  const errEl = document.getElementById('edit-event-error');
+  errEl.style.display = 'none';
+  const btn = document.querySelector('#modalEditEvent .btn-primary');
+  lockBtn(btn, 'שומר...');
+  const eventId = document.getElementById('edit-event-id').value;
+  const desc    = document.getElementById('edit-ev-desc').value.trim();
+  const date    = document.getElementById('edit-ev-date').value;
+  if (!desc || !date) {
+    errEl.textContent = 'נא למלא תיאור ותאריך';
+    errEl.style.display = 'block'; return;
+  }
+  try {
+    await callAPI('updateEvent', {
+      eventId,
+      description: desc,
+      date,
+      km:        Number(document.getElementById('edit-ev-km').value)    || 0,
+      climb:     Number(document.getElementById('edit-ev-climb').value) || 0,
+      meetPoint: document.getElementById('edit-ev-meet').value.trim(),
+      meetTime:  document.getElementById('edit-ev-time').value,
+      captain:   document.getElementById('edit-ev-captain').value,
+    });
+    unlockBtn(document.querySelector('#modalEditEvent .btn-primary'));
+    closeModal('modalEditEvent');
+    showToast(`אירוע "${desc}" עודכן ✅`, 'success');
+    await loadEvents();
+  } catch(e) {
+    unlockBtn(document.querySelector('#modalEditEvent .btn-primary'));
+    errEl.textContent = 'שגיאה: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+// ─── EDIT / DELETE BIKE ────────────────────────────
+function editBike(bikeId) {
+  const b = STATE.bikes.find(x => x.id === bikeId);
+  if (!b) { showToast('אופניים לא נמצאו', 'error'); return; }
+  document.getElementById('edit-bike-id').value     = b.id;
+  document.getElementById('edit-bike-name').value   = b.name;
+  document.getElementById('edit-bike-frame').value  = b.frame;
+  document.getElementById('edit-bike-drive').value  = b.drive;
+  document.getElementById('edit-bike-error').style.display = 'none';
+  openModal('modalEditBike');
+}
+
+async function submitEditBike() {
+  const errEl = document.getElementById('edit-bike-error');
+  errEl.style.display = 'none';
+  const btn = document.querySelector('#modalEditBike .btn-primary');
+  lockBtn(btn, 'שומר...');
+  const bikeId = document.getElementById('edit-bike-id').value;
+  const name   = document.getElementById('edit-bike-name').value.trim();
+  const frame  = document.getElementById('edit-bike-frame').value;
+  const drive  = document.getElementById('edit-bike-drive').value;
+  if (!name) { errEl.textContent = 'נא למלא שם'; errEl.style.display = 'block'; return; }
+  try {
+    await callAPI('updateBike', { bikeId, name, frame, drive });
+    unlockBtn(document.querySelector('#modalEditBike .btn-primary'));
+    closeModal('modalEditBike');
+    showToast(`אופניים "${name}" עודכנו ✅`, 'success');
+    await loadBikes();
+  } catch(e) {
+    unlockBtn(document.querySelector('#modalEditBike .btn-primary'));
+    errEl.textContent = 'שגיאה: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+async function deleteBike(bikeId, name) {
+  if (!confirm(`למחוק את האופניים "${name}"?`)) return;
+  try {
+    await callAPI('deleteBike', { bikeId });
+    showToast(`אופניים "${name}" נמחקו`, 'success');
+    await loadBikes();
+  } catch(e) {
+    showToast('שגיאה: ' + e.message, 'error');
+  }
+}
+
+// ─── TOAST ─────────────────────────────────────────
+function showToast(message, type = 'success') {
+  const area  = document.getElementById('toastArea');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.setAttribute('role', 'status');
+  toast.innerHTML = `<span aria-hidden="true">${type === 'success' ? '✅' : '❌'}</span> ${message}`;
+  area.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
 }
 </script>
 </body>
