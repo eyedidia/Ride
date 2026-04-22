@@ -2339,7 +2339,9 @@ function renderAssignments() {
 
   const captainsBody = document.getElementById('captainsBody');
   captainsBody.innerHTML = captains.length ? captains.map(r => {
-    const isAssigned = r.bike && r.bike !== 'PRIVATE' && r.bike !== '—' && r.bike !== '';
+    const bikeVal    = (r.bike || '').toString().trim();
+    const isAssigned = bikeVal !== '' && bikeVal !== 'PRIVATE' && bikeVal !== '—'
+                    || (r.role === 'קפטן' && r.partnerTid && r.partnerTid !== '');
     const hasPartner = r.role === 'קפטן' && r.partnerTid;
 
     if (isAssigned) {
