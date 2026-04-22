@@ -2438,17 +2438,25 @@ function renderAssignments() {
 
 function editAssignment(captainTid) {
   const captain = assignRegs.find(r => r.tid === captainTid);
-  if (captain) captain.bike = '';
+  if (captain) {
+    captain.bike     = '';
+    captain._fromApi = false; // ← שחרר נעילה
+  }
   renderAssignments();
 }
 
 function onStokerChange(captainTid) {
   const sel = document.getElementById('stoker-' + captainTid);
   if (!sel) return;
-  // שמור רק ב-partnerTid זמני — לא ננעל עד לחיצת שמור
+
+  // שמור את הבחירה הנוכחית של האופניים לפני רינדור מחדש
+  const bikeSel = document.getElementById('bike-' + captainTid);
   const captain = assignRegs.find(r => r.tid === captainTid);
-  if (captain) captain.partnerTid = sel.value;
-  // אל תרנדר מחדש — רק מעדכן את הבחירה הנוכחית
+  if (captain) {
+    if (bikeSel) captain.bike = bikeSel.value; // שמור bike נבחר
+    captain.partnerTid = sel.value;
+  }
+  // לא מרנדר — האופניים יישמרו בגלל captain.bike
 }
 
 function updatePartnerBike(captainTid) {
