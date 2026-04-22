@@ -727,12 +727,6 @@ tbody td {
 /* ── תוכן ראשי ── */
 .content { padding: 12px; flex: 1; padding-bottom: 32px; }
 
-/* גובה topbar — מונע כיסוי תוכן */
-:root { --topbar-h: 62px; }
-@media (max-width: 768px) {
-  .content { padding-top: calc(var(--topbar-h) + 8px); }
-}
-
 /* ── מסך גדול — sidebar קבוע ── */
 @media (min-width: 769px) {
   .content { padding: 28px; }
@@ -745,6 +739,8 @@ tbody td {
 
 /* ── מובייל ── */
 @media (max-width: 768px) {
+  /* תוכן לא מוסתר מהסרגל העליון */
+  .content { padding-top: 70px; }
   .sidebar { transform: translateX(100%); }
   .sidebar.open {
     transform: translateX(0);
@@ -755,7 +751,8 @@ tbody td {
   .main         { margin-right: 0; }
 
   /* Topbar */
-  .topbar { padding: 10px 14px 10px 58px; gap: 6px; flex-wrap: nowrap; }
+  /* Topbar — כפתור בורגר נמצא fixed ימינה, כותרת צריכה מרחק מימין */
+  .topbar { padding: 10px 58px 10px 10px; gap: 6px; flex-wrap: nowrap; }
   .page-title      { font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .page-breadcrumb { display: none; }
   .topbar-actions  { gap: 6px; flex-shrink: 0; }
@@ -906,22 +903,50 @@ tbody td {
   /* Badge */
   .badge { margin-right: 4px; }
 
-  /* שיבוצים — ודא רוחב מלא, ללא גלישה */
-  #assignmentsContent,
+  /* שיבוצים — מניעת גלישה אופקית */
+  #section-assignments {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  #assignmentsContent {
+    width: 100%;
+    box-sizing: border-box;
+  }
   #assignmentsContent .panel,
   #assignmentsContent .panel-body,
-  #captainsBody,
+  #assignmentsContent .panel-header {
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+  #captainsBody {
+    padding: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
   #captainsBody > div {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
     min-width: 0 !important;
-    overflow: hidden !important;
   }
-  /* אפשר גלילה רק לסלקט בתוך הכרטיס */
   #captainsBody select,
   #captainsBody .select {
-    overflow: visible !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  #stokersList {
+    padding: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    flex-wrap: wrap !important;
+  }
+  #stokersList > div {
+    width: 100%;
+    box-sizing: border-box;
   }
 }
 </style>
@@ -2437,10 +2462,12 @@ async function saveAssignment(captainTid, captainName) {
       await callAPI('assignPartner', { eventId, captainTid, stokerTid });
     }
 
-    // עדכון אופטימיסטי מקומי — ננעל מיד
+    // עדכון אופטימיסטי — ננעל מיד רק אם נבחרו אופניים
     const captain = assignRegs.find(r => r.tid === captainTid);
     if (captain) {
-      if (bikeId)    captain.bike       = bikeId;
+      if (bikeId && bikeId !== 'PRIVATE' && bikeId !== '') {
+        captain.bike = bikeId;
+      }
       if (stokerTid) captain.partnerTid = stokerTid;
     }
 
