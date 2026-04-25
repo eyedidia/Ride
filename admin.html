@@ -1000,6 +1000,7 @@ tbody td {
   <div class="nav-section">
     <div class="nav-section-label" aria-hidden="true">ראשי</div>
     <button class="nav-item active"
+            data-section="dashboard"
             onclick="showSection('dashboard',this)"
             aria-current="page"
             aria-label="סקירה כללית">
@@ -1007,18 +1008,21 @@ tbody td {
       סקירה כללית
     </button>
     <button class="nav-item"
+            data-section="riders"
             onclick="showSection('riders',this)"
             aria-label="ניהול רוכבים">
       <span class="nav-icon" aria-hidden="true">👥</span>
       רוכבים
     </button>
     <button class="nav-item"
+            data-section="events"
             onclick="showSection('events',this)"
             aria-label="ניהול אירועים">
       <span class="nav-icon" aria-hidden="true">📅</span>
       אירועים
     </button>
     <button class="nav-item"
+            data-section="assignments"
             onclick="showSection('assignments',this)"
             aria-label="שיבוצים">
       <span class="nav-icon" aria-hidden="true">🔗</span>
@@ -1029,18 +1033,21 @@ tbody td {
   <div class="nav-section">
     <div class="nav-section-label" aria-hidden="true">ניהול</div>
     <button class="nav-item"
+            data-section="bikes"
             onclick="showSection('bikes',this)"
             aria-label="ניהול צי אופניים">
       <span class="nav-icon" aria-hidden="true">🚲</span>
       צי אופניים
     </button>
     <button class="nav-item"
+            data-section="maintenance"
             onclick="showSection('maintenance',this)"
             aria-label="היסטוריית תחזוקה">
       <span class="nav-icon" aria-hidden="true">🔧</span>
       תחזוקה
     </button>
     <button class="nav-item"
+            data-section="exams"
             onclick="showSection('exams',this)"
             aria-label="בדיקות ארגומטריות">
       <span class="nav-icon" aria-hidden="true">🩺</span>
@@ -1818,68 +1825,22 @@ tbody td {
 <!-- Visually hidden helper -->
 <style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>
 
-<script>
-// ─── CONFIG ────────────────────────────────────────
-const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec";
+<!-- Shared admin utilities (API, auth guard, toast, lockBtn, modal, tabs) -->
+<script src="shared/admin-common.js"></script>
 
-// ─── GUARD — מנהלים בלבד ───────────────────────────
-(function() {
-  const stored = sessionStorage.getItem('user');
-  if (!stored) { window.location.replace('login.html'); return; }
-  const u = JSON.parse(stored);
-  if (u.permission !== 'מנהל') { window.location.replace('rider.html'); return; }
-  // עדכון כרטיס משתמש בסרגל הצד
-  document.addEventListener('DOMContentLoaded', () => {
-    const nameEl   = document.querySelector('.user-name');
-    const roleEl   = document.querySelector('.user-role');
-    const avatarEl = document.querySelector('.user-avatar');
-    if (nameEl)   nameEl.textContent   = u.name;
-    if (roleEl)   roleEl.textContent   = 'מנהל מערכת';
-    if (avatarEl) avatarEl.textContent = u.name.trim().split(' ').map(w=>w[0]).slice(0,2).join('');
-    const userCard = document.querySelector('.user-card');
-    if (userCard) userCard.setAttribute('aria-label', `משתמש מחובר: ${u.name}, מנהל מערכת`);
-  });
-})();
+<script>
+// ─── GUARD + USER CARD ─────────────────────────────
+// checkAdminAccess / populateUserCard are provided by shared/admin-common.js
+const adminUser = checkAdminAccess();   // redirects if not an admin role
+document.addEventListener('DOMContentLoaded', () => {
+  populateUserCard(adminUser);
+  applyRoleAccess(adminUser);
+});
 
 // ══════════════════════════════════════════════════
 // DATA LAYER — טעינה מה-API בטעינת הדף
+// (apiGet, callAPI defined in shared/admin-common.js)
 // ══════════════════════════════════════════════════
-
-// קריאה ל-Apps Script (doGet — קריאה)
-async function apiGet(action, params = {}) {
-  const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 8000);
-  try {
-    const qs  = new URLSearchParams({ action, ...params }).toString();
-    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
-    return data.data;
-  } catch(err) {
-    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
-    throw err;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-// קריאה ל-Apps Script (doGet — כתיבה עם data=JSON)
-async function callAPI(action, body = {}) {
-  const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 8000);
-  try {
-    const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
-    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
-    return data.data;
-  } catch(err) {
-    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
-    throw err;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
 
 // ─── BOOTSTRAP — רץ בטעינת הדף ─────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -2874,20 +2835,7 @@ function adminLogout() {
 }
 
 // ─── LOADING INDICATOR ───────────────────────────
-function showLoading(on) {
-  let el = document.getElementById('loadingBar');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'loadingBar';
-    el.setAttribute('role', 'progressbar');
-    el.setAttribute('aria-label', 'טוען נתונים');
-    el.setAttribute('aria-valuetext', 'טוען...');
-    el.style.cssText = `position:fixed;top:0;right:0;left:0;height:3px;background:var(--accent);
-      z-index:9999;transition:opacity 0.3s;transform-origin:right;`;
-    document.body.prepend(el);
-  }
-  el.style.opacity = on ? '1' : '0';
-}
+// (showLoading defined in shared/admin-common.js)
 
 // ── התראות דשבורד ─────────────────────────────────
 function renderAdminNotifications() {
@@ -2966,25 +2914,7 @@ function renderAdminNotifications() {
   area.innerHTML = banners.join('');
 }
 
-// ─── BUTTON LOCK — מניעת לחיצה כפולה ────────────
-function lockBtn(btnEl, loadingText = '...') {
-  if (!btnEl) return;
-  btnEl.disabled = true;
-  btnEl._origText = btnEl.innerHTML;
-  btnEl.innerHTML = `<span style="opacity:.7">${loadingText}</span>`;
-  btnEl.setAttribute('aria-busy', 'true');
-}
-function unlockBtn(btnEl) {
-  if (!btnEl) return;
-  btnEl.disabled = false;
-  btnEl.innerHTML = btnEl._origText || btnEl.innerHTML;
-  btnEl.removeAttribute('aria-busy');
-}
-
-// ─── UTILS ────────────────────────────────────────
-function esc(str) {
-  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+// (lockBtn, unlockBtn, esc defined in shared/admin-common.js)
 
 // ─── NAV ───────────────────────────────────────────
 const sections = ['dashboard','riders','events','assignments','bikes','maintenance','exams'];
@@ -2999,6 +2929,10 @@ const titles   = {
 };
 
 function showSection(name, clickedBtn) {
+  // role guard — silently redirect to dashboard if section not permitted
+  const allowed = getUserAllowedSections(adminUser);
+  if (!allowed.includes(name)) { name = 'dashboard'; }
+
   sections.forEach(s => {
     const el = document.getElementById('section-' + s);
     if (el) el.hidden = (s !== name);
@@ -3014,9 +2948,7 @@ function showSection(name, clickedBtn) {
   document.getElementById('pageTitle').textContent      = titles[name][0];
   document.getElementById('pageBreadcrumb').textContent = titles[name][1];
   document.getElementById('main-content').focus();
-  // סוגר תפריט במובייל תמיד
   closeSidebar();
-  // טעינה עצלה לתחזוקה
   if (name === 'maintenance') loadMaintenance();
 }
 
@@ -3041,59 +2973,46 @@ function closeSidebar() {
   btn.setAttribute('aria-label','פתח תפריט ניווט');
 }
 
-// ─── TABS ──────────────────────────────────────────
-function switchTab(btn, panelId) {
-  const panel = btn.closest('.panel');
-  panel.querySelectorAll('.tab-btn').forEach(b => {
-    b.classList.remove('active');
-    b.setAttribute('aria-selected','false');
-  });
-  panel.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  btn.setAttribute('aria-selected','true');
-  document.getElementById(panelId).classList.add('active');
-}
+// (switchTab, openModal, closeModal, backdropClose defined in shared/admin-common.js)
 
-// ─── MODAL ─────────────────────────────────────────
-let lastFocus = null;
-
+// openModal override — populates captain select for event modals
 function openModal(id) {
-  // אכלוס תפריט קפטנים בטופס אירוע
-  if (id === 'modalAddEvent') {
-    const sel = document.getElementById('ev-captain');
-    sel.innerHTML = '<option value="">— בחר —</option>' +
-      STATE.riders.filter(r => r.rideStyle === 'קפטן' || r.permission === 'מנהל')
-        .map(r => `<option value="${esc(r.name)}">${esc(r.name)}</option>`).join('');
+  if (id === 'modalAddEvent' || id === 'modalEditEvent') {
+    const selId = id === 'modalAddEvent' ? 'ev-captain' : 'edit-ev-captain';
+    const sel = document.getElementById(selId);
+    if (sel) {
+      sel.innerHTML = '<option value="">— בחר —</option>' +
+        STATE.riders
+          .filter(r => r.rideStyle === 'קפטן' || r.permission === 'מנהל')
+          .map(r => `<option value="${esc(r.name)}">${esc(r.name)}</option>`)
+          .join('');
+    }
   }
-  lastFocus = document.activeElement;
+  // delegate to shared openModal after populating
+  _lastFocus = document.activeElement;
   const m = document.getElementById(id);
   m.classList.add('open');
   const firstInput = m.querySelector('input, select, button');
   if (firstInput) firstInput.focus();
-  document.addEventListener('keydown', trapFocus);
+  document.addEventListener('keydown', _trapFocus);
 }
 
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-  document.removeEventListener('keydown', trapFocus);
-  if (lastFocus) lastFocus.focus();
-}
-
-function backdropClose(e, id) {
-  if (e.target === e.currentTarget) closeModal(id);
-}
-
-function trapFocus(e) {
-  if (e.key !== 'Tab') {
-    if (e.key === 'Escape') { document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open')); }
-    return;
+// ─── ROLE-BASED SECTION ACCESS ─────────────────────
+function applyRoleAccess(u) {
+  const allowed = getUserAllowedSections(u);
+  // Nav items: hide those whose section the user can't access
+  document.querySelectorAll('.nav-item[data-section]').forEach(btn => {
+    const sec = btn.dataset.section;
+    if (!allowed.includes(sec)) btn.style.display = 'none';
+  });
+  // If user can't access the current (default) section, show first allowed one
+  const currentVisible = sections.find(s => allowed.includes(s) && s !== 'dashboard') || 'dashboard';
+  if (!allowed.includes('dashboard') && allowed.length === 0) return;
+  // activate first permitted nav button after dashboard
+  if (allowed.length === 1) {
+    // only dashboard — hide the nav entirely since nothing else to show
+    document.querySelector('.nav-section')?.style.setProperty('display','none');
   }
-  const modal = document.querySelector('.modal-backdrop.open .modal');
-  if (!modal) return;
-  const focusable = modal.querySelectorAll('input, select, textarea, button, [tabindex]:not([tabindex="-1"])');
-  const first = focusable[0], last = focusable[focusable.length - 1];
-  if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
-  else            { if (document.activeElement === last)  { e.preventDefault(); first.focus(); } }
 }
 
 // ─── ADD RIDER ─────────────────────────────────────
@@ -3343,16 +3262,7 @@ async function deleteBike(bikeId, name) {
   }
 }
 
-// ─── TOAST ─────────────────────────────────────────
-function showToast(message, type = 'success') {
-  const area  = document.getElementById('toastArea');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.setAttribute('role', 'status');
-  toast.innerHTML = `<span aria-hidden="true">${type === 'success' ? '✅' : '❌'}</span> ${message}`;
-  area.appendChild(toast);
-  setTimeout(() => toast.remove(), 4000);
-}
+// (showToast defined in shared/admin-common.js)
 </script>
 </body>
 </html>
