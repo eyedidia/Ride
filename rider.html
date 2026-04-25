@@ -482,6 +482,55 @@ body::before {
   flex-shrink: 0;
 }
 
+/* ─── DATE GROUP VIEW ───────────────────── */
+.date-group { margin-bottom: 8px; }
+
+.date-group-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: right;
+  transition: background 0.15s;
+}
+.date-group-btn:hover { background: var(--surface2); }
+.date-group-btn[aria-expanded="true"] {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+.date-group-count {
+  margin-right: auto;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+.date-group-arrow { color: var(--muted); font-size: 0.75rem; }
+
+.date-group-items {
+  border: 1px solid var(--border);
+  border-top: none;
+  border-bottom-left-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg);
+}
+.date-group-item {
+  border-radius: 10px !important;
+}
+
 /* ─── PHONE BOOK ────────────────────────── */
 .phonebook-search {
   position: relative;
@@ -830,7 +879,28 @@ body::before {
         <div class="stats-panel-title" aria-hidden="true">🚲 האופניים שלי</div>
         <dl id="topBikesList"></dl>
       </div>
+
+      <!-- תאריכי רכיבה -->
+      <div class="stats-panel" id="rideDatePanel" style="display:none"
+           role="region" aria-label="תאריכי רכיבה">
+        <div class="stats-panel-title" aria-hidden="true">📅 תאריכי רכיבה</div>
+        <div id="rideDateInfo" style="font-size:0.85rem;color:var(--muted)"></div>
+      </div>
     </div>
+
+    <!-- כפתור תצוגת תאריכים -->
+    <div id="historyViewToggle" style="display:none;margin-bottom:10px">
+      <button class="flt-reset"
+              id="btnDateView"
+              onclick="toggleDateView()"
+              aria-pressed="false"
+              aria-label="הצג קבוצות תאריכים">
+        <span aria-hidden="true">📅</span> תצוגת תאריכים
+      </button>
+    </div>
+
+    <!-- תצוגת תאריכים -->
+    <div id="dateViewList" style="display:none" role="list" aria-label="רכיבות לפי תאריך"></div>
 
     <!-- פילטרים -->
     <div class="history-filters" id="historyFilters" style="display:none"
@@ -1608,6 +1678,22 @@ function renderStats(history) {
         <dd class="partner-km">${count} רכיבות</dd>
       </div>`).join('');
   }
+
+  // first/last ride dates
+  const sorted    = [...history].sort((a,b) => parseDate(a.date) - parseDate(b.date));
+  const firstDate = sorted[0]?.date || '';
+  const lastDate  = sorted[sorted.length - 1]?.date || '';
+  const rideDatePanel = document.getElementById('rideDatePanel');
+  const rideDateInfo  = document.getElementById('rideDateInfo');
+  if (firstDate) {
+    rideDatePanel.style.display = 'block';
+    rideDateInfo.innerHTML = firstDate === lastDate
+      ? `<div>רכיבה יחידה: <strong>${esc(firstDate)}</strong></div>`
+      : `<div>רכיבה ראשונה: <strong>${esc(firstDate)}</strong></div>
+         <div style="margin-top:4px">רכיבה אחרונה: <strong>${esc(lastDate)}</strong></div>`;
+  }
+
+  document.getElementById('historyViewToggle').style.display = 'block';
 }
 
 function populateFilterOptions(history) {
@@ -1659,6 +1745,98 @@ function resetFilters() {
 function parseDate(str) {
   const [d,m,y] = (str||'').split('/');
   return new Date(`${y}-${m}-${d}`).getTime() || 0;
+}
+
+/* ─── Date View ─────────────────────────── */
+let _dateViewActive = false;
+
+function toggleDateView() {
+  _dateViewActive = !_dateViewActive;
+  const btn          = document.getElementById('btnDateView');
+  const dateViewList = document.getElementById('dateViewList');
+  const filters      = document.getElementById('historyFilters');
+  const list         = document.getElementById('historyList');
+  const pager        = document.getElementById('historyPager');
+
+  btn.setAttribute('aria-pressed', _dateViewActive ? 'true' : 'false');
+  btn.setAttribute('aria-label',   _dateViewActive ? 'חזור לרשימת הרכיבות' : 'הצג קבוצות תאריכים');
+  btn.innerHTML = _dateViewActive
+    ? '<span aria-hidden="true">📋</span> חזור לרשימה'
+    : '<span aria-hidden="true">📅</span> תצוגת תאריכים';
+
+  if (_dateViewActive) {
+    filters.style.display      = 'none';
+    list.style.display         = 'none';
+    pager.style.display        = 'none';
+    renderDateView();
+    dateViewList.style.display = 'block';
+    announce('מציג רכיבות לפי תאריך. לחץ על תאריך לראות פרטים');
+  } else {
+    dateViewList.style.display = 'none';
+    filters.style.display      = 'flex';
+    list.style.display         = 'block';
+    applyFilters();
+    announce('חזרת לרשימת הרכיבות');
+  }
+}
+
+function renderDateView() {
+  const byDate = {};
+  allHistory.forEach(h => {
+    const d = h.date || 'תאריך לא ידוע';
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(h);
+  });
+
+  const dates = Object.keys(byDate).sort((a,b) => parseDate(b) - parseDate(a));
+  const container = document.getElementById('dateViewList');
+
+  container.innerHTML = dates.map((date, i) => {
+    const rides = byDate[date];
+    const count = rides.length;
+    const id    = `date-grp-${i}`;
+    return `
+      <div role="listitem" class="date-group">
+        <button class="date-group-btn"
+                aria-expanded="false"
+                aria-controls="${id}"
+                onclick="toggleDateGroup(this,'${id}')">
+          <span>${esc(date)}</span>
+          <span class="date-group-count">${count} ${count === 1 ? 'רכיבה' : 'רכיבות'}</span>
+          <span class="date-group-arrow" aria-hidden="true">▼</span>
+        </button>
+        <div id="${id}" class="date-group-items" style="display:none" role="list">
+          ${rides.map(h => `
+            <div class="history-item date-group-item" role="listitem">
+              <div class="history-info">
+                <div class="history-title">${esc(h.description)}</div>
+                <div class="history-meta">
+                  <span class="sr-only">תפקיד: </span><span>${esc(h.role || '—')}</span>
+                  ${h.bike ? `<span aria-hidden="true"> · </span><span class="sr-only">אופניים: </span><span>${esc(h.bike)}</span>` : ''}
+                  ${h.partner && h.partner !== '—'
+                    ? `<span aria-hidden="true"> · </span><span class="sr-only">שותף: </span><span>עם ${esc(h.partner)}</span>`
+                    : ''}
+                </div>
+                <div class="history-meta" style="margin-top:4px">
+                  <span aria-label="${esc(String(h.km))} קילומטר">${esc(String(h.km))} ק"מ</span>
+                  ${Number(h.climb) > 0
+                    ? `<span aria-hidden="true"> · </span><span aria-label="${Number(h.climb).toLocaleString('he-IL')} מטר עלייה">${Number(h.climb).toLocaleString('he-IL')} מ' עלייה</span>`
+                    : ''}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleDateGroup(btn, contentId) {
+  const content  = document.getElementById(contentId);
+  const expanded = btn.getAttribute('aria-expanded') === 'true';
+  btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+  content.style.display = expanded ? 'none' : 'block';
+  btn.querySelector('.date-group-arrow').textContent = expanded ? '▼' : '▲';
 }
 
 function renderHistoryPage() {
