@@ -193,6 +193,32 @@ body::before {
   color: var(--accent);
 }
 
+/* ─── 1-HOUR EVENT BANNER ───────────────── */
+.event-soon-banner {
+  background: linear-gradient(135deg, rgba(79,124,255,0.18), rgba(124,92,255,0.14));
+  border: 1px solid rgba(79,124,255,0.45);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+.event-soon-banner .esb-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.event-soon-banner .esb-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.event-soon-banner p {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 3px 0;
+}
+
 /* ─── EXAM BANNER ───────────────────────── */
 .exam-banner {
   background: rgba(255,179,71,0.1);
@@ -1061,7 +1087,67 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   await loadEvents();
+  checkUpcomingEventNotifications();
 });
+
+// ══════════════════════════════════════════
+// 1-HOUR EVENT NOTIFICATION
+// ══════════════════════════════════════════
+async function checkUpcomingEventNotifications() {
+  if (!cachedEvents.length) return;
+  const now          = new Date();
+  const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+
+  const soonEvents = cachedEvents.filter(ev => {
+    if (!myRegs.has(ev.id)) return false;
+    const [d, m, y] = (ev.date || '').split('/');
+    const [hh, mm]  = (ev.meetTime || '00:00').split(':');
+    if (!d || !m || !y) return false;
+    const eventTime = new Date(y, m - 1, d, hh || 0, mm || 0);
+    return eventTime > now && eventTime <= oneHourLater;
+  });
+
+  if (!soonEvents.length) return;
+
+  const ev = soonEvents[0];
+  let assignmentHtml = '<p>רשום כ-סינגל</p>';
+
+  try {
+    const regs = await apiGet('getRegistrations', { eventId: ev.id });
+    const myReg = regs.find(r => normTid(r.tid) === normTid(user.tid));
+    if (myReg) {
+      const minsLeft = Math.round((new Date(
+        Number(ev.date.split('/')[2]),
+        Number(ev.date.split('/')[1]) - 1,
+        Number(ev.date.split('/')[0]),
+        Number((ev.meetTime || '00:00').split(':')[0]),
+        Number((ev.meetTime || '00:00').split(':')[1])
+      ) - now) / 60000);
+
+      const parts = [];
+      if (myReg.role)    parts.push(`תפקיד: ${myReg.role}`);
+      if (myReg.partner && myReg.partner !== '—') parts.push(`שותף: ${myReg.partner}`);
+      if (myReg.bike    && myReg.bike    !== '—') parts.push(`אופניים: ${myReg.bike}`);
+      if (ev.meetPoint)  parts.push(`נקודת מפגש: ${ev.meetPoint}`);
+      assignmentHtml = parts.map(p => `<p>${esc(p)}</p>`).join('');
+
+      const banner = document.createElement('div');
+      banner.className = 'event-soon-banner';
+      banner.setAttribute('role', 'alert');
+      banner.setAttribute('aria-label', `אירוע בעוד ${minsLeft} דקות: ${ev.description}`);
+      banner.innerHTML = `
+        <div class="esb-title">
+          <span aria-hidden="true">⏰</span> אירוע בעוד ${minsLeft} דקות!
+        </div>
+        <div class="esb-name">${esc(ev.description)}</div>
+        ${assignmentHtml}
+      `;
+      const evSection = document.getElementById('section-events');
+      evSection.prepend(banner);
+      announce(`אירוע מתקרב: ${ev.description} בעוד ${minsLeft} דקות`);
+    }
+  } catch(_) {}
+}
 
 // ══════════════════════════════════════════
 // PERSONAL NOTIFICATIONS
@@ -1392,6 +1478,30 @@ async function cancelReg(eventId, eventName, btn) {
   btn.setAttribute('aria-label', `מבטל הרשמה לרכיבה ${eventName}...`);
   btn.textContent = '...';
   try {
+    // שלב 1: בדוק אם יש שיבוץ (שותף / אופניים) לרוכב זה
+    const regs = await apiGet('getRegistrations', { eventId }).catch(() => []);
+    const myReg = regs.find(r => normTid(r.tid) === normTid(user.tid));
+
+    if (myReg) {
+      // שלב 2א: אם קפטן עם סטוקר — פרק את הצמד קודם
+      if (myReg.role === 'קפטן' && myReg.partnerTid) {
+        await callAPI('unassignPartner', {
+          eventId,
+          captainTid:  user.tid,
+          stokerTid:   myReg.partnerTid,
+          partnerTid:  myReg.partnerTid,
+          stokerName:  myReg.partner || ''
+        }).catch(() => {});
+      }
+      // שלב 2ב: פנה שיבוץ אופניים (ריק = ביטול)
+      if (myReg.bike && myReg.bike !== '—') {
+        await callAPI('assignBike', {
+          eventId, tid: user.tid, bikeId: ''
+        }).catch(() => {});
+      }
+    }
+
+    // שלב 3: בטל הרשמה
     await callAPI('cancelRegistration', { tid: user.tid, eventId });
     myRegs.delete(eventId);
     cachedCounts[eventId] = Math.max(0, (cachedCounts[eventId] || 1) - 1);

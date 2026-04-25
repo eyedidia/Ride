@@ -247,6 +247,7 @@ body::before {
 </style>
 </head>
 <body>
+<div id="sr-login-announce" aria-live="polite" aria-atomic="true" class="sr-only"></div>
 
 <main>
   <div class="card" role="main" aria-label="כניסה לאזור האישי של קבוצת האופניים">
@@ -335,6 +336,15 @@ body::before {
         <span class="spinner" aria-hidden="true" role="presentation"></span>
       </button>
 
+      <div style="margin-top:14px;display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="rememberMe" name="rememberMe"
+               style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent)"
+               aria-label="זכור אותי — מלא את הפרטים בכניסה הבאה">
+        <label for="rememberMe" style="font-size:0.875rem;color:var(--muted);cursor:pointer">
+          זכור אותי
+        </label>
+      </div>
+
     </form>
 
     <div class="divider" role="contentinfo">
@@ -381,6 +391,7 @@ async function handleLogin(e) {
     }
 
     const user = data.data;
+    saveRememberMe(phone, name);
     sessionStorage.clear();
     sessionStorage.setItem('user', JSON.stringify(user));
     window.location.href = 'rider.html';
@@ -419,8 +430,35 @@ function hideAlerts() {
 // אם כבר מחובר — הפנה ישירות ל-rider.html (כולם)
 window.addEventListener('DOMContentLoaded', () => {
   const stored = sessionStorage.getItem('user');
-  if (stored) window.location.replace('rider.html');
+  if (stored) { window.location.replace('rider.html'); return; }
+
+  // "זכור אותי" — מלא שדות מ-localStorage אם נשמרו
+  const savedPhone = localStorage.getItem('ride_phone');
+  const savedName  = localStorage.getItem('ride_name');
+  if (savedPhone) {
+    document.getElementById('phone').value = savedPhone;
+    document.getElementById('name').value  = savedName || '';
+    document.getElementById('rememberMe').checked = true;
+    announce('זכרתי אותך. לחץ כניסה למערכת לאישור.');
+  }
 });
+
+function announce(msg) {
+  const el = document.getElementById('sr-login-announce');
+  if (!el) return;
+  el.textContent = '';
+  requestAnimationFrame(() => { el.textContent = msg; });
+}
+
+function saveRememberMe(phone, name) {
+  if (document.getElementById('rememberMe')?.checked) {
+    localStorage.setItem('ride_phone', phone);
+    localStorage.setItem('ride_name',  name);
+  } else {
+    localStorage.removeItem('ride_phone');
+    localStorage.removeItem('ride_name');
+  }
+}
 </script>
   <script src="accessibility.js" defer></script>
 </body>
