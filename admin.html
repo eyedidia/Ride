@@ -2553,12 +2553,16 @@ async function unassignCaptain(captainTid, captainName) {
 
 // ─── CANCEL EVENT ───────────────────────────────────
 async function cancelEvent(eventId, name) {
-  if (!confirm(`לבטל את האירוע "${name}"?`)) return;
   try {
+    const regs = await apiGet('getRegistrations', { eventId });
+    const regCount = Array.isArray(regs) ? regs.length : 0;
+    const confirmMsg = regCount > 0
+      ? `לבטל את האירוע "${name}"?\n\n⚠️ ${regCount} רוכבים רשומים — ביטול יסיר את כולם.`
+      : `לבטל את האירוע "${name}"?`;
+    if (!confirm(confirmMsg)) return;
     await callAPI('cancelEvent', { eventId });
     showToast(`האירוע "${name}" בוטל`, 'success');
     await loadEvents();
-    // loadEvents() קורא ל-renderAllEventsTables פנימית — אין צורך לקרוא שוב
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
   }
@@ -2638,7 +2642,12 @@ async function submitEditRider() {
   const phone = document.getElementById('edit-phone').value.trim();
   if (!name || !phone) {
     errEl.textContent = 'שם וטלפון הם שדות חובה';
-    errEl.style.display = 'block'; errEl.focus(); return;
+    errEl.style.display = 'block'; errEl.focus(); unlockBtn(btn); return;
+  }
+  const phoneNormEdit = phone.replace(/[-\s]/g, '');
+  if (!/^0\d{9}$/.test(phoneNormEdit)) {
+    errEl.textContent = 'מספר טלפון לא תקין — יש להזין 10 ספרות (לדוגמה: 050-1234567)';
+    errEl.style.display = 'block'; errEl.focus(); unlockBtn(btn); return;
   }
   const examDate = document.getElementById('edit-exam').value;
   try {
@@ -2822,7 +2831,15 @@ function editRider(tid) {
 }
 
 async function deleteRider(tid, name) {
-  if (!confirm(`למחוק את ${name}?`)) return;
+  const futureEvents = (STATE.events || []).filter(ev => {
+    const d = ev.date ? ev.date.split('/').reverse().join('-') : '';
+    return d >= new Date().toISOString().slice(0, 10);
+  });
+  const hasUpcoming = futureEvents.length > 0;
+  const confirmMsg = hasUpcoming
+    ? `למחוק את ${name}?\n\n⚠️ ייתכן שהרוכב רשום לאירועים עתידיים — מחיקה תסיר את ההרשמות.`
+    : `למחוק את ${name}?`;
+  if (!confirm(confirmMsg)) return;
   try {
     await callAPI('deleteRider', { tid });
     await loadRiders();
@@ -3107,6 +3124,23 @@ async function submitAddRider() {
     return;
   }
 
+  if (STATE.riders.some(r => String(r.tid).trim() === tid)) {
+    errEl.textContent = `רוכב עם תעודת זהות ${tid} כבר קיים במערכת`;
+    errEl.style.display = 'block';
+    errEl.focus();
+    unlockBtn(btn);
+    return;
+  }
+
+  const phoneNorm = phone.replace(/[-\s]/g, '');
+  if (!/^0\d{9}$/.test(phoneNorm)) {
+    errEl.textContent = 'מספר טלפון לא תקין — יש להזין 10 ספרות (לדוגמה: 050-1234567)';
+    errEl.style.display = 'block';
+    errEl.focus();
+    unlockBtn(btn);
+    return;
+  }
+
   try {
     await callAPI('addRider', {
       tid, name,
@@ -3154,8 +3188,6 @@ async function saveExamDate(tid, name) {
   try {
     await callAPI('updateExamDate', { tid, examDate });
     showToast(`תאריך הבדיקה עודכן ל${name} ✅`, 'success');
-    // רענון מהשרת — ממתינים שהנוסחאות ב-Sheets יתחשבו
-    await new Promise(r => setTimeout(r, 800));
     await loadRiders();
     updateDashboardStats();
     updateExamAlerts();
