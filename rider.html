@@ -26,10 +26,7 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; }
-/* מרווח גלילה לכותרת דביקה */
-html { scroll-padding-top: 70px; }
-.section { scroll-margin-top: 70px; }
-  
+
 body {
   font-family: var(--font);
   background: var(--bg);
@@ -345,10 +342,19 @@ body::before {
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 14px;
+  list-style: none;
+}
+
+/* dl/dt/dd בתוך event-meta — מאופסים ויזואלית */
+.event-meta dt,
+.event-meta dd {
+  display: inline;
+  margin: 0;
+  padding: 0;
 }
 
 .meta-chip {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 5px;
   font-size: 0.88rem;
@@ -685,14 +691,8 @@ body::before {
 <!-- ─── HEADER ─────────────────────────── -->
 <header class="app-header" role="banner">
   <div class="header-user">
-    <button class="avatar" id="avatarEl"
-        onclick="window.location.href='profile.html'"
-        aria-label="האזור האישי שלי"
-        title="האזור האישי שלי"
-        style="cursor:pointer;border:none;font-family:inherit">?</button>
+    <div class="avatar" id="avatarEl" aria-hidden="true">??</div>
     <div>
-      <!--<button class="icon-btn" onclick="window.location.href='profile.html'" -->
-        <!--aria-label="האזור האישי שלי" title="פרופיל אישי">⚙️</button> -->
       <div class="header-name" id="headerName">טוען...</div>
       <div class="header-role" id="headerRole" aria-label="תפקיד"></div>
     </div>
@@ -777,21 +777,17 @@ body::before {
          role="region"
          aria-label="סטטיסטיקות רכיבה">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
-        <div class="stat-mini blue">
-          <!-- aria-label על ה-div כולו — VoiceOver יקרא "12 רכיבות סה"כ" כמשפט אחד -->
-          <div class="stat-mini-val" id="stat-total" aria-hidden="true">—</div>
-          <div class="stat-mini-lbl" id="stat-total-lbl" aria-hidden="true">רכיבות סה"כ</div>
-          <span class="sr-only" id="stat-total-sr" aria-live="polite">טוען...</span>
+        <div class="stat-mini blue" aria-label="סך הרכיבות">
+          <div class="stat-mini-val" id="stat-total" aria-live="polite">—</div>
+          <div class="stat-mini-lbl">רכיבות סה"כ</div>
         </div>
-        <div class="stat-mini green">
-          <div class="stat-mini-val" id="stat-km" aria-hidden="true">—</div>
-          <div class="stat-mini-lbl" aria-hidden="true">ק"מ מצטבר</div>
-          <span class="sr-only" id="stat-km-sr" aria-live="polite">טוען...</span>
+        <div class="stat-mini green" aria-label="קילומטרים מצטברים">
+          <div class="stat-mini-val" id="stat-km" aria-live="polite">—</div>
+          <div class="stat-mini-lbl">ק"מ מצטבר</div>
         </div>
-        <div class="stat-mini" style="background:var(--surface);border:1px solid var(--border)">
-          <div class="stat-mini-val" id="stat-climb" style="color:var(--orange)" aria-hidden="true">—</div>
-          <div class="stat-mini-lbl" aria-hidden="true">מטרי עלייה מצטברים</div>
-          <span class="sr-only" id="stat-climb-sr" aria-live="polite">טוען...</span>
+        <div class="stat-mini" style="background:var(--surface);border:1px solid var(--border)" aria-label="מטרי עלייה מצטברים">
+          <div class="stat-mini-val" id="stat-climb" style="color:var(--orange)" aria-live="polite">—</div>
+          <div class="stat-mini-lbl">מטרי עלייה מצטברים</div>
         </div>
       </div>
 
@@ -1206,12 +1202,6 @@ async function loadEvents() {
     cachedCounts = counts;
     await loadMyRegistrations(events);
     renderEvents(events, counts);
-    // הכרזה לאחר טעינה
-    if (events.length === 0) {
-      announce('אין רכיבות קרובות כרגע');
-    } else {
-      announce(`נטענו ${events.length} רכיבות קרובות`);
-    }
   } catch(e) {
     container.setAttribute('aria-busy','false');
     container.innerHTML = `<div class="empty-state" role="alert">
@@ -1258,56 +1248,60 @@ function renderEvents(events, counts = {}) {
     const canReg = user.canRegister;
     const count  = counts[ev.id] || 0;
 
-    // ── משפט אחד קריא לפרטי הרכיבה ──
-    // role="text" מונע מ-VoiceOver לנווט לתוך האלמנט — הוא קורא את aria-label כולו כמשפט אחד
-    const metaLabel = `נקודת מפגש: ${ev.meetPoint}. מרחק: ${ev.km} קילומטר. עלייה: ${ev.climb} מטר. קפטן למסלול: ${ev.captain}.`;
-
-    // ── תיאור כפתורים לפי מצב ──
-    const btnRegisteredLabel = `בטל הרשמה לרכיבה "${ev.description}" בתאריך ${formatDateHebrew(ev.date)}`;
-    const btnRegisterLabel   = canReg
-      ? `הירשם לרכיבה "${ev.description}" בתאריך ${formatDateHebrew(ev.date)}`
-      : `לא ניתן להירשם — נדרשת בדיקה ארגומטרית בתוקף`;
-    const btnAttendeesLabel  = `הצג מי נרשם לרכיבה "${ev.description}"${count > 0 ? ` — ${count} נרשמו` : ''}`;
+    // ── הערה: אין aria-label על ה-article ––
+    // VoiceOver/iOS מנווט בין אלמנטים פנימיים ולא קורא את label המכיל.
+    // במקום זה: כל אמוג'י = aria-hidden, כל פרט = טקסט גלוי עם sr-only label.
 
     return `
     <article class="event-card ${isReg ? 'registered' : ''}" role="listitem">
 
       <div class="event-top">
         <div>
+          <!-- שם הרכיבה — h2 כדי שVoiceOver יודיע "כותרת" -->
           <h2 class="event-title">${esc(ev.description)}</h2>
+
           <p class="event-date">
-            <span aria-hidden="true">📅 </span>
-            <time datetime="${esc(toIsoDate(ev.date))}"
-                  aria-label="תאריך: ${esc(formatDateHebrew(ev.date))}">${esc(ev.date)}</time>
-            <span aria-hidden="true"> · 🕕 </span>
-            <span class="sr-only">, שעת מפגש: </span>
-            <time>${esc(ev.meetTime)}</time>
+            <span aria-hidden="true">📅 </span><span class="sr-only">תאריך: </span>${esc(ev.date)}
+            <span aria-hidden="true"> · 🕕 </span><span class="sr-only">, שעת מפגש: </span>${esc(ev.meetTime)}
           </p>
         </div>
 
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
           ${isReg
-            ? `<span class="badge-reg" aria-label="סטטוס: רשום לרכיבה זו">רשום</span>`
+            ? `<span class="badge-reg">
+                 <span class="sr-only">סטטוס: </span>רשום
+               </span>`
             : ''}
           ${count > 0
-            ? `<span aria-hidden="true" style="font-size:0.75rem;color:var(--muted)">${count} נרשמו</span>`
+            ? `<span style="font-size:0.75rem;color:var(--muted)" aria-hidden="true">${count} נרשמו</span>
+               <span class="sr-only">${count} אנשים נרשמו לרכיבה זו</span>`
             : ''}
         </div>
       </div>
 
-      <!-- role="text" + aria-label = VoiceOver קורא כמשפט אחד רציף, לא מנווט פנימה -->
-      <div class="event-meta"
-           role="text"
-           aria-label="${esc(metaLabel)}">
-        <span class="meta-chip" aria-hidden="true"><span>📍 </span>${esc(ev.meetPoint)}</span>
-        <span class="meta-chip" aria-hidden="true"><span>🚴 </span><strong>${esc(String(ev.km))}</strong> ק"מ</span>
-        <span class="meta-chip" aria-hidden="true"><span>⛰️ </span><strong>${esc(String(ev.climb))}</strong> מ'</span>
-        <span class="meta-chip" aria-hidden="true"><span>👑 </span>${esc(ev.captain)}</span>
-      </div>
+      <!-- פרטי אירוע — dl/dt/dd לנגישות: קורא מסך יקרא "נקודת מפגש: X", "מרחק: Y ק"מ" וכו' -->
+      <dl class="event-meta">
+        <div class="meta-chip">
+          <dt><span aria-hidden="true">📍 </span><span class="sr-only">נקודת מפגש:</span></dt>
+          <dd>${esc(ev.meetPoint)}</dd>
+        </div>
+        <div class="meta-chip">
+          <dt><span class="sr-only">מרחק:</span></dt>
+          <dd><span aria-hidden="true">🚴 </span><strong>${esc(String(ev.km))}</strong> ק"מ</dd>
+        </div>
+        <div class="meta-chip">
+          <dt><span class="sr-only">עלייה:</span></dt>
+          <dd><span aria-hidden="true">⛰️ </span><strong>${esc(String(ev.climb))}</strong> מ' עלייה</dd>
+        </div>
+        <div class="meta-chip">
+          <dt><span aria-hidden="true">👑 </span><span class="sr-only">קפטן:</span></dt>
+          <dd>${esc(ev.captain)}</dd>
+        </div>
+      </dl>
 
       <div class="event-footer">
         <button class="btn btn-ghost"
-                aria-label="${esc(btnAttendeesLabel)}"
+                aria-label="הצג נרשמים לרכיבה ${esc(ev.description)}${count > 0 ? ' — ' + count + ' נרשמו' : ''}"
                 aria-haspopup="dialog"
                 onclick="showEventDetails('${esc(ev.id)}','${esc(ev.description)}',this)">
           <span aria-hidden="true">👥 </span>נרשמים${count > 0 ? ` (${count})` : ''}
@@ -1315,15 +1309,17 @@ function renderEvents(events, counts = {}) {
 
         ${isReg
           ? `<button class="btn btn-cancel"
-                     aria-label="${esc(btnRegisteredLabel)}"
+                     aria-label="בטל הרשמה לרכיבה ${esc(ev.description)}"
                      onclick="cancelReg('${esc(ev.id)}','${esc(ev.description)}',this)">
                בטל הרשמה
              </button>`
           : `<button class="btn btn-primary"
                      ${!canReg ? 'disabled aria-disabled="true"' : ''}
-                     aria-label="${esc(btnRegisterLabel)}"
+                     aria-label="${canReg
+                       ? `הירשם לרכיבה ${esc(ev.description)}`
+                       : `לא ניתן להירשם לרכיבה ${esc(ev.description)} — נדרשת בדיקה ארגומטרית בתוקף`}"
                      onclick="register('${esc(ev.id)}','${esc(ev.description)}',this)">
-               ${canReg ? 'הירשם' : 'דרושה בדיקה ארגומטרית'}
+               ${canReg ? '+ הירשם' : 'דרושה בדיקה ארגומטרית'}
              </button>`
         }
       </div>
@@ -1434,15 +1430,9 @@ function renderStats(history) {
   const totalKm    = history.reduce((s, h) => s + (Number(h.km)    || 0), 0);
   const totalClimb = history.reduce((s, h) => s + (Number(h.climb) || 0), 0);
 
-  // עדכון ויזואלי
   document.getElementById('stat-total').textContent = history.length;
   document.getElementById('stat-km').textContent    = totalKm.toLocaleString('he-IL') + ' ק"מ';
   document.getElementById('stat-climb').textContent = totalClimb.toLocaleString('he-IL') + ' מ\'';
-
-  // עדכון sr-only — VoiceOver יקרא משפט שלם במקום מספר בנפרד מהתווית
-  document.getElementById('stat-total-sr').textContent  = `${history.length} רכיבות סה"כ`;
-  document.getElementById('stat-km-sr').textContent     = `${totalKm.toLocaleString('he-IL')} קילומטר מצטבר`;
-  document.getElementById('stat-climb-sr').textContent  = `${totalClimb.toLocaleString('he-IL')} מטרי עלייה מצטברים`;
 
   const partners = {};
   history.forEach(h => {
@@ -1563,32 +1553,33 @@ function renderHistoryPage() {
     const day = parts[0]||'??';
     const mon = parts[1] ? monthName(parseInt(parts[1])) : '';
 
-    // ── משפט קריא לקורא מסך ──
-    // role="text" → VoiceOver קורא כמשפט אחד, לא מנווט פנימה
-    const partnerPart = (h.partner && h.partner !== '—') ? `, שותף: ${h.partner}` : '';
-    const bikePart    = h.bike ? `, אופניים: ${h.bike}` : '';
-    const metaLabel   = `${formatDateHebrew(h.date)}. תפקיד: ${h.role}${bikePart}${partnerPart}.`;
-
+    // בלוק תאריך ויזואלי בלבד — sr-only נותן תאריך מלא
     return `
     <div class="history-item" role="listitem">
+      <!-- ויזואלי בלבד — sr-only ליד נותן את התאריך המלא -->
       <div class="history-date-block" aria-hidden="true">
         <div class="history-day">${esc(day)}</div>
         <div class="history-mon">${esc(mon)}</div>
       </div>
+      <span class="sr-only">תאריך: ${esc(h.date)},</span>
 
       <div class="history-info">
         <div class="history-title">${esc(h.description)}</div>
-        <!-- role="text" → משפט אחד רציף, לא ניווט פנימי -->
-        <div class="history-meta" role="text" aria-label="${esc(metaLabel)}">
-          <span aria-hidden="true">${esc(h.role)}</span>
-          ${h.bike    ? `<span aria-hidden="true"> · ${esc(h.bike)}</span>`    : ''}
+        <div class="history-meta">
+          <span class="sr-only">תפקיד: </span><span>${esc(h.role)}</span>
+          ${h.bike
+            ? `<span aria-hidden="true"> · </span><span class="sr-only">, אופניים: </span><span>${esc(h.bike)}</span>`
+            : ''}
           ${h.partner && h.partner !== '—'
-            ? `<span aria-hidden="true"> · עם ${esc(h.partner)}</span>` : ''}
+            ? `<span aria-hidden="true"> · </span><span class="sr-only">, שותף: </span><span>עם ${esc(h.partner)}</span>`
+            : ''}
         </div>
       </div>
 
-      <div class="history-km" aria-hidden="true">${esc(String(h.km))} ק"מ</div>
-      <span class="sr-only">${esc(String(h.km))} קילומטר</span>
+      <div class="history-km">
+        <span aria-hidden="true">${esc(String(h.km))} ק"מ</span>
+        <span class="sr-only">${esc(String(h.km))} קילומטר</span>
+      </div>
     </div>`;
   }).join('');
 
@@ -1613,22 +1604,6 @@ function changePage(dir) {
 
 function monthName(m) {
   return ['','ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'][m] || '';
-}
-
-// dd/mm/yyyy → yyyy-mm-dd (לשימוש ב-datetime attribute)
-function toIsoDate(str) {
-  const [d,m,y] = (str||'').split('/');
-  if (!d||!m||!y) return '';
-  return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-}
-
-// dd/mm/yyyy → "15 באפריל 2026" (קריא בעברית ל-VoiceOver)
-function formatDateHebrew(str) {
-  const months = ['','ינואר','פברואר','מרץ','אפריל','מאי','יוני',
-                  'יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
-  const [d,m,y] = (str||'').split('/');
-  if (!d||!m||!y) return str||'';
-  return `${parseInt(d)} ב${months[parseInt(m)]} ${y}`;
 }
 
 // ══════════════════════════════════════════
@@ -1785,10 +1760,6 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
     }
 
     body.innerHTML = html;
-
-    // אחרי שהתוכן נטען — הכרזה על כמות הנרשמים
-    // (focus נשאר על כפתור הסגירה לשימוש נוח ב-VoiceOver)
-    announce(`${regs.length} נרשמים לרכיבה ${eventName}`);
 
   } catch(e) {
     body.innerHTML = `<p style="color:var(--red);padding:20px" role="alert">שגיאה בטעינת נרשמים: ${esc(e.message)}</p>`;
