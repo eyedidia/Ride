@@ -565,19 +565,37 @@ async function saveProfile() {
 
 // ── HELPERS ──────────────────────────────
 async function apiGet(action, params = {}) {
-  const qs  = new URLSearchParams({ action, ...params }).toString();
-  const res = await fetch(`${API_URL}?${qs}`);
-  const d   = await res.json();
-  if (!d.success) throw new Error(d.error);
-  return d.data;
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  try {
+    const qs  = new URLSearchParams({ action, ...params }).toString();
+    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
+    const d   = await res.json();
+    if (!d.success) throw new Error(d.error || 'שגיאת שרת לא ידועה');
+    return d.data;
+  } catch(err) {
+    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 async function callAPI(action, body = {}) {
-  const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
-  const res = await fetch(`${API_URL}?${qs}`);
-  const d   = await res.json();
-  if (!d.success) throw new Error(d.error);
-  return d.data;
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  try {
+    const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
+    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
+    const d   = await res.json();
+    if (!d.success) throw new Error(d.error || 'שגיאת שרת לא ידועה');
+    return d.data;
+  } catch(err) {
+    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 function esc(str) {

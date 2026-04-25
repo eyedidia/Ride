@@ -1228,7 +1228,22 @@ async function loadMyRegistrations(events) {
 }
 
 function normTid(val) {
-  return String(val || '').trim().replace(/\.0+$/, '');
+  if (!val) return '';
+  const str = String(val).trim().replace(/\.0+$/, '');
+  return str.replace(/^0+(?=\d)/, '') || '0';
+}
+
+function normalizeEvent(ev) {
+  return {
+    id:          ev.id          || '',
+    description: ev.description || '(ללא תיאור)',
+    date:        ev.date        || '',
+    meetTime:    ev.meetTime    || '',
+    meetPoint:   ev.meetPoint   || '(לא הוגדרה)',
+    km:          Number(ev.km   || 0),
+    climb:       Number(ev.climb || 0),
+    captain:     ev.captain     || '(לא הוגדר)'
+  };
 }
 
 function renderEvents(events, counts = {}) {
@@ -1243,7 +1258,8 @@ function renderEvents(events, counts = {}) {
     return;
   }
 
-  container.innerHTML = events.map(ev => {
+  container.innerHTML = events.map(rawEv => {
+    const ev     = normalizeEvent(rawEv);
     const isReg  = myRegs.has(ev.id);
     const canReg = user.canRegister;
     const count  = counts[ev.id] || 0;
@@ -1332,11 +1348,12 @@ function renderEvents(events, counts = {}) {
 // ══════════════════════════════════════════
 let cachedEvents = [];
 let cachedCounts = {};
-let registering  = false;
+const _pendingRegistrations = new Set();
+const _pendingCancellations = new Set();
 
 async function register(eventId, eventName, btn) {
-  if (registering) return;
-  registering = true;
+  if (_pendingRegistrations.has(eventId)) return;
+  _pendingRegistrations.add(eventId);
   btn.disabled = true;
   btn.setAttribute('aria-busy', 'true');
   btn.setAttribute('aria-label', `מבצע הרשמה לרכיבה ${eventName}...`);
@@ -1347,27 +1364,29 @@ async function register(eventId, eventName, btn) {
     myRegs.add(eventId);
     cachedCounts[eventId] = (cachedCounts[eventId] || 0) + 1;
     announce(`נרשמת בהצלחה לרכיבה ${eventName}`);
-    showToast(`נרשמת לרכיבה: ${eventName} ✅`, 'success');
+    showToast(`נרשמת לרכיבה: ${eventName}`, 'success');
     renderEvents(cachedEvents, cachedCounts);
   } catch(e) {
-    myRegs.delete(eventId);
-    if (e.message.includes('כבר רשום')) {
+    if (e.message && e.message.includes('כבר רשום')) {
       myRegs.add(eventId);
       renderEvents(cachedEvents, cachedCounts);
     } else {
+      myRegs.delete(eventId);
       announce(`שגיאה בהרשמה לרכיבה ${eventName}: ${e.message}`);
-      showToast('שגיאה: ' + e.message, 'error');
+      showToast('שגיאה בהרשמה: ' + (e.message || 'נסה שוב'), 'error');
       btn.disabled = false;
       btn.removeAttribute('aria-busy');
       btn.setAttribute('aria-label', `הירשם לרכיבה ${eventName}`);
       btn.textContent = '+ הירשם';
     }
   } finally {
-    registering = false;
+    _pendingRegistrations.delete(eventId);
   }
 }
 
 async function cancelReg(eventId, eventName, btn) {
+  if (_pendingCancellations.has(eventId)) return;
+  _pendingCancellations.add(eventId);
   btn.disabled = true;
   btn.setAttribute('aria-busy', 'true');
   btn.setAttribute('aria-label', `מבטל הרשמה לרכיבה ${eventName}...`);
@@ -1381,11 +1400,13 @@ async function cancelReg(eventId, eventName, btn) {
     renderEvents(cachedEvents, cachedCounts);
   } catch(e) {
     announce(`שגיאה בביטול הרשמה: ${e.message}`);
-    showToast('שגיאה: ' + e.message, 'error');
+    showToast('שגיאה בביטול: ' + (e.message || 'נסה שוב'), 'error');
     btn.disabled = false;
     btn.removeAttribute('aria-busy');
     btn.setAttribute('aria-label', `בטל את ההרשמה שלי לרכיבה ${eventName}`);
     btn.textContent = '✕ בטל הרשמה';
+  } finally {
+    _pendingCancellations.delete(eventId);
   }
 }
 
@@ -1857,19 +1878,37 @@ function logout() {
 // API HELPERS
 // ══════════════════════════════════════════
 async function apiGet(action, params = {}) {
-  const qs   = new URLSearchParams({ action, ...params }).toString();
-  const res  = await fetch(`${API_URL}?${qs}`);
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error);
-  return data.data;
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  try {
+    const qs  = new URLSearchParams({ action, ...params }).toString();
+    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
+    return data.data;
+  } catch(err) {
+    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 async function callAPI(action, body = {}) {
-  const qs   = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
-  const res  = await fetch(`${API_URL}?${qs}`);
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error);
-  return data.data;
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  try {
+    const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
+    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
+    return data.data;
+  } catch(err) {
+    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 // ══════════════════════════════════════════

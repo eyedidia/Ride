@@ -1847,20 +1847,38 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3
 
 // קריאה ל-Apps Script (doGet — קריאה)
 async function apiGet(action, params = {}) {
-  const qs   = new URLSearchParams({ action, ...params }).toString();
-  const res  = await fetch(`${API_URL}?${qs}`);
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error);
-  return data.data;
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  try {
+    const qs  = new URLSearchParams({ action, ...params }).toString();
+    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
+    return data.data;
+  } catch(err) {
+    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 // קריאה ל-Apps Script (doGet — כתיבה עם data=JSON)
 async function callAPI(action, body = {}) {
-  const qs   = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
-  const res  = await fetch(`${API_URL}?${qs}`);
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error);
-  return data.data;
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  try {
+    const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
+    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
+    return data.data;
+  } catch(err) {
+    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 // ─── BOOTSTRAP — רץ בטעינת הדף ─────────────────
@@ -2540,7 +2558,7 @@ async function cancelEvent(eventId, name) {
     await callAPI('cancelEvent', { eventId });
     showToast(`האירוע "${name}" בוטל`, 'success');
     await loadEvents();
-    renderAllEventsTables(STATE.events);
+    // loadEvents() קורא ל-renderAllEventsTables פנימית — אין צורך לקרוא שוב
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
   }
@@ -2575,8 +2593,7 @@ async function submitAddEvent() {
     closeModal('modalAddEvent');
     showToast(`אירוע "${desc}" נוצר (${result.id || ''}) ✅`, 'success');
     await loadEvents();
-    renderAllEventsTables(STATE.events);
-    renderAssignmentsEventSelect(STATE.events);
+    // loadEvents() קורא ל-renderAllEventsTables + renderAssignmentsEventSelect פנימית
   } catch(e) {
     unlockBtn(document.querySelector('#modalAddEvent .btn-primary'));
     errEl.textContent = 'שגיאה: ' + e.message;
@@ -3149,8 +3166,10 @@ async function saveExamDate(tid, name) {
 }
 
 // ─── FILTER RIDERS ─────────────────────────────────
+let _filterTimer;
 function filterRiders(query) {
-  applyRidersFilter();
+  clearTimeout(_filterTimer);
+  _filterTimer = setTimeout(() => applyRidersFilter(), 250);
 }
 
 function applyRidersFilter() {
