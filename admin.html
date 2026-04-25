@@ -1953,17 +1953,17 @@ function renderRidersTable(riders) {
     const permClass = r.permission === 'מנהל' ? 'status-blue' : 'status-blue';
     return `
     <tr class="rider-row">
-      <td data-label="שם">
+      <td data-label="שם" aria-label="שם: ${esc(r.name)}, טלפון: ${esc(r.phone)}, עיר: ${esc(r.city)}, גיל: ${esc(r.age)}">
         <div class="td-name">${esc(r.name)}</div>
         <div class="td-sub">${esc(r.phone)}</div>
         <div class="td-sub">${esc(r.city)} · גיל ${esc(r.age)}</div>
       </td>
-      <td data-label="טלפון" class="hide-mobile">${esc(r.phone)}</td>
-      <td data-label="עיר" class="hide-mobile">${esc(r.city)}</td>
-      <td data-label="גיל" class="hide-mobile">${esc(r.age)}</td>
-      <td data-label="סגנון"><span class="role-tag">${esc(r.rideStyle)}</span></td>
-      <td data-label="הרשאה"><span class="status ${permClass}">${esc(r.permission)}</span></td>
-      <td data-label="בדיקה"><span class="status ${examClass}" role="status">${esc(r.examStatus)}</span></td>
+      <td data-label="טלפון" class="hide-mobile" aria-label="טלפון: ${esc(r.phone)}">${esc(r.phone)}</td>
+      <td data-label="עיר" class="hide-mobile" aria-label="עיר: ${esc(r.city)}">${esc(r.city)}</td>
+      <td data-label="גיל" class="hide-mobile" aria-label="גיל: ${esc(r.age)}">${esc(r.age)}</td>
+      <td data-label="סגנון" aria-label="סגנון רכיבה: ${esc(r.rideStyle)}"><span class="role-tag">${esc(r.rideStyle)}</span></td>
+      <td data-label="הרשאה" aria-label="הרשאה: ${esc(r.permission)}"><span class="status ${permClass}">${esc(r.permission)}</span></td>
+      <td data-label="בדיקה" aria-label="מצב בדיקה: ${esc(r.examStatus)}"><span class="status ${examClass}" role="status">${esc(r.examStatus)}</span></td>
       <td data-label="פעולות">
         <div class="row-actions">
           <button class="icon-btn" aria-label="ערוך פרטי רוכב ${esc(r.name)}" title="עריכה" onclick="editRider('${esc(r.tid)}')">✏️</button>

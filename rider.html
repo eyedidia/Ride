@@ -1644,9 +1644,12 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
   // הפעלת focus trap
   modal.addEventListener('keydown', trapFocus);
 
-  // העברת focus לכפתור הסגירה
+  // העברת focus לתוכן הראשי של המודאל (לא כפתור הסגירה)
+  // כך קורא מסך יתחיל מהתוכן ולא מכפתור "סגור"
   requestAnimationFrame(() => {
-    document.getElementById('modalCloseBtn').focus();
+    const modal = document.getElementById('eventDetailsModal');
+    const firstContent = modal.querySelector('h2, h3, [role="status"], p');
+    (firstContent || document.getElementById('modalCloseBtn')).focus();
   });
 
   try {
