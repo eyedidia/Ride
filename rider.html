@@ -107,6 +107,13 @@ body::before {
   font-size: 0.85rem;
   flex-shrink: 0;
   color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, box-shadow 0.2s;
+}
+.avatar:hover, .avatar:focus-visible {
+  opacity: 0.85;
+  box-shadow: 0 0 0 3px var(--accent);
 }
 
 .header-name { font-size: 0.95rem; font-weight: 700; }
@@ -766,7 +773,10 @@ body::before {
 <!-- ─── HEADER ─────────────────────────── -->
 <header class="app-header" role="banner">
   <div class="header-user">
-    <div class="avatar" id="avatarEl" aria-hidden="true">??</div>
+    <button class="avatar"
+            id="avatarEl"
+            onclick="window.location.href='profile.html'"
+            aria-label="פתח פרופיל אישי">??</button>
     <div>
       <div class="header-name" id="headerName">טוען...</div>
       <div class="header-role" id="headerRole" aria-label="תפקיד"></div>
@@ -1298,8 +1308,7 @@ function renderHeader() {
   const initials = user.name.trim().split(' ').map(w => w[0]).slice(0,2).join('');
   const av = document.getElementById('avatarEl');
   av.textContent = initials;
-  // האווטאר הוא דקורטיבי — השם כבר מופיע ב-headerName
-  av.setAttribute('aria-hidden', 'true');
+  av.setAttribute('aria-label', `פרופיל אישי של ${user.name} — לחץ לעריכה`);
   document.title = `${user.name} — קבוצת אופניים`;
 }
 
