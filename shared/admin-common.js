@@ -6,7 +6,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3
 
 // Sections each role may access (dashboard always included)
 const ADMIN_ROLES = {
-  'מנהל':          ['dashboard','riders','events','assignments','bikes','maintenance','exams'],
+  'מנהל':          ['dashboard','riders','events','assignments','bikes','maintenance','exams','settings'],
   'מנהל_רוכבים':  ['dashboard','riders','exams'],
   'מנהל_אירועים': ['dashboard','events'],
   'מנהל_שיבוצים': ['dashboard','assignments'],

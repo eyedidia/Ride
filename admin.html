@@ -1058,7 +1058,10 @@ tbody td {
 
   <div class="nav-section">
     <div class="nav-section-label" aria-hidden="true">מערכת</div>
-    <button class="nav-item" aria-label="הגדרות מערכת">
+    <button class="nav-item"
+            data-section="settings"
+            onclick="showSection('settings',this)"
+            aria-label="הגדרות מערכת">
       <span class="nav-icon" aria-hidden="true">⚙️</span>
       הגדרות
     </button>
@@ -1427,6 +1430,64 @@ tbody td {
           <div id="examsBody">
             <div style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SETTINGS ── -->
+    <section id="section-settings" aria-labelledby="settings-heading" hidden>
+      <h1 id="settings-heading" class="sr-only">הגדרות מערכת</h1>
+
+      <!-- התראות ארגומטריות -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2 class="panel-title"><span aria-hidden="true">🩺</span> התראות ארגומטריות לרוכב</h2>
+        </div>
+        <div class="panel-body" style="padding:20px">
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:20px">
+            המערכת תשלח מייל לרוכבים שיש להם כתובת מייל מעודכנת, ותתריע למנהל על רוכבים ללא מייל.
+          </p>
+
+          <fieldset style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px">
+            <legend style="font-size:0.82rem;font-weight:700;color:var(--text-muted);padding:0 8px">
+              תזמון תזכורות (ימים לפני פקיעה)
+            </legend>
+
+            <div id="examReminderRows" style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+              <!-- נבנה דינמית -->
+            </div>
+
+            <button class="btn btn-ghost btn-sm" style="margin-top:14px"
+                    aria-label="הוסף תזכורת נוספת"
+                    onclick="addReminderRow()">
+              + הוסף תזכורת
+            </button>
+          </fieldset>
+
+          <div style="margin-bottom:20px">
+            <label class="form-label" for="adminEmailSetting">מייל מנהל (לקבלת התראות על רוכבים ללא מייל)</label>
+            <input type="email" id="adminEmailSetting" class="input"
+                   placeholder="admin@example.com"
+                   aria-describedby="adminEmailHint">
+            <span id="adminEmailHint" style="font-size:0.76rem;color:var(--text-muted);display:block;margin-top:4px">
+              מייל זה יקבל רשימת רוכבים שפגה/עומדת לפוג בדיקתם ואין להם כתובת מייל
+            </span>
+          </div>
+
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <button class="btn btn-primary"
+                    aria-label="שמור הגדרות תזכורות"
+                    onclick="saveReminderSettings()">
+              💾 שמור הגדרות
+            </button>
+            <button class="btn btn-ghost"
+                    aria-label="שלח תזכורות כעת לכל הרוכבים הרלוונטיים"
+                    onclick="sendExamRemindersNow()">
+              📧 שלח תזכורות כעת
+            </button>
+          </div>
+
+          <div id="reminderStatus" role="status" aria-live="polite" style="margin-top:16px;font-size:0.85rem"></div>
         </div>
       </div>
     </section>
@@ -2269,6 +2330,14 @@ async function loadAssignments() {
   }
 }
 
+const _soloMode = new Set(); // קפטנים שנבחרו לשיבוץ כסינגל
+
+function toggleSoloMode(tid) {
+  if (_soloMode.has(tid)) _soloMode.delete(tid);
+  else _soloMode.add(tid);
+  renderAssignments();
+}
+
 function renderAssignments() {
   const captains = assignRegs.filter(r => r.role === 'קפטן' || r.role === 'סינגל');
   const stokers  = assignRegs.filter(r => r.role === 'סטוקר');
@@ -2286,10 +2355,11 @@ function renderAssignments() {
     `${availableStokers.length} זמינים מתוך ${stokers.length}`;
 
   // ── טבלת קפטנים + סינגלים ──
-  const bikeOpts = (selected, role) => {
+  const bikeOpts = (selected, role, isSolo) => {
     const filtered = assignBikes.filter(b => {
       if (b.id === 'PRIVATE') return true;
       if (role === 'סינגל') return b.frame === 'סינגל';
+      if (role === 'קפטן' && isSolo) return b.frame === 'סינגל';
       if (role === 'קפטן')  return b.frame === 'טנדם';
       return true;
     });
@@ -2355,33 +2425,47 @@ function renderAssignments() {
     }
 
     // ── כרטיס פתוח — ממתין לשיבוץ ──
+    const isSolo = _soloMode.has(r.tid) || r.role === 'סינגל';
     return `
-    <div style="background:var(--surface2);border:1px solid var(--border);
+    <div style="background:var(--surface2);border:1px solid ${isSolo && r.role==='קפטן' ? 'var(--orange)' : 'var(--border)'};
                 border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;
                 width:100%;box-sizing:border-box;min-width:0">
 
-      <!-- שם ותפקיד -->
+      <!-- שם, תפקיד, ו-toggle solo -->
       <div style="display:flex;align-items:center;justify-content:space-between;
                   margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">
         <div>
           <div style="font-weight:700;font-size:0.95rem">${esc(r.name)}</div>
-          <div style="margin-top:3px"><span class="role-tag">${esc(r.role)}</span></div>
+          <div style="margin-top:3px">
+            <span class="role-tag">${esc(r.role)}</span>
+            ${isSolo && r.role==='קפטן' ? '<span style="font-size:0.72rem;color:var(--orange);margin-right:6px">🚴 ללא סטוקר</span>' : ''}
+          </div>
         </div>
+        ${r.role === 'קפטן' ? `
+        <button class="btn btn-sm"
+                style="font-size:0.75rem;${isSolo ? 'background:rgba(255,179,71,0.15);color:var(--orange);border-color:rgba(255,179,71,0.4)' : ''}"
+                aria-label="${isSolo ? 'חזור לשיבוץ עם סטוקר' : 'שבץ כסינגל ללא סטוקר'}"
+                aria-pressed="${isSolo}"
+                onclick="toggleSoloMode('${esc(r.tid)}')">
+          🚴 ${isSolo ? 'ביטול סינגל' : 'שיבוץ כסינגל'}
+        </button>` : ''}
       </div>
 
       <!-- אופניים -->
       <div style="margin-bottom:10px">
-        <div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;margin-bottom:4px">אופניים</div>
+        <div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;margin-bottom:4px">
+          אופניים${isSolo && r.role==='קפטן' ? ' (סינגל)' : ''}
+        </div>
         <label for="bike-${esc(r.tid)}" class="sr-only">אופניים ל${esc(r.name)}</label>
         <select class="select" id="bike-${esc(r.tid)}" style="width:100%"
                 aria-label="אופניים ל${esc(r.name)}"
                 onchange="updatePartnerBike('${esc(r.tid)}')">
-          ${bikeOpts(r.bike, r.role)}
+          ${bikeOpts(r.bike, r.role, isSolo)}
         </select>
       </div>
 
-      <!-- סטוקר שותף (קפטן בלבד) -->
-      ${r.role === 'קפטן' ? `
+      <!-- סטוקר שותף — נסתר כשב-solo mode -->
+      ${r.role === 'קפטן' && !isSolo ? `
       <div style="margin-bottom:12px">
         <div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;margin-bottom:4px">סטוקר שותף</div>
         <label for="stoker-${esc(r.tid)}" class="sr-only">סטוקר ל${esc(r.name)}</label>
@@ -2394,9 +2478,9 @@ function renderAssignments() {
 
       <!-- כפתור שמור -->
       <button class="btn btn-primary" id="save-btn-${esc(r.tid)}" style="width:100%;justify-content:center"
-              aria-label="שמור שיבוץ ל${esc(r.name)}"
+              aria-label="שמור שיבוץ ל${esc(r.name)}${isSolo && r.role==='קפטן' ? ' כסינגל ללא סטוקר' : ''}"
               onclick="saveAssignment('${esc(r.tid)}','${esc(r.name)}')">
-        💾 שמור שיבוץ
+        💾 שמור שיבוץ${isSolo && r.role==='קפטן' ? ' (סינגל)' : ''}
       </button>
     </div>`;
   }).join('')
@@ -2917,7 +3001,7 @@ function renderAdminNotifications() {
 // (lockBtn, unlockBtn, esc defined in shared/admin-common.js)
 
 // ─── NAV ───────────────────────────────────────────
-const sections = ['dashboard','riders','events','assignments','bikes','maintenance','exams'];
+const sections = ['dashboard','riders','events','assignments','bikes','maintenance','exams','settings'];
 const titles   = {
   dashboard:   ['סקירה כללית',   'ניהול קבוצת אופניים / סקירה כללית'],
   riders:      ['ניהול רוכבים',  'ניהול קבוצת אופניים / רוכבים'],
@@ -2926,6 +3010,7 @@ const titles   = {
   bikes:       ['צי אופניים',    'ניהול קבוצת אופניים / צי אופניים'],
   maintenance: ['תחזוקה',        'ניהול קבוצת אופניים / תחזוקה'],
   exams:       ['בדיקות ארגומטריות','ניהול קבוצת אופניים / בדיקות'],
+  settings:    ['הגדרות מערכת',  'ניהול קבוצת אופניים / הגדרות'],
 };
 
 function showSection(name, clickedBtn) {
@@ -3263,6 +3348,119 @@ async function deleteBike(bikeId, name) {
 }
 
 // (showToast defined in shared/admin-common.js)
+
+// ─── REMINDER SETTINGS ────────────────────────────
+const REMINDER_STORAGE_KEY = 'ride_exam_reminders';
+const DEFAULT_REMINDER_DAYS = [30, 7, 1];
+
+function loadReminderSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(REMINDER_STORAGE_KEY) || '{}');
+    return {
+      days: saved.days || [...DEFAULT_REMINDER_DAYS],
+      adminEmail: saved.adminEmail || '',
+    };
+  } catch { return { days: [...DEFAULT_REMINDER_DAYS], adminEmail: '' }; }
+}
+
+function initSettingsSection() {
+  const cfg = loadReminderSettings();
+  document.getElementById('adminEmailSetting').value = cfg.adminEmail;
+  const container = document.getElementById('examReminderRows');
+  container.innerHTML = '';
+  cfg.days.forEach(d => addReminderRow(d));
+}
+
+function addReminderRow(days = 30) {
+  const container = document.getElementById('examReminderRows');
+  const id = 'rem-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;align-items:center;gap:10px';
+  row.innerHTML = `
+    <label for="${id}" class="sr-only">ימים לפני פקיעה</label>
+    <input type="number" id="${id}" class="input" value="${days}" min="1" max="365"
+           style="width:90px" aria-label="שלח תזכורת ${days} ימים לפני פקיעה">
+    <span style="font-size:0.85rem;color:var(--text-muted)">ימים לפני פקיעה</span>
+    <button class="btn btn-sm" style="background:rgba(255,90,90,0.15);color:var(--red);border:none;margin-right:auto"
+            aria-label="הסר תזכורת זו"
+            onclick="this.closest('div').remove()">הסר</button>`;
+  container.appendChild(row);
+}
+
+function saveReminderSettings() {
+  const rows = document.querySelectorAll('#examReminderRows input[type="number"]');
+  const days = [...rows].map(i => parseInt(i.value)).filter(d => d > 0);
+  const adminEmail = document.getElementById('adminEmailSetting').value.trim();
+  localStorage.setItem(REMINDER_STORAGE_KEY, JSON.stringify({ days, adminEmail }));
+  showToast('הגדרות נשמרו ✅', 'success');
+  document.getElementById('reminderStatus').textContent = `נשמר: תזכורות ${days.join(', ')} ימים לפני פקיעה`;
+}
+
+async function sendExamRemindersNow() {
+  const cfg = loadReminderSettings();
+  if (!cfg.days.length) { showToast('הגדר לפחות יום תזכורת אחד', 'error'); return; }
+  const statusEl = document.getElementById('reminderStatus');
+  statusEl.textContent = 'שולח תזכורות...';
+
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // בנה רשימת רוכבים לפי פקיעה
+  const toSend   = []; // { rider, daysLeft, hasEmail }
+  const noEmail  = [];
+
+  STATE.riders.forEach(r => {
+    if (!r.examExpiry) return;
+    const exp     = new Date(r.examExpiry.split('/').reverse().join('-'));
+    const daysLeft = Math.round((exp - today) / 86400000);
+
+    const shouldNotify = cfg.days.some(d => daysLeft === d || daysLeft === 0);
+    if (!shouldNotify) return;
+
+    if (r.email && r.email.trim()) {
+      toSend.push({ tid: r.tid, name: r.name, email: r.email.trim(), daysLeft });
+    } else {
+      noEmail.push({ name: r.name, daysLeft });
+    }
+  });
+
+  try {
+    let sent = 0;
+    // שלח לרוכבים עם מייל
+    if (toSend.length) {
+      await callAPI('sendExamReminders', {
+        recipients: toSend,
+        adminEmail: cfg.adminEmail,
+      });
+      sent = toSend.length;
+    }
+
+    // שלח סיכום למנהל על רוכבים ללא מייל
+    if (noEmail.length && cfg.adminEmail) {
+      await callAPI('notifyAdminNoEmail', {
+        adminEmail: cfg.adminEmail,
+        riders: noEmail,
+      });
+    }
+
+    const parts = [];
+    if (sent)          parts.push(`נשלחו ${sent} תזכורות לרוכבים`);
+    if (noEmail.length) parts.push(`${noEmail.length} רוכבים ללא מייל — נשלחה התראה למנהל`);
+    if (!parts.length)  parts.push('אין רוכבים שמחייבים תזכורת היום');
+
+    statusEl.textContent = parts.join(' · ');
+    showToast('תזכורות נשלחו ✅', 'success');
+  } catch(e) {
+    statusEl.textContent = 'שגיאה: ' + e.message;
+    showToast('שגיאה בשליחת תזכורות: ' + e.message, 'error');
+  }
+}
+
+// אתחול הגדרות כשנכנסים לסקשן
+const _origShowSection = showSection;
+function showSection(name, clickedBtn) {
+  _origShowSection(name, clickedBtn);
+  if (name === 'settings') initSettingsSection();
+}
 </script>
 </body>
 </html>

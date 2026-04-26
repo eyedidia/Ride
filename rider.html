@@ -1053,17 +1053,19 @@ body::before {
          style="width:40px;height:4px;background:var(--border);border-radius:2px;
                 margin:12px auto 0"></div>
     <div style="padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between">
-      <h2 id="modal-event-title" style="font-size:1.05rem;font-weight:800"></h2>
+      <h2 id="modal-event-title" aria-hidden="true" style="font-size:1.05rem;font-weight:800"></h2>
       <button id="modalCloseBtn"
               onclick="closeEventModal()"
               style="background:none;border:none;color:var(--muted);font-size:1.3rem;
                      cursor:pointer;padding:8px;min-width:44px;min-height:44px;
                      display:flex;align-items:center;justify-content:center;border-radius:8px"
-              aria-label="סגור חלון נרשמים לאירוע">
+              aria-label="סגור רשימת נרשמים">
         <span aria-hidden="true">✕</span>
       </button>
     </div>
     <div id="modalEventBody"
+         role="list"
+         aria-label="נרשמים לרכיבה"
          style="padding:16px 20px 24px"
          tabindex="-1"></div>
   </div>
@@ -1087,6 +1089,19 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3
 let user        = null;
 let allContacts = [];
 let myRegs      = new Set();
+let bikesCache  = []; // נטען בעת האתחול
+
+// מחזיר תיאור מלא של האופניים לפי ID
+function bikeLabel(bikeId) {
+  if (!bikeId || bikeId === '—' || bikeId === '') return '';
+  if (bikeId === 'PRIVATE') return 'אופניים פרטיים';
+  const b = bikesCache.find(x => String(x.id) === String(bikeId));
+  if (!b) return bikeId; // fallback לID אם לא נמצא
+  const parts = [b.name];
+  if (b.frame && b.frame !== 'PRIVATE') parts.push(b.frame);
+  if (b.drive)  parts.push(b.drive);
+  return parts.join(' · ');
+}
 
 // ══════════════════════════════════════════
 // ACCESSIBILITY HELPERS
@@ -1165,6 +1180,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       'הבדיקה הארגומטרית שלך עומדת לפוג בקרוב. אנא פנה למנהל הקבוצה לחידוש.';
     banner.style.display = 'flex';
   }
+
+  // טעינת אופניים ברקע — לא חוסמת את הדף
+  apiGet('getBikes').then(bikes => { if (Array.isArray(bikes)) bikesCache = bikes; }).catch(() => {});
 
   await loadEvents();
   checkUpcomingEventNotifications();
@@ -1526,6 +1544,10 @@ async function register(eventId, eventName, btn) {
 
   try {
     await callAPI('register', { tid: user.tid, eventId, role: user.rideStyle });
+    // סינגל → שיבוץ אוטומטי לאופניים פרטיים
+    if (user.rideStyle === 'סינגל') {
+      await callAPI('assignBike', { eventId, tid: user.tid, bikeId: 'PRIVATE' }).catch(() => {});
+    }
     myRegs.add(eventId);
     cachedCounts[eventId] = (cachedCounts[eventId] || 0) + 1;
     announce(`נרשמת בהצלחה לרכיבה ${eventName}`);
@@ -1681,9 +1703,9 @@ function renderStats(history) {
   const bikePanel = document.getElementById('topBikePanel');
   if (topBikes.length) {
     bikePanel.style.display = 'block';
-    document.getElementById('topBikesList').innerHTML = topBikes.map(([name, count]) => `
+    document.getElementById('topBikesList').innerHTML = topBikes.map(([id, count]) => `
       <div class="bike-row">
-        <dt class="partner-name">${esc(name)}</dt>
+        <dt class="partner-name">${esc(bikeLabel(id))}</dt>
         <dd class="partner-km">${count} רכיבות</dd>
       </div>`).join('');
   }
@@ -1715,7 +1737,7 @@ function populateFilterOptions(history) {
 
   const bSel = document.getElementById('flt-bike');
   bSel.innerHTML = '<option value="">כל האופניים</option>' +
-    bikes.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
+    bikes.map(b => `<option value="${esc(b)}">${esc(bikeLabel(b))}</option>`).join('');
 }
 
 function applyFilters() {
@@ -1821,7 +1843,7 @@ function renderDateView() {
                 <div class="history-title">${esc(h.description)}</div>
                 <div class="history-meta">
                   <span class="sr-only">תפקיד: </span><span>${esc(h.role || '—')}</span>
-                  ${h.bike ? `<span aria-hidden="true"> · </span><span class="sr-only">אופניים: </span><span>${esc(h.bike)}</span>` : ''}
+                  ${h.bike ? `<span aria-hidden="true"> · </span><span class="sr-only">אופניים: </span><span>${esc(bikeLabel(h.bike))}</span>` : ''}
                   ${h.partner && h.partner !== '—'
                     ? `<span aria-hidden="true"> · </span><span class="sr-only">שותף: </span><span>עם ${esc(h.partner)}</span>`
                     : ''}
@@ -1886,7 +1908,7 @@ function renderHistoryPage() {
         <div class="history-meta">
           <span class="sr-only">תפקיד: </span><span>${esc(h.role)}</span>
           ${h.bike
-            ? `<span aria-hidden="true"> · </span><span class="sr-only">, אופניים: </span><span>${esc(h.bike)}</span>`
+            ? `<span aria-hidden="true"> · </span><span class="sr-only">, אופניים: </span><span>${esc(bikeLabel(h.bike))}</span>`
             : ''}
           ${h.partner && h.partner !== '—'
             ? `<span aria-hidden="true"> · </span><span class="sr-only">, שותף: </span><span>עם ${esc(h.partner)}</span>`
@@ -1934,20 +1956,11 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
   const modal = document.getElementById('modalEventDetails');
   const body  = document.getElementById('modalEventBody');
   document.getElementById('modal-event-title').textContent = eventName;
-  body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted)" role="status" aria-live="polite">טוען נרשמים...</div>`;
+  body.setAttribute('aria-label', `נרשמים לרכיבה ${eventName}`);
+  body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted)" aria-hidden="true">טוען...</div>`;
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
-
-  // הפעלת focus trap
   modal.addEventListener('keydown', trapFocus);
-
-  // העברת focus לתוכן הראשי של המודאל (לא כפתור הסגירה)
-  // כך קורא מסך יתחיל מהתוכן ולא מכפתור "סגור"
-  requestAnimationFrame(() => {
-    const modal = document.getElementById('eventDetailsModal');
-    const firstContent = modal.querySelector('h2, h3, [role="status"], p');
-    (firstContent || document.getElementById('modalCloseBtn')).focus();
-  });
 
   try {
     const regs = await apiGet('getRegistrations', { eventId });
@@ -1960,15 +1973,15 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
     const singles         = regs.filter(r => r.role === 'סינגל');
     const unpairedStokers = regs.filter(r => r.role === 'סטוקר');
 
-    let html = `<p style="margin-bottom:14px;font-size:0.85rem;color:var(--muted)" role="status">
-      סה"כ ${regs.length} נרשמים לרכיבה ${esc(eventName)}
+    let html = `<p aria-hidden="true" style="margin-bottom:14px;font-size:0.85rem;color:var(--muted)">
+      סה"כ ${regs.length} נרשמים
     </p>`;
 
     if (captains.length) {
-      html += `<h3 style="font-size:0.78rem;font-weight:700;color:var(--muted);
+      html += `<div aria-hidden="true" style="font-size:0.78rem;font-weight:700;color:var(--muted);
                            text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">
                  צוותי טנדם (${captains.length})
-               </h3>`;
+               </div>`;
 
       html += captains.map(c => {
         const partnerName = c.partner && c.partner !== '—' && c.partner !== '' ? c.partner : null;
@@ -1980,7 +1993,8 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
         return `
         <div style="background:var(--surface2);border-radius:12px;margin-bottom:10px;
                     overflow:hidden;border:1px solid ${isMe ? 'var(--accent)' : 'var(--border)'}"
-             role="group"
+             role="listitem"
+             tabindex="0"
              aria-label="${esc(teamLabel)}">
           <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;
                       border-bottom:${partnerName ? '1px solid var(--border)' : 'none'}">
@@ -1995,7 +2009,7 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
                 ${esc(c.name)}
                 ${isMe ? '<span style="font-size:0.7rem;background:rgba(79,124,255,0.2);color:var(--accent);padding:2px 7px;border-radius:20px;margin-right:4px;font-weight:700" aria-label="זה אתה">אתה</span>' : ''}
               </div>
-              <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">קפטן${c.bike && c.bike !== '—' ? ` · ${esc(c.bike)}` : ''}</div>
+              <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">קפטן${c.bike && c.bike !== '—' ? ` · ${esc(bikeLabel(c.bike))}` : ''}</div>
             </div>
           </div>
           ${partnerName ? `
@@ -2019,11 +2033,11 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
     }
 
     if (unpairedStokers.length) {
-      html += `<h3 style="font-size:0.78rem;font-weight:700;color:var(--muted);
+      html += `<div aria-hidden="true" style="font-size:0.78rem;font-weight:700;color:var(--muted);
                            text-transform:uppercase;letter-spacing:0.08em;
                            margin-top:${captains.length ? '14px' : '0'};margin-bottom:8px">
                  סטוקרים ממתינים לשיבוץ (${unpairedStokers.length})
-               </h3>`;
+               </div>`;
 
       html += unpairedStokers.map(s => {
         const isMe = normTid(s.tid) === normTid(user.tid);
@@ -2031,7 +2045,8 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
         <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;
                     background:var(--surface2);border-radius:10px;margin-bottom:8px;
                     border:1px solid ${isMe ? 'var(--accent)' : 'var(--border)'}"
-             aria-label="סטוקר: ${esc(s.name)}${isMe ? ', זה אתה' : ''}, ממתין לשיבוץ">
+             role="listitem" tabindex="0"
+             aria-label="סטוקר: ${esc(s.name)}${isMe ? ', זה אתה' : ''}. ממתין לשיבוץ">
           <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;
                       background:rgba(255,179,71,0.2);
                       display:flex;align-items:center;justify-content:center;
@@ -2050,11 +2065,11 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
     }
 
     if (singles.length) {
-      html += `<h3 style="font-size:0.78rem;font-weight:700;color:var(--muted);
+      html += `<div aria-hidden="true" style="font-size:0.78rem;font-weight:700;color:var(--muted);
                            text-transform:uppercase;letter-spacing:0.08em;
                            margin-top:${captains.length || unpairedStokers.length ? '14px' : '0'};margin-bottom:8px">
                  רוכבי סינגל (${singles.length})
-               </h3>`;
+               </div>`;
 
       html += singles.map(s => {
         const isMe = normTid(s.tid) === normTid(user.tid);
@@ -2062,7 +2077,8 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
         <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;
                     background:var(--surface2);border-radius:10px;margin-bottom:8px;
                     border:1px solid ${isMe ? 'var(--accent)' : 'var(--border)'}"
-             aria-label="סינגל: ${esc(s.name)}${isMe ? ', זה אתה' : ''}${s.bike && s.bike !== '—' ? ', אופניים ' + s.bike : ''}">
+             role="listitem" tabindex="0"
+             aria-label="סינגל: ${esc(s.name)}${isMe ? ', זה אתה' : ''}${s.bike && s.bike !== '—' ? '. אופניים: ' + bikeLabel(s.bike) : ''}">
           <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;
                       background:var(--surface);border:1px solid var(--border);
                       display:flex;align-items:center;justify-content:center;
@@ -2074,13 +2090,19 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
               ${esc(s.name)}
               ${isMe ? '<span style="font-size:0.7rem;background:rgba(79,124,255,0.2);color:var(--accent);padding:2px 7px;border-radius:20px;margin-right:4px;font-weight:700" aria-label="זה אתה">אתה</span>' : ''}
             </div>
-            <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">סינגל${s.bike && s.bike !== '—' ? ` · ${esc(s.bike)}` : ''}</div>
+            <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">סינגל${s.bike && s.bike !== '—' ? ` · ${esc(bikeLabel(s.bike))}` : ''}</div>
           </div>
         </div>`;
       }).join('');
     }
 
     body.innerHTML = html;
+    // focus על הפריט הראשון ברשימה — קורא מסך יתחיל מיד לקרוא
+    requestAnimationFrame(() => {
+      const first = body.querySelector('[role="listitem"]');
+      if (first) first.focus();
+      else document.getElementById('modalCloseBtn').focus();
+    });
 
   } catch(e) {
     body.innerHTML = `<p style="color:var(--red);padding:20px" role="alert">שגיאה בטעינת נרשמים: ${esc(e.message)}</p>`;
