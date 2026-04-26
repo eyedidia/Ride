@@ -816,7 +816,7 @@ tbody td {
 @media (max-width: 360px) {
   .stats-grid { gap: 6px; }
   .stat-value { font-size: 1.2rem; }
-  .topbar { padding: 8px 6px 8px 46px; }
+  .topbar { padding: 8px 58px 8px 10px; }
   .topbar-actions .btn-primary { padding: 6px 8px; font-size: 0.75rem; }
 }
 
@@ -3035,6 +3035,7 @@ function showSection(name, clickedBtn) {
   document.getElementById('main-content').focus();
   closeSidebar();
   if (name === 'maintenance') loadMaintenance();
+  if (name === 'settings')    initSettingsSection();
 }
 
 // ─── MOBILE SIDEBAR ────────────────────────────────
@@ -3456,11 +3457,6 @@ async function sendExamRemindersNow() {
 }
 
 // אתחול הגדרות כשנכנסים לסקשן
-const _origShowSection = showSection;
-function showSection(name, clickedBtn) {
-  _origShowSection(name, clickedBtn);
-  if (name === 'settings') initSettingsSection();
-}
 </script>
 </body>
 </html>
