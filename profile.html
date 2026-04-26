@@ -383,7 +383,7 @@ let RIDER_DATA = null;
 // ── BOOTSTRAP ───────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   const stored = sessionStorage.getItem('user');
-  if (!stored) { window.location.replace('login.html'); return; }
+  if (!stored) { window.location.replace('index.html'); return; }
   USER = JSON.parse(stored);
 
   try {
@@ -429,18 +429,18 @@ function renderPage(r) {
     <div class="big-avatar">${esc(initials)}</div>
     <div class="identity-name">${esc(r.name)}</div>
     <div class="identity-chips">
-      <span class="chip chip-blue">🚴 ${esc(r.rideStyle || r.style || '—')}</span>
+      <span class="chip chip-blue"><span aria-hidden="true">🚴</span> ${esc(r.rideStyle || r.style || '—')}</span>
       ${isAdmin
-        ? '<span class="chip chip-yellow">⭐ מנהל</span>'
-        : '<span class="chip chip-muted">👤 משתמש</span>'}
-      <span class="chip ${examChipClass}">${r.examStatus ? r.examStatus.split(' ')[0] : '❌'} בדיקה ארגומטרית</span>
+        ? '<span class="chip chip-yellow"><span aria-hidden="true">⭐</span> מנהל</span>'
+        : '<span class="chip chip-muted"><span aria-hidden="true">👤</span> משתמש</span>'}
+      <span class="chip ${examChipClass}"><span aria-hidden="true">${r.examStatus ? r.examStatus.split(' ')[0] : '❌'}</span> בדיקה ארגומטרית</span>
     </div>
   </div>
 
   <!-- פרטי חבר (תצוגה בלבד) -->
   <div class="section-card">
     <div class="section-header">
-      <span>📋</span> פרטי חבר
+      <span aria-hidden="true">📋</span> פרטי חבר
     </div>
     <div class="locked-grid">
       <div class="locked-item">
@@ -465,7 +465,7 @@ function renderPage(r) {
   <!-- טופס עריכה -->
   <div class="form-card">
     <div class="section-header">
-      <span>✏️</span> פרטים שאפשר לעדכן
+      <span aria-hidden="true">✏️</span> פרטים שאפשר לעדכן
     </div>
     <div class="form-body">
 
@@ -487,7 +487,7 @@ function renderPage(r) {
       </div>
 
       <div class="form-group full">
-        <label class="form-label" for="fld-email">📧 דואר אלקטרוני</label>
+        <label class="form-label" for="fld-email"><span aria-hidden="true">📧</span> דואר אלקטרוני</label>
         <input type="email" id="fld-email" class="input"
                inputmode="email" placeholder="name@email.com"
                value="${esc(r.email || '')}"
@@ -496,7 +496,7 @@ function renderPage(r) {
       </div>
 
       <div class="form-group full">
-        <label class="form-label" for="fld-dob">🎂 תאריך לידה</label>
+        <label class="form-label" for="fld-dob"><span aria-hidden="true">🎂</span> תאריך לידה</label>
         <input type="date" id="fld-dob" class="input"
                value="${esc(dobForInput)}"
                aria-label="תאריך לידה">
@@ -527,6 +527,28 @@ async function saveProfile() {
     errEl.textContent = 'נא להזין מספר טלפון';
     errEl.style.display = 'block';
     document.getElementById('fld-phone').focus();
+    return;
+  }
+
+  const phoneNorm = phone.replace(/[-\s]/g, '');
+  if (!/^0\d{9}$/.test(phoneNorm)) {
+    errEl.textContent = 'מספר טלפון לא תקין — יש להזין 10 ספרות (לדוגמה: 050-1234567)';
+    errEl.style.display = 'block';
+    document.getElementById('fld-phone').focus();
+    return;
+  }
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'כתובת דוא"ל לא תקינה';
+    errEl.style.display = 'block';
+    document.getElementById('fld-email').focus();
+    return;
+  }
+
+  if (dob && new Date(dob) > new Date()) {
+    errEl.textContent = 'תאריך לידה לא יכול להיות בעתיד';
+    errEl.style.display = 'block';
+    document.getElementById('fld-dob').focus();
     return;
   }
 
@@ -565,19 +587,37 @@ async function saveProfile() {
 
 // ── HELPERS ──────────────────────────────
 async function apiGet(action, params = {}) {
-  const qs  = new URLSearchParams({ action, ...params }).toString();
-  const res = await fetch(`${API_URL}?${qs}`);
-  const d   = await res.json();
-  if (!d.success) throw new Error(d.error);
-  return d.data;
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  try {
+    const qs  = new URLSearchParams({ action, ...params }).toString();
+    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
+    const d   = await res.json();
+    if (!d.success) throw new Error(d.error || 'שגיאת שרת לא ידועה');
+    return d.data;
+  } catch(err) {
+    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 async function callAPI(action, body = {}) {
-  const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
-  const res = await fetch(`${API_URL}?${qs}`);
-  const d   = await res.json();
-  if (!d.success) throw new Error(d.error);
-  return d.data;
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  try {
+    const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
+    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
+    const d   = await res.json();
+    if (!d.success) throw new Error(d.error || 'שגיאת שרת לא ידועה');
+    return d.data;
+  } catch(err) {
+    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 function esc(str) {

@@ -26,10 +26,7 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; }
-/* מרווח גלילה לכותרת דביקה */
-html { scroll-padding-top: 70px; }
-.section { scroll-margin-top: 70px; }
-  
+
 body {
   font-family: var(--font);
   background: var(--bg);
@@ -110,6 +107,13 @@ body::before {
   font-size: 0.85rem;
   flex-shrink: 0;
   color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, box-shadow 0.2s;
+}
+.avatar:hover, .avatar:focus-visible {
+  opacity: 0.85;
+  box-shadow: 0 0 0 3px var(--accent);
 }
 
 .header-name { font-size: 0.95rem; font-weight: 700; }
@@ -194,6 +198,32 @@ body::before {
   background: linear-gradient(135deg, rgba(79,124,255,0.12), rgba(124,92,255,0.1));
   border: 1px solid rgba(79,124,255,0.3);
   color: var(--accent);
+}
+
+/* ─── 1-HOUR EVENT BANNER ───────────────── */
+.event-soon-banner {
+  background: linear-gradient(135deg, rgba(79,124,255,0.18), rgba(124,92,255,0.14));
+  border: 1px solid rgba(79,124,255,0.45);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+.event-soon-banner .esb-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.event-soon-banner .esb-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.event-soon-banner p {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 3px 0;
 }
 
 /* ─── EXAM BANNER ───────────────────────── */
@@ -345,10 +375,19 @@ body::before {
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 14px;
+  list-style: none;
+}
+
+/* dl/dt/dd בתוך event-meta — מאופסים ויזואלית */
+.event-meta dt,
+.event-meta dd {
+  display: inline;
+  margin: 0;
+  padding: 0;
 }
 
 .meta-chip {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 5px;
   font-size: 0.88rem;
@@ -448,6 +487,55 @@ body::before {
   font-weight: 700;
   color: var(--accent);
   flex-shrink: 0;
+}
+
+/* ─── DATE GROUP VIEW ───────────────────── */
+.date-group { margin-bottom: 8px; }
+
+.date-group-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: right;
+  transition: background 0.15s;
+}
+.date-group-btn:hover { background: var(--surface2); }
+.date-group-btn[aria-expanded="true"] {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+.date-group-count {
+  margin-right: auto;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+.date-group-arrow { color: var(--muted); font-size: 0.75rem; }
+
+.date-group-items {
+  border: 1px solid var(--border);
+  border-top: none;
+  border-bottom-left-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg);
+}
+.date-group-item {
+  border-radius: 10px !important;
 }
 
 /* ─── PHONE BOOK ────────────────────────── */
@@ -685,14 +773,11 @@ body::before {
 <!-- ─── HEADER ─────────────────────────── -->
 <header class="app-header" role="banner">
   <div class="header-user">
-    <button class="avatar" id="avatarEl"
-        onclick="window.location.href='profile.html'"
-        aria-label="האזור האישי שלי"
-        title="האזור האישי שלי"
-        style="cursor:pointer;border:none;font-family:inherit">?</button>
+    <button class="avatar"
+            id="avatarEl"
+            onclick="window.location.href='profile.html'"
+            aria-label="פתח פרופיל אישי">??</button>
     <div>
-      <!--<button class="icon-btn" onclick="window.location.href='profile.html'" -->
-        <!--aria-label="האזור האישי שלי" title="פרופיל אישי">⚙️</button> -->
       <div class="header-name" id="headerName">טוען...</div>
       <div class="header-role" id="headerRole" aria-label="תפקיד"></div>
     </div>
@@ -777,21 +862,17 @@ body::before {
          role="region"
          aria-label="סטטיסטיקות רכיבה">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
-        <div class="stat-mini blue">
-          <!-- aria-label על ה-div כולו — VoiceOver יקרא "12 רכיבות סה"כ" כמשפט אחד -->
-          <div class="stat-mini-val" id="stat-total" aria-hidden="true">—</div>
-          <div class="stat-mini-lbl" id="stat-total-lbl" aria-hidden="true">רכיבות סה"כ</div>
-          <span class="sr-only" id="stat-total-sr" aria-live="polite">טוען...</span>
+        <div class="stat-mini blue" aria-label="סך הרכיבות">
+          <div class="stat-mini-val" id="stat-total" aria-live="polite">—</div>
+          <div class="stat-mini-lbl">רכיבות סה"כ</div>
         </div>
-        <div class="stat-mini green">
-          <div class="stat-mini-val" id="stat-km" aria-hidden="true">—</div>
-          <div class="stat-mini-lbl" aria-hidden="true">ק"מ מצטבר</div>
-          <span class="sr-only" id="stat-km-sr" aria-live="polite">טוען...</span>
+        <div class="stat-mini green" aria-label="קילומטרים מצטברים">
+          <div class="stat-mini-val" id="stat-km" aria-live="polite">—</div>
+          <div class="stat-mini-lbl">ק"מ מצטבר</div>
         </div>
-        <div class="stat-mini" style="background:var(--surface);border:1px solid var(--border)">
-          <div class="stat-mini-val" id="stat-climb" style="color:var(--orange)" aria-hidden="true">—</div>
-          <div class="stat-mini-lbl" aria-hidden="true">מטרי עלייה מצטברים</div>
-          <span class="sr-only" id="stat-climb-sr" aria-live="polite">טוען...</span>
+        <div class="stat-mini" style="background:var(--surface);border:1px solid var(--border)" aria-label="מטרי עלייה מצטברים">
+          <div class="stat-mini-val" id="stat-climb" style="color:var(--orange)" aria-live="polite">—</div>
+          <div class="stat-mini-lbl">מטרי עלייה מצטברים</div>
         </div>
       </div>
 
@@ -808,7 +889,28 @@ body::before {
         <div class="stats-panel-title" aria-hidden="true">🚲 האופניים שלי</div>
         <dl id="topBikesList"></dl>
       </div>
+
+      <!-- תאריכי רכיבה -->
+      <div class="stats-panel" id="rideDatePanel" style="display:none"
+           role="region" aria-label="תאריכי רכיבה">
+        <div class="stats-panel-title" aria-hidden="true">📅 תאריכי רכיבה</div>
+        <div id="rideDateInfo" style="font-size:0.85rem;color:var(--muted)"></div>
+      </div>
     </div>
+
+    <!-- כפתור תצוגת תאריכים -->
+    <div id="historyViewToggle" style="display:none;margin-bottom:10px">
+      <button class="flt-reset"
+              id="btnDateView"
+              onclick="toggleDateView()"
+              aria-pressed="false"
+              aria-label="הצג קבוצות תאריכים">
+        <span aria-hidden="true">📅</span> תצוגת תאריכים
+      </button>
+    </div>
+
+    <!-- תצוגת תאריכים -->
+    <div id="dateViewList" style="display:none" role="list" aria-label="רכיבות לפי תאריך"></div>
 
     <!-- פילטרים -->
     <div class="history-filters" id="historyFilters" style="display:none"
@@ -951,17 +1053,19 @@ body::before {
          style="width:40px;height:4px;background:var(--border);border-radius:2px;
                 margin:12px auto 0"></div>
     <div style="padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between">
-      <h2 id="modal-event-title" style="font-size:1.05rem;font-weight:800"></h2>
+      <h2 id="modal-event-title" aria-hidden="true" style="font-size:1.05rem;font-weight:800"></h2>
       <button id="modalCloseBtn"
               onclick="closeEventModal()"
               style="background:none;border:none;color:var(--muted);font-size:1.3rem;
                      cursor:pointer;padding:8px;min-width:44px;min-height:44px;
                      display:flex;align-items:center;justify-content:center;border-radius:8px"
-              aria-label="סגור חלון נרשמים לאירוע">
+              aria-label="סגור רשימת נרשמים">
         <span aria-hidden="true">✕</span>
       </button>
     </div>
     <div id="modalEventBody"
+         role="list"
+         aria-label="נרשמים לרכיבה"
          style="padding:16px 20px 24px"
          tabindex="-1"></div>
   </div>
@@ -985,6 +1089,19 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3
 let user        = null;
 let allContacts = [];
 let myRegs      = new Set();
+let bikesCache  = []; // נטען בעת האתחול
+
+// מחזיר תיאור מלא של האופניים לפי ID
+function bikeLabel(bikeId) {
+  if (!bikeId || bikeId === '—' || bikeId === '') return '';
+  if (bikeId === 'PRIVATE') return 'אופניים פרטיים';
+  const b = bikesCache.find(x => String(x.id) === String(bikeId));
+  if (!b) return bikeId; // fallback לID אם לא נמצא
+  const parts = [b.name];
+  if (b.frame && b.frame !== 'PRIVATE') parts.push(b.frame);
+  if (b.drive)  parts.push(b.drive);
+  return parts.join(' · ');
+}
 
 // ══════════════════════════════════════════
 // ACCESSIBILITY HELPERS
@@ -1036,7 +1153,7 @@ function trapFocus(e) {
 // ══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
   const stored = sessionStorage.getItem('user');
-  if (!stored) { window.location.replace('login.html'); return; }
+  if (!stored) { window.location.replace('index.html'); return; }
   user = JSON.parse(stored);
 
   if (user.isAdmin) {
@@ -1064,8 +1181,71 @@ document.addEventListener('DOMContentLoaded', async () => {
     banner.style.display = 'flex';
   }
 
+  // טעינת אופניים ברקע — לא חוסמת את הדף
+  apiGet('getBikes').then(bikes => { if (Array.isArray(bikes)) bikesCache = bikes; }).catch(() => {});
+
   await loadEvents();
+  checkUpcomingEventNotifications();
 });
+
+// ══════════════════════════════════════════
+// 1-HOUR EVENT NOTIFICATION
+// ══════════════════════════════════════════
+async function checkUpcomingEventNotifications() {
+  if (!cachedEvents.length) return;
+  const now          = new Date();
+  const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+
+  const soonEvents = cachedEvents.filter(ev => {
+    if (!myRegs.has(ev.id)) return false;
+    const [d, m, y] = (ev.date || '').split('/');
+    const [hh, mm]  = (ev.meetTime || '00:00').split(':');
+    if (!d || !m || !y) return false;
+    const eventTime = new Date(y, m - 1, d, hh || 0, mm || 0);
+    return eventTime > now && eventTime <= oneHourLater;
+  });
+
+  if (!soonEvents.length) return;
+
+  const ev = soonEvents[0];
+  let assignmentHtml = '<p>רשום כ-סינגל</p>';
+
+  try {
+    const regs = await apiGet('getRegistrations', { eventId: ev.id });
+    const myReg = regs.find(r => normTid(r.tid) === normTid(user.tid));
+    if (myReg) {
+      const minsLeft = Math.round((new Date(
+        Number(ev.date.split('/')[2]),
+        Number(ev.date.split('/')[1]) - 1,
+        Number(ev.date.split('/')[0]),
+        Number((ev.meetTime || '00:00').split(':')[0]),
+        Number((ev.meetTime || '00:00').split(':')[1])
+      ) - now) / 60000);
+
+      const parts = [];
+      if (myReg.role)    parts.push(`תפקיד: ${myReg.role}`);
+      if (myReg.partner && myReg.partner !== '—') parts.push(`שותף: ${myReg.partner}`);
+      if (myReg.bike    && myReg.bike    !== '—') parts.push(`אופניים: ${myReg.bike}`);
+      if (ev.meetPoint)  parts.push(`נקודת מפגש: ${ev.meetPoint}`);
+      assignmentHtml = parts.map(p => `<p>${esc(p)}</p>`).join('');
+
+      const banner = document.createElement('div');
+      banner.className = 'event-soon-banner';
+      banner.setAttribute('role', 'alert');
+      banner.setAttribute('aria-label', `אירוע בעוד ${minsLeft} דקות: ${ev.description}`);
+      banner.innerHTML = `
+        <div class="esb-title">
+          <span aria-hidden="true">⏰</span> אירוע בעוד ${minsLeft} דקות!
+        </div>
+        <div class="esb-name">${esc(ev.description)}</div>
+        ${assignmentHtml}
+      `;
+      const evSection = document.getElementById('section-events');
+      evSection.prepend(banner);
+      announce(`אירוע מתקרב: ${ev.description} בעוד ${minsLeft} דקות`);
+    }
+  } catch(_) {}
+}
 
 // ══════════════════════════════════════════
 // PERSONAL NOTIFICATIONS
@@ -1146,8 +1326,7 @@ function renderHeader() {
   const initials = user.name.trim().split(' ').map(w => w[0]).slice(0,2).join('');
   const av = document.getElementById('avatarEl');
   av.textContent = initials;
-  // האווטאר הוא דקורטיבי — השם כבר מופיע ב-headerName
-  av.setAttribute('aria-hidden', 'true');
+  av.setAttribute('aria-label', `פרופיל אישי של ${user.name} — לחץ לעריכה`);
   document.title = `${user.name} — קבוצת אופניים`;
 }
 
@@ -1206,12 +1385,6 @@ async function loadEvents() {
     cachedCounts = counts;
     await loadMyRegistrations(events);
     renderEvents(events, counts);
-    // הכרזה לאחר טעינה
-    if (events.length === 0) {
-      announce('אין רכיבות קרובות כרגע');
-    } else {
-      announce(`נטענו ${events.length} רכיבות קרובות`);
-    }
   } catch(e) {
     container.setAttribute('aria-busy','false');
     container.innerHTML = `<div class="empty-state" role="alert">
@@ -1238,7 +1411,22 @@ async function loadMyRegistrations(events) {
 }
 
 function normTid(val) {
-  return String(val || '').trim().replace(/\.0+$/, '');
+  if (!val) return '';
+  const str = String(val).trim().replace(/\.0+$/, '');
+  return str.replace(/^0+(?=\d)/, '') || '0';
+}
+
+function normalizeEvent(ev) {
+  return {
+    id:          ev.id          || '',
+    description: ev.description || '(ללא תיאור)',
+    date:        ev.date        || '',
+    meetTime:    ev.meetTime    || '',
+    meetPoint:   ev.meetPoint   || '(לא הוגדרה)',
+    km:          Number(ev.km   || 0),
+    climb:       Number(ev.climb || 0),
+    captain:     ev.captain     || '(לא הוגדר)'
+  };
 }
 
 function renderEvents(events, counts = {}) {
@@ -1253,61 +1441,66 @@ function renderEvents(events, counts = {}) {
     return;
   }
 
-  container.innerHTML = events.map(ev => {
+  container.innerHTML = events.map(rawEv => {
+    const ev     = normalizeEvent(rawEv);
     const isReg  = myRegs.has(ev.id);
     const canReg = user.canRegister;
     const count  = counts[ev.id] || 0;
 
-    // ── משפט אחד קריא לפרטי הרכיבה ──
-    // role="text" מונע מ-VoiceOver לנווט לתוך האלמנט — הוא קורא את aria-label כולו כמשפט אחד
-    const metaLabel = `נקודת מפגש: ${ev.meetPoint}. מרחק: ${ev.km} קילומטר. עלייה: ${ev.climb} מטר. קפטן למסלול: ${ev.captain}.`;
-
-    // ── תיאור כפתורים לפי מצב ──
-    const btnRegisteredLabel = `בטל הרשמה לרכיבה "${ev.description}" בתאריך ${formatDateHebrew(ev.date)}`;
-    const btnRegisterLabel   = canReg
-      ? `הירשם לרכיבה "${ev.description}" בתאריך ${formatDateHebrew(ev.date)}`
-      : `לא ניתן להירשם — נדרשת בדיקה ארגומטרית בתוקף`;
-    const btnAttendeesLabel  = `הצג מי נרשם לרכיבה "${ev.description}"${count > 0 ? ` — ${count} נרשמו` : ''}`;
+    // ── הערה: אין aria-label על ה-article ––
+    // VoiceOver/iOS מנווט בין אלמנטים פנימיים ולא קורא את label המכיל.
+    // במקום זה: כל אמוג'י = aria-hidden, כל פרט = טקסט גלוי עם sr-only label.
 
     return `
     <article class="event-card ${isReg ? 'registered' : ''}" role="listitem">
 
       <div class="event-top">
         <div>
+          <!-- שם הרכיבה — h2 כדי שVoiceOver יודיע "כותרת" -->
           <h2 class="event-title">${esc(ev.description)}</h2>
+
           <p class="event-date">
-            <span aria-hidden="true">📅 </span>
-            <time datetime="${esc(toIsoDate(ev.date))}"
-                  aria-label="תאריך: ${esc(formatDateHebrew(ev.date))}">${esc(ev.date)}</time>
-            <span aria-hidden="true"> · 🕕 </span>
-            <span class="sr-only">, שעת מפגש: </span>
-            <time>${esc(ev.meetTime)}</time>
+            <span aria-hidden="true">📅 </span><span class="sr-only">תאריך: </span>${esc(ev.date)}
+            <span aria-hidden="true"> · 🕕 </span><span class="sr-only">, שעת מפגש: </span>${esc(ev.meetTime)}
           </p>
         </div>
 
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
           ${isReg
-            ? `<span class="badge-reg" aria-label="סטטוס: רשום לרכיבה זו">רשום</span>`
+            ? `<span class="badge-reg">
+                 <span class="sr-only">סטטוס: </span>רשום
+               </span>`
             : ''}
           ${count > 0
-            ? `<span aria-hidden="true" style="font-size:0.75rem;color:var(--muted)">${count} נרשמו</span>`
+            ? `<span style="font-size:0.75rem;color:var(--muted)" aria-hidden="true">${count} נרשמו</span>
+               <span class="sr-only">${count} אנשים נרשמו לרכיבה זו</span>`
             : ''}
         </div>
       </div>
 
-      <!-- role="text" + aria-label = VoiceOver קורא כמשפט אחד רציף, לא מנווט פנימה -->
-      <div class="event-meta"
-           role="text"
-           aria-label="${esc(metaLabel)}">
-        <span class="meta-chip" aria-hidden="true"><span>📍 </span>${esc(ev.meetPoint)}</span>
-        <span class="meta-chip" aria-hidden="true"><span>🚴 </span><strong>${esc(String(ev.km))}</strong> ק"מ</span>
-        <span class="meta-chip" aria-hidden="true"><span>⛰️ </span><strong>${esc(String(ev.climb))}</strong> מ'</span>
-        <span class="meta-chip" aria-hidden="true"><span>👑 </span>${esc(ev.captain)}</span>
-      </div>
+      <!-- פרטי אירוע — dl/dt/dd לנגישות: קורא מסך יקרא "נקודת מפגש: X", "מרחק: Y ק"מ" וכו' -->
+      <dl class="event-meta">
+        <div class="meta-chip">
+          <dt><span aria-hidden="true">📍 </span><span class="sr-only">נקודת מפגש:</span></dt>
+          <dd>${esc(ev.meetPoint)}</dd>
+        </div>
+        <div class="meta-chip">
+          <dt><span class="sr-only">מרחק:</span></dt>
+          <dd><span aria-hidden="true">🚴 </span><strong>${esc(String(ev.km))}</strong> ק"מ</dd>
+        </div>
+        <div class="meta-chip">
+          <dt><span class="sr-only">עלייה:</span></dt>
+          <dd><span aria-hidden="true">⛰️ </span><strong>${esc(String(ev.climb))}</strong> מ' עלייה</dd>
+        </div>
+        <div class="meta-chip">
+          <dt><span aria-hidden="true">👑 </span><span class="sr-only">קפטן:</span></dt>
+          <dd>${esc(ev.captain)}</dd>
+        </div>
+      </dl>
 
       <div class="event-footer">
         <button class="btn btn-ghost"
-                aria-label="${esc(btnAttendeesLabel)}"
+                aria-label="הצג נרשמים לרכיבה ${esc(ev.description)}${count > 0 ? ' — ' + count + ' נרשמו' : ''}"
                 aria-haspopup="dialog"
                 onclick="showEventDetails('${esc(ev.id)}','${esc(ev.description)}',this)">
           <span aria-hidden="true">👥 </span>נרשמים${count > 0 ? ` (${count})` : ''}
@@ -1315,15 +1508,17 @@ function renderEvents(events, counts = {}) {
 
         ${isReg
           ? `<button class="btn btn-cancel"
-                     aria-label="${esc(btnRegisteredLabel)}"
+                     aria-label="בטל הרשמה לרכיבה ${esc(ev.description)}"
                      onclick="cancelReg('${esc(ev.id)}','${esc(ev.description)}',this)">
                בטל הרשמה
              </button>`
           : `<button class="btn btn-primary"
                      ${!canReg ? 'disabled aria-disabled="true"' : ''}
-                     aria-label="${esc(btnRegisterLabel)}"
+                     aria-label="${canReg
+                       ? `הירשם לרכיבה ${esc(ev.description)}`
+                       : `לא ניתן להירשם לרכיבה ${esc(ev.description)} — נדרשת בדיקה ארגומטרית בתוקף`}"
                      onclick="register('${esc(ev.id)}','${esc(ev.description)}',this)">
-               ${canReg ? 'הירשם' : 'דרושה בדיקה ארגומטרית'}
+               ${canReg ? '+ הירשם' : 'דרושה בדיקה ארגומטרית'}
              </button>`
         }
       </div>
@@ -1336,11 +1531,12 @@ function renderEvents(events, counts = {}) {
 // ══════════════════════════════════════════
 let cachedEvents = [];
 let cachedCounts = {};
-let registering  = false;
+const _pendingRegistrations = new Set();
+const _pendingCancellations = new Set();
 
 async function register(eventId, eventName, btn) {
-  if (registering) return;
-  registering = true;
+  if (_pendingRegistrations.has(eventId)) return;
+  _pendingRegistrations.add(eventId);
   btn.disabled = true;
   btn.setAttribute('aria-busy', 'true');
   btn.setAttribute('aria-label', `מבצע הרשמה לרכיבה ${eventName}...`);
@@ -1348,35 +1544,65 @@ async function register(eventId, eventName, btn) {
 
   try {
     await callAPI('register', { tid: user.tid, eventId, role: user.rideStyle });
+    // סינגל → שיבוץ אוטומטי לאופניים פרטיים
+    if (user.rideStyle === 'סינגל') {
+      await callAPI('assignBike', { eventId, tid: user.tid, bikeId: 'PRIVATE' }).catch(() => {});
+    }
     myRegs.add(eventId);
     cachedCounts[eventId] = (cachedCounts[eventId] || 0) + 1;
     announce(`נרשמת בהצלחה לרכיבה ${eventName}`);
-    showToast(`נרשמת לרכיבה: ${eventName} ✅`, 'success');
+    showToast(`נרשמת לרכיבה: ${eventName}`, 'success');
     renderEvents(cachedEvents, cachedCounts);
   } catch(e) {
-    myRegs.delete(eventId);
-    if (e.message.includes('כבר רשום')) {
+    if (e.message && e.message.includes('כבר רשום')) {
       myRegs.add(eventId);
       renderEvents(cachedEvents, cachedCounts);
     } else {
+      myRegs.delete(eventId);
       announce(`שגיאה בהרשמה לרכיבה ${eventName}: ${e.message}`);
-      showToast('שגיאה: ' + e.message, 'error');
+      showToast('שגיאה בהרשמה: ' + (e.message || 'נסה שוב'), 'error');
       btn.disabled = false;
       btn.removeAttribute('aria-busy');
       btn.setAttribute('aria-label', `הירשם לרכיבה ${eventName}`);
       btn.textContent = '+ הירשם';
     }
   } finally {
-    registering = false;
+    _pendingRegistrations.delete(eventId);
   }
 }
 
 async function cancelReg(eventId, eventName, btn) {
+  if (_pendingCancellations.has(eventId)) return;
+  _pendingCancellations.add(eventId);
   btn.disabled = true;
   btn.setAttribute('aria-busy', 'true');
   btn.setAttribute('aria-label', `מבטל הרשמה לרכיבה ${eventName}...`);
   btn.textContent = '...';
   try {
+    // שלב 1: בדוק אם יש שיבוץ (שותף / אופניים) לרוכב זה
+    const regs = await apiGet('getRegistrations', { eventId }).catch(() => []);
+    const myReg = regs.find(r => normTid(r.tid) === normTid(user.tid));
+
+    if (myReg) {
+      // שלב 2א: אם קפטן עם סטוקר — פרק את הצמד קודם
+      if (myReg.role === 'קפטן' && myReg.partnerTid) {
+        await callAPI('unassignPartner', {
+          eventId,
+          captainTid:  user.tid,
+          stokerTid:   myReg.partnerTid,
+          partnerTid:  myReg.partnerTid,
+          stokerName:  myReg.partner || ''
+        }).catch(() => {});
+      }
+      // שלב 2ב: פנה שיבוץ אופניים (ריק = ביטול)
+      if (myReg.bike && myReg.bike !== '—') {
+        await callAPI('assignBike', {
+          eventId, tid: user.tid, bikeId: ''
+        }).catch(() => {});
+      }
+    }
+
+    // שלב 3: בטל הרשמה
     await callAPI('cancelRegistration', { tid: user.tid, eventId });
     myRegs.delete(eventId);
     cachedCounts[eventId] = Math.max(0, (cachedCounts[eventId] || 1) - 1);
@@ -1385,11 +1611,13 @@ async function cancelReg(eventId, eventName, btn) {
     renderEvents(cachedEvents, cachedCounts);
   } catch(e) {
     announce(`שגיאה בביטול הרשמה: ${e.message}`);
-    showToast('שגיאה: ' + e.message, 'error');
+    showToast('שגיאה בביטול: ' + (e.message || 'נסה שוב'), 'error');
     btn.disabled = false;
     btn.removeAttribute('aria-busy');
     btn.setAttribute('aria-label', `בטל את ההרשמה שלי לרכיבה ${eventName}`);
     btn.textContent = '✕ בטל הרשמה';
+  } finally {
+    _pendingCancellations.delete(eventId);
   }
 }
 
@@ -1434,15 +1662,9 @@ function renderStats(history) {
   const totalKm    = history.reduce((s, h) => s + (Number(h.km)    || 0), 0);
   const totalClimb = history.reduce((s, h) => s + (Number(h.climb) || 0), 0);
 
-  // עדכון ויזואלי
   document.getElementById('stat-total').textContent = history.length;
   document.getElementById('stat-km').textContent    = totalKm.toLocaleString('he-IL') + ' ק"מ';
   document.getElementById('stat-climb').textContent = totalClimb.toLocaleString('he-IL') + ' מ\'';
-
-  // עדכון sr-only — VoiceOver יקרא משפט שלם במקום מספר בנפרד מהתווית
-  document.getElementById('stat-total-sr').textContent  = `${history.length} רכיבות סה"כ`;
-  document.getElementById('stat-km-sr').textContent     = `${totalKm.toLocaleString('he-IL')} קילומטר מצטבר`;
-  document.getElementById('stat-climb-sr').textContent  = `${totalClimb.toLocaleString('he-IL')} מטרי עלייה מצטברים`;
 
   const partners = {};
   history.forEach(h => {
@@ -1481,12 +1703,28 @@ function renderStats(history) {
   const bikePanel = document.getElementById('topBikePanel');
   if (topBikes.length) {
     bikePanel.style.display = 'block';
-    document.getElementById('topBikesList').innerHTML = topBikes.map(([name, count]) => `
+    document.getElementById('topBikesList').innerHTML = topBikes.map(([id, count]) => `
       <div class="bike-row">
-        <dt class="partner-name">${esc(name)}</dt>
+        <dt class="partner-name">${esc(bikeLabel(id))}</dt>
         <dd class="partner-km">${count} רכיבות</dd>
       </div>`).join('');
   }
+
+  // first/last ride dates
+  const sorted    = [...history].sort((a,b) => parseDate(a.date) - parseDate(b.date));
+  const firstDate = sorted[0]?.date || '';
+  const lastDate  = sorted[sorted.length - 1]?.date || '';
+  const rideDatePanel = document.getElementById('rideDatePanel');
+  const rideDateInfo  = document.getElementById('rideDateInfo');
+  if (firstDate) {
+    rideDatePanel.style.display = 'block';
+    rideDateInfo.innerHTML = firstDate === lastDate
+      ? `<div>רכיבה יחידה: <strong>${esc(firstDate)}</strong></div>`
+      : `<div>רכיבה ראשונה: <strong>${esc(firstDate)}</strong></div>
+         <div style="margin-top:4px">רכיבה אחרונה: <strong>${esc(lastDate)}</strong></div>`;
+  }
+
+  document.getElementById('historyViewToggle').style.display = 'block';
 }
 
 function populateFilterOptions(history) {
@@ -1499,7 +1737,7 @@ function populateFilterOptions(history) {
 
   const bSel = document.getElementById('flt-bike');
   bSel.innerHTML = '<option value="">כל האופניים</option>' +
-    bikes.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
+    bikes.map(b => `<option value="${esc(b)}">${esc(bikeLabel(b))}</option>`).join('');
 }
 
 function applyFilters() {
@@ -1540,6 +1778,98 @@ function parseDate(str) {
   return new Date(`${y}-${m}-${d}`).getTime() || 0;
 }
 
+/* ─── Date View ─────────────────────────── */
+let _dateViewActive = false;
+
+function toggleDateView() {
+  _dateViewActive = !_dateViewActive;
+  const btn          = document.getElementById('btnDateView');
+  const dateViewList = document.getElementById('dateViewList');
+  const filters      = document.getElementById('historyFilters');
+  const list         = document.getElementById('historyList');
+  const pager        = document.getElementById('historyPager');
+
+  btn.setAttribute('aria-pressed', _dateViewActive ? 'true' : 'false');
+  btn.setAttribute('aria-label',   _dateViewActive ? 'חזור לרשימת הרכיבות' : 'הצג קבוצות תאריכים');
+  btn.innerHTML = _dateViewActive
+    ? '<span aria-hidden="true">📋</span> חזור לרשימה'
+    : '<span aria-hidden="true">📅</span> תצוגת תאריכים';
+
+  if (_dateViewActive) {
+    filters.style.display      = 'none';
+    list.style.display         = 'none';
+    pager.style.display        = 'none';
+    renderDateView();
+    dateViewList.style.display = 'block';
+    announce('מציג רכיבות לפי תאריך. לחץ על תאריך לראות פרטים');
+  } else {
+    dateViewList.style.display = 'none';
+    filters.style.display      = 'flex';
+    list.style.display         = 'block';
+    applyFilters();
+    announce('חזרת לרשימת הרכיבות');
+  }
+}
+
+function renderDateView() {
+  const byDate = {};
+  allHistory.forEach(h => {
+    const d = h.date || 'תאריך לא ידוע';
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(h);
+  });
+
+  const dates = Object.keys(byDate).sort((a,b) => parseDate(b) - parseDate(a));
+  const container = document.getElementById('dateViewList');
+
+  container.innerHTML = dates.map((date, i) => {
+    const rides = byDate[date];
+    const count = rides.length;
+    const id    = `date-grp-${i}`;
+    return `
+      <div role="listitem" class="date-group">
+        <button class="date-group-btn"
+                aria-expanded="false"
+                aria-controls="${id}"
+                onclick="toggleDateGroup(this,'${id}')">
+          <span>${esc(date)}</span>
+          <span class="date-group-count">${count} ${count === 1 ? 'רכיבה' : 'רכיבות'}</span>
+          <span class="date-group-arrow" aria-hidden="true">▼</span>
+        </button>
+        <div id="${id}" class="date-group-items" style="display:none" role="list">
+          ${rides.map(h => `
+            <div class="history-item date-group-item" role="listitem">
+              <div class="history-info">
+                <div class="history-title">${esc(h.description)}</div>
+                <div class="history-meta">
+                  <span class="sr-only">תפקיד: </span><span>${esc(h.role || '—')}</span>
+                  ${h.bike ? `<span aria-hidden="true"> · </span><span class="sr-only">אופניים: </span><span>${esc(bikeLabel(h.bike))}</span>` : ''}
+                  ${h.partner && h.partner !== '—'
+                    ? `<span aria-hidden="true"> · </span><span class="sr-only">שותף: </span><span>עם ${esc(h.partner)}</span>`
+                    : ''}
+                </div>
+                <div class="history-meta" style="margin-top:4px">
+                  <span aria-label="${esc(String(h.km))} קילומטר">${esc(String(h.km))} ק"מ</span>
+                  ${Number(h.climb) > 0
+                    ? `<span aria-hidden="true"> · </span><span aria-label="${Number(h.climb).toLocaleString('he-IL')} מטר עלייה">${Number(h.climb).toLocaleString('he-IL')} מ' עלייה</span>`
+                    : ''}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleDateGroup(btn, contentId) {
+  const content  = document.getElementById(contentId);
+  const expanded = btn.getAttribute('aria-expanded') === 'true';
+  btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+  content.style.display = expanded ? 'none' : 'block';
+  btn.querySelector('.date-group-arrow').textContent = expanded ? '▼' : '▲';
+}
+
 function renderHistoryPage() {
   const container  = document.getElementById('historyList');
   const pager      = document.getElementById('historyPager');
@@ -1563,32 +1893,33 @@ function renderHistoryPage() {
     const day = parts[0]||'??';
     const mon = parts[1] ? monthName(parseInt(parts[1])) : '';
 
-    // ── משפט קריא לקורא מסך ──
-    // role="text" → VoiceOver קורא כמשפט אחד, לא מנווט פנימה
-    const partnerPart = (h.partner && h.partner !== '—') ? `, שותף: ${h.partner}` : '';
-    const bikePart    = h.bike ? `, אופניים: ${h.bike}` : '';
-    const metaLabel   = `${formatDateHebrew(h.date)}. תפקיד: ${h.role}${bikePart}${partnerPart}.`;
-
+    // בלוק תאריך ויזואלי בלבד — sr-only נותן תאריך מלא
     return `
     <div class="history-item" role="listitem">
+      <!-- ויזואלי בלבד — sr-only ליד נותן את התאריך המלא -->
       <div class="history-date-block" aria-hidden="true">
         <div class="history-day">${esc(day)}</div>
         <div class="history-mon">${esc(mon)}</div>
       </div>
+      <span class="sr-only">תאריך: ${esc(h.date)},</span>
 
       <div class="history-info">
         <div class="history-title">${esc(h.description)}</div>
-        <!-- role="text" → משפט אחד רציף, לא ניווט פנימי -->
-        <div class="history-meta" role="text" aria-label="${esc(metaLabel)}">
-          <span aria-hidden="true">${esc(h.role)}</span>
-          ${h.bike    ? `<span aria-hidden="true"> · ${esc(h.bike)}</span>`    : ''}
+        <div class="history-meta">
+          <span class="sr-only">תפקיד: </span><span>${esc(h.role)}</span>
+          ${h.bike
+            ? `<span aria-hidden="true"> · </span><span class="sr-only">, אופניים: </span><span>${esc(bikeLabel(h.bike))}</span>`
+            : ''}
           ${h.partner && h.partner !== '—'
-            ? `<span aria-hidden="true"> · עם ${esc(h.partner)}</span>` : ''}
+            ? `<span aria-hidden="true"> · </span><span class="sr-only">, שותף: </span><span>עם ${esc(h.partner)}</span>`
+            : ''}
         </div>
       </div>
 
-      <div class="history-km" aria-hidden="true">${esc(String(h.km))} ק"מ</div>
-      <span class="sr-only">${esc(String(h.km))} קילומטר</span>
+      <div class="history-km">
+        <span aria-hidden="true">${esc(String(h.km))} ק"מ</span>
+        <span class="sr-only">${esc(String(h.km))} קילומטר</span>
+      </div>
     </div>`;
   }).join('');
 
@@ -1615,22 +1946,6 @@ function monthName(m) {
   return ['','ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'][m] || '';
 }
 
-// dd/mm/yyyy → yyyy-mm-dd (לשימוש ב-datetime attribute)
-function toIsoDate(str) {
-  const [d,m,y] = (str||'').split('/');
-  if (!d||!m||!y) return '';
-  return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-}
-
-// dd/mm/yyyy → "15 באפריל 2026" (קריא בעברית ל-VoiceOver)
-function formatDateHebrew(str) {
-  const months = ['','ינואר','פברואר','מרץ','אפריל','מאי','יוני',
-                  'יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
-  const [d,m,y] = (str||'').split('/');
-  if (!d||!m||!y) return str||'';
-  return `${parseInt(d)} ב${months[parseInt(m)]} ${y}`;
-}
-
 // ══════════════════════════════════════════
 // EVENT DETAILS MODAL
 // ══════════════════════════════════════════
@@ -1641,17 +1956,11 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
   const modal = document.getElementById('modalEventDetails');
   const body  = document.getElementById('modalEventBody');
   document.getElementById('modal-event-title').textContent = eventName;
-  body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted)" role="status" aria-live="polite">טוען נרשמים...</div>`;
+  body.setAttribute('aria-label', `נרשמים לרכיבה ${eventName}`);
+  body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted)" aria-hidden="true">טוען...</div>`;
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
-
-  // הפעלת focus trap
   modal.addEventListener('keydown', trapFocus);
-
-  // העברת focus לכפתור הסגירה
-  requestAnimationFrame(() => {
-    document.getElementById('modalCloseBtn').focus();
-  });
 
   try {
     const regs = await apiGet('getRegistrations', { eventId });
@@ -1664,15 +1973,15 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
     const singles         = regs.filter(r => r.role === 'סינגל');
     const unpairedStokers = regs.filter(r => r.role === 'סטוקר');
 
-    let html = `<p style="margin-bottom:14px;font-size:0.85rem;color:var(--muted)" role="status">
-      סה"כ ${regs.length} נרשמים לרכיבה ${esc(eventName)}
+    let html = `<p aria-hidden="true" style="margin-bottom:14px;font-size:0.85rem;color:var(--muted)">
+      סה"כ ${regs.length} נרשמים
     </p>`;
 
     if (captains.length) {
-      html += `<h3 style="font-size:0.78rem;font-weight:700;color:var(--muted);
+      html += `<div aria-hidden="true" style="font-size:0.78rem;font-weight:700;color:var(--muted);
                            text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">
                  צוותי טנדם (${captains.length})
-               </h3>`;
+               </div>`;
 
       html += captains.map(c => {
         const partnerName = c.partner && c.partner !== '—' && c.partner !== '' ? c.partner : null;
@@ -1684,7 +1993,8 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
         return `
         <div style="background:var(--surface2);border-radius:12px;margin-bottom:10px;
                     overflow:hidden;border:1px solid ${isMe ? 'var(--accent)' : 'var(--border)'}"
-             role="group"
+             role="listitem"
+             tabindex="0"
              aria-label="${esc(teamLabel)}">
           <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;
                       border-bottom:${partnerName ? '1px solid var(--border)' : 'none'}">
@@ -1699,7 +2009,7 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
                 ${esc(c.name)}
                 ${isMe ? '<span style="font-size:0.7rem;background:rgba(79,124,255,0.2);color:var(--accent);padding:2px 7px;border-radius:20px;margin-right:4px;font-weight:700" aria-label="זה אתה">אתה</span>' : ''}
               </div>
-              <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">קפטן${c.bike && c.bike !== '—' ? ` · ${esc(c.bike)}` : ''}</div>
+              <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">קפטן${c.bike && c.bike !== '—' ? ` · ${esc(bikeLabel(c.bike))}` : ''}</div>
             </div>
           </div>
           ${partnerName ? `
@@ -1723,11 +2033,11 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
     }
 
     if (unpairedStokers.length) {
-      html += `<h3 style="font-size:0.78rem;font-weight:700;color:var(--muted);
+      html += `<div aria-hidden="true" style="font-size:0.78rem;font-weight:700;color:var(--muted);
                            text-transform:uppercase;letter-spacing:0.08em;
                            margin-top:${captains.length ? '14px' : '0'};margin-bottom:8px">
                  סטוקרים ממתינים לשיבוץ (${unpairedStokers.length})
-               </h3>`;
+               </div>`;
 
       html += unpairedStokers.map(s => {
         const isMe = normTid(s.tid) === normTid(user.tid);
@@ -1735,7 +2045,8 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
         <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;
                     background:var(--surface2);border-radius:10px;margin-bottom:8px;
                     border:1px solid ${isMe ? 'var(--accent)' : 'var(--border)'}"
-             aria-label="סטוקר: ${esc(s.name)}${isMe ? ', זה אתה' : ''}, ממתין לשיבוץ">
+             role="listitem" tabindex="0"
+             aria-label="סטוקר: ${esc(s.name)}${isMe ? ', זה אתה' : ''}. ממתין לשיבוץ">
           <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;
                       background:rgba(255,179,71,0.2);
                       display:flex;align-items:center;justify-content:center;
@@ -1754,11 +2065,11 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
     }
 
     if (singles.length) {
-      html += `<h3 style="font-size:0.78rem;font-weight:700;color:var(--muted);
+      html += `<div aria-hidden="true" style="font-size:0.78rem;font-weight:700;color:var(--muted);
                            text-transform:uppercase;letter-spacing:0.08em;
                            margin-top:${captains.length || unpairedStokers.length ? '14px' : '0'};margin-bottom:8px">
                  רוכבי סינגל (${singles.length})
-               </h3>`;
+               </div>`;
 
       html += singles.map(s => {
         const isMe = normTid(s.tid) === normTid(user.tid);
@@ -1766,7 +2077,8 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
         <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;
                     background:var(--surface2);border-radius:10px;margin-bottom:8px;
                     border:1px solid ${isMe ? 'var(--accent)' : 'var(--border)'}"
-             aria-label="סינגל: ${esc(s.name)}${isMe ? ', זה אתה' : ''}${s.bike && s.bike !== '—' ? ', אופניים ' + s.bike : ''}">
+             role="listitem" tabindex="0"
+             aria-label="סינגל: ${esc(s.name)}${isMe ? ', זה אתה' : ''}${s.bike && s.bike !== '—' ? '. אופניים: ' + bikeLabel(s.bike) : ''}">
           <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;
                       background:var(--surface);border:1px solid var(--border);
                       display:flex;align-items:center;justify-content:center;
@@ -1778,17 +2090,19 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
               ${esc(s.name)}
               ${isMe ? '<span style="font-size:0.7rem;background:rgba(79,124,255,0.2);color:var(--accent);padding:2px 7px;border-radius:20px;margin-right:4px;font-weight:700" aria-label="זה אתה">אתה</span>' : ''}
             </div>
-            <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">סינגל${s.bike && s.bike !== '—' ? ` · ${esc(s.bike)}` : ''}</div>
+            <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">סינגל${s.bike && s.bike !== '—' ? ` · ${esc(bikeLabel(s.bike))}` : ''}</div>
           </div>
         </div>`;
       }).join('');
     }
 
     body.innerHTML = html;
-
-    // אחרי שהתוכן נטען — הכרזה על כמות הנרשמים
-    // (focus נשאר על כפתור הסגירה לשימוש נוח ב-VoiceOver)
-    announce(`${regs.length} נרשמים לרכיבה ${eventName}`);
+    // focus על הפריט הראשון ברשימה — קורא מסך יתחיל מיד לקרוא
+    requestAnimationFrame(() => {
+      const first = body.querySelector('[role="listitem"]');
+      if (first) first.focus();
+      else document.getElementById('modalCloseBtn').focus();
+    });
 
   } catch(e) {
     body.innerHTML = `<p style="color:var(--red);padding:20px" role="alert">שגיאה בטעינת נרשמים: ${esc(e.message)}</p>`;
@@ -1879,26 +2193,44 @@ function filterContacts(query) {
 // ══════════════════════════════════════════
 function logout() {
   sessionStorage.removeItem('user');
-  window.location.href = 'login.html';
+  window.location.href = 'index.html';
 }
 
 // ══════════════════════════════════════════
 // API HELPERS
 // ══════════════════════════════════════════
 async function apiGet(action, params = {}) {
-  const qs   = new URLSearchParams({ action, ...params }).toString();
-  const res  = await fetch(`${API_URL}?${qs}`);
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error);
-  return data.data;
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  try {
+    const qs  = new URLSearchParams({ action, ...params }).toString();
+    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
+    return data.data;
+  } catch(err) {
+    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 async function callAPI(action, body = {}) {
-  const qs   = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
-  const res  = await fetch(`${API_URL}?${qs}`);
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error);
-  return data.data;
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  try {
+    const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
+    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
+    return data.data;
+  } catch(err) {
+    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 // ══════════════════════════════════════════

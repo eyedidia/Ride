@@ -1000,6 +1000,7 @@ tbody td {
   <div class="nav-section">
     <div class="nav-section-label" aria-hidden="true">ראשי</div>
     <button class="nav-item active"
+            data-section="dashboard"
             onclick="showSection('dashboard',this)"
             aria-current="page"
             aria-label="סקירה כללית">
@@ -1007,18 +1008,21 @@ tbody td {
       סקירה כללית
     </button>
     <button class="nav-item"
+            data-section="riders"
             onclick="showSection('riders',this)"
             aria-label="ניהול רוכבים">
       <span class="nav-icon" aria-hidden="true">👥</span>
       רוכבים
     </button>
     <button class="nav-item"
+            data-section="events"
             onclick="showSection('events',this)"
             aria-label="ניהול אירועים">
       <span class="nav-icon" aria-hidden="true">📅</span>
       אירועים
     </button>
     <button class="nav-item"
+            data-section="assignments"
             onclick="showSection('assignments',this)"
             aria-label="שיבוצים">
       <span class="nav-icon" aria-hidden="true">🔗</span>
@@ -1029,18 +1033,21 @@ tbody td {
   <div class="nav-section">
     <div class="nav-section-label" aria-hidden="true">ניהול</div>
     <button class="nav-item"
+            data-section="bikes"
             onclick="showSection('bikes',this)"
             aria-label="ניהול צי אופניים">
       <span class="nav-icon" aria-hidden="true">🚲</span>
       צי אופניים
     </button>
     <button class="nav-item"
+            data-section="maintenance"
             onclick="showSection('maintenance',this)"
             aria-label="היסטוריית תחזוקה">
       <span class="nav-icon" aria-hidden="true">🔧</span>
       תחזוקה
     </button>
     <button class="nav-item"
+            data-section="exams"
             onclick="showSection('exams',this)"
             aria-label="בדיקות ארגומטריות">
       <span class="nav-icon" aria-hidden="true">🩺</span>
@@ -1051,7 +1058,10 @@ tbody td {
 
   <div class="nav-section">
     <div class="nav-section-label" aria-hidden="true">מערכת</div>
-    <button class="nav-item" aria-label="הגדרות מערכת">
+    <button class="nav-item"
+            data-section="settings"
+            onclick="showSection('settings',this)"
+            aria-label="הגדרות מערכת">
       <span class="nav-icon" aria-hidden="true">⚙️</span>
       הגדרות
     </button>
@@ -1420,6 +1430,64 @@ tbody td {
           <div id="examsBody">
             <div style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SETTINGS ── -->
+    <section id="section-settings" aria-labelledby="settings-heading" hidden>
+      <h1 id="settings-heading" class="sr-only">הגדרות מערכת</h1>
+
+      <!-- התראות ארגומטריות -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2 class="panel-title"><span aria-hidden="true">🩺</span> התראות ארגומטריות לרוכב</h2>
+        </div>
+        <div class="panel-body" style="padding:20px">
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:20px">
+            המערכת תשלח מייל לרוכבים שיש להם כתובת מייל מעודכנת, ותתריע למנהל על רוכבים ללא מייל.
+          </p>
+
+          <fieldset style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px">
+            <legend style="font-size:0.82rem;font-weight:700;color:var(--text-muted);padding:0 8px">
+              תזמון תזכורות (ימים לפני פקיעה)
+            </legend>
+
+            <div id="examReminderRows" style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+              <!-- נבנה דינמית -->
+            </div>
+
+            <button class="btn btn-ghost btn-sm" style="margin-top:14px"
+                    aria-label="הוסף תזכורת נוספת"
+                    onclick="addReminderRow()">
+              + הוסף תזכורת
+            </button>
+          </fieldset>
+
+          <div style="margin-bottom:20px">
+            <label class="form-label" for="adminEmailSetting">מייל מנהל (לקבלת התראות על רוכבים ללא מייל)</label>
+            <input type="email" id="adminEmailSetting" class="input"
+                   placeholder="admin@example.com"
+                   aria-describedby="adminEmailHint">
+            <span id="adminEmailHint" style="font-size:0.76rem;color:var(--text-muted);display:block;margin-top:4px">
+              מייל זה יקבל רשימת רוכבים שפגה/עומדת לפוג בדיקתם ואין להם כתובת מייל
+            </span>
+          </div>
+
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <button class="btn btn-primary"
+                    aria-label="שמור הגדרות תזכורות"
+                    onclick="saveReminderSettings()">
+              💾 שמור הגדרות
+            </button>
+            <button class="btn btn-ghost"
+                    aria-label="שלח תזכורות כעת לכל הרוכבים הרלוונטיים"
+                    onclick="sendExamRemindersNow()">
+              📧 שלח תזכורות כעת
+            </button>
+          </div>
+
+          <div id="reminderStatus" role="status" aria-live="polite" style="margin-top:16px;font-size:0.85rem"></div>
         </div>
       </div>
     </section>
@@ -1818,50 +1886,22 @@ tbody td {
 <!-- Visually hidden helper -->
 <style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>
 
-<script>
-// ─── CONFIG ────────────────────────────────────────
-const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec";
+<!-- Shared admin utilities (API, auth guard, toast, lockBtn, modal, tabs) -->
+<script src="shared/admin-common.js"></script>
 
-// ─── GUARD — מנהלים בלבד ───────────────────────────
-(function() {
-  const stored = sessionStorage.getItem('user');
-  if (!stored) { window.location.replace('login.html'); return; }
-  const u = JSON.parse(stored);
-  if (u.permission !== 'מנהל') { window.location.replace('rider.html'); return; }
-  // עדכון כרטיס משתמש בסרגל הצד
-  document.addEventListener('DOMContentLoaded', () => {
-    const nameEl   = document.querySelector('.user-name');
-    const roleEl   = document.querySelector('.user-role');
-    const avatarEl = document.querySelector('.user-avatar');
-    if (nameEl)   nameEl.textContent   = u.name;
-    if (roleEl)   roleEl.textContent   = 'מנהל מערכת';
-    if (avatarEl) avatarEl.textContent = u.name.trim().split(' ').map(w=>w[0]).slice(0,2).join('');
-    const userCard = document.querySelector('.user-card');
-    if (userCard) userCard.setAttribute('aria-label', `משתמש מחובר: ${u.name}, מנהל מערכת`);
-  });
-})();
+<script>
+// ─── GUARD + USER CARD ─────────────────────────────
+// checkAdminAccess / populateUserCard are provided by shared/admin-common.js
+const adminUser = checkAdminAccess();   // redirects if not an admin role
+document.addEventListener('DOMContentLoaded', () => {
+  populateUserCard(adminUser);
+  applyRoleAccess(adminUser);
+});
 
 // ══════════════════════════════════════════════════
 // DATA LAYER — טעינה מה-API בטעינת הדף
+// (apiGet, callAPI defined in shared/admin-common.js)
 // ══════════════════════════════════════════════════
-
-// קריאה ל-Apps Script (doGet — קריאה)
-async function apiGet(action, params = {}) {
-  const qs   = new URLSearchParams({ action, ...params }).toString();
-  const res  = await fetch(`${API_URL}?${qs}`);
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error);
-  return data.data;
-}
-
-// קריאה ל-Apps Script (doGet — כתיבה עם data=JSON)
-async function callAPI(action, body = {}) {
-  const qs   = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
-  const res  = await fetch(`${API_URL}?${qs}`);
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error);
-  return data.data;
-}
 
 // ─── BOOTSTRAP — רץ בטעינת הדף ─────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1935,17 +1975,17 @@ function renderRidersTable(riders) {
     const permClass = r.permission === 'מנהל' ? 'status-blue' : 'status-blue';
     return `
     <tr class="rider-row">
-      <td data-label="שם">
+      <td data-label="שם" aria-label="שם: ${esc(r.name)}, טלפון: ${esc(r.phone)}, עיר: ${esc(r.city)}, גיל: ${esc(r.age)}">
         <div class="td-name">${esc(r.name)}</div>
         <div class="td-sub">${esc(r.phone)}</div>
         <div class="td-sub">${esc(r.city)} · גיל ${esc(r.age)}</div>
       </td>
-      <td data-label="טלפון" class="hide-mobile">${esc(r.phone)}</td>
-      <td data-label="עיר" class="hide-mobile">${esc(r.city)}</td>
-      <td data-label="גיל" class="hide-mobile">${esc(r.age)}</td>
-      <td data-label="סגנון"><span class="role-tag">${esc(r.rideStyle)}</span></td>
-      <td data-label="הרשאה"><span class="status ${permClass}">${esc(r.permission)}</span></td>
-      <td data-label="בדיקה"><span class="status ${examClass}" role="status">${esc(r.examStatus)}</span></td>
+      <td data-label="טלפון" class="hide-mobile" aria-label="טלפון: ${esc(r.phone)}">${esc(r.phone)}</td>
+      <td data-label="עיר" class="hide-mobile" aria-label="עיר: ${esc(r.city)}">${esc(r.city)}</td>
+      <td data-label="גיל" class="hide-mobile" aria-label="גיל: ${esc(r.age)}">${esc(r.age)}</td>
+      <td data-label="סגנון" aria-label="סגנון רכיבה: ${esc(r.rideStyle)}"><span class="role-tag">${esc(r.rideStyle)}</span></td>
+      <td data-label="הרשאה" aria-label="הרשאה: ${esc(r.permission)}"><span class="status ${permClass}">${esc(r.permission)}</span></td>
+      <td data-label="בדיקה" aria-label="מצב בדיקה: ${esc(r.examStatus)}"><span class="status ${examClass}" role="status">${esc(r.examStatus)}</span></td>
       <td data-label="פעולות">
         <div class="row-actions">
           <button class="icon-btn" aria-label="ערוך פרטי רוכב ${esc(r.name)}" title="עריכה" onclick="editRider('${esc(r.tid)}')">✏️</button>
@@ -2290,6 +2330,14 @@ async function loadAssignments() {
   }
 }
 
+const _soloMode = new Set(); // קפטנים שנבחרו לשיבוץ כסינגל
+
+function toggleSoloMode(tid) {
+  if (_soloMode.has(tid)) _soloMode.delete(tid);
+  else _soloMode.add(tid);
+  renderAssignments();
+}
+
 function renderAssignments() {
   const captains = assignRegs.filter(r => r.role === 'קפטן' || r.role === 'סינגל');
   const stokers  = assignRegs.filter(r => r.role === 'סטוקר');
@@ -2307,10 +2355,11 @@ function renderAssignments() {
     `${availableStokers.length} זמינים מתוך ${stokers.length}`;
 
   // ── טבלת קפטנים + סינגלים ──
-  const bikeOpts = (selected, role) => {
+  const bikeOpts = (selected, role, isSolo) => {
     const filtered = assignBikes.filter(b => {
       if (b.id === 'PRIVATE') return true;
       if (role === 'סינגל') return b.frame === 'סינגל';
+      if (role === 'קפטן' && isSolo) return b.frame === 'סינגל';
       if (role === 'קפטן')  return b.frame === 'טנדם';
       return true;
     });
@@ -2376,33 +2425,47 @@ function renderAssignments() {
     }
 
     // ── כרטיס פתוח — ממתין לשיבוץ ──
+    const isSolo = _soloMode.has(r.tid) || r.role === 'סינגל';
     return `
-    <div style="background:var(--surface2);border:1px solid var(--border);
+    <div style="background:var(--surface2);border:1px solid ${isSolo && r.role==='קפטן' ? 'var(--orange)' : 'var(--border)'};
                 border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;
                 width:100%;box-sizing:border-box;min-width:0">
 
-      <!-- שם ותפקיד -->
+      <!-- שם, תפקיד, ו-toggle solo -->
       <div style="display:flex;align-items:center;justify-content:space-between;
                   margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">
         <div>
           <div style="font-weight:700;font-size:0.95rem">${esc(r.name)}</div>
-          <div style="margin-top:3px"><span class="role-tag">${esc(r.role)}</span></div>
+          <div style="margin-top:3px">
+            <span class="role-tag">${esc(r.role)}</span>
+            ${isSolo && r.role==='קפטן' ? '<span style="font-size:0.72rem;color:var(--orange);margin-right:6px">🚴 ללא סטוקר</span>' : ''}
+          </div>
         </div>
+        ${r.role === 'קפטן' ? `
+        <button class="btn btn-sm"
+                style="font-size:0.75rem;${isSolo ? 'background:rgba(255,179,71,0.15);color:var(--orange);border-color:rgba(255,179,71,0.4)' : ''}"
+                aria-label="${isSolo ? 'חזור לשיבוץ עם סטוקר' : 'שבץ כסינגל ללא סטוקר'}"
+                aria-pressed="${isSolo}"
+                onclick="toggleSoloMode('${esc(r.tid)}')">
+          🚴 ${isSolo ? 'ביטול סינגל' : 'שיבוץ כסינגל'}
+        </button>` : ''}
       </div>
 
       <!-- אופניים -->
       <div style="margin-bottom:10px">
-        <div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;margin-bottom:4px">אופניים</div>
+        <div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;margin-bottom:4px">
+          אופניים${isSolo && r.role==='קפטן' ? ' (סינגל)' : ''}
+        </div>
         <label for="bike-${esc(r.tid)}" class="sr-only">אופניים ל${esc(r.name)}</label>
         <select class="select" id="bike-${esc(r.tid)}" style="width:100%"
                 aria-label="אופניים ל${esc(r.name)}"
                 onchange="updatePartnerBike('${esc(r.tid)}')">
-          ${bikeOpts(r.bike, r.role)}
+          ${bikeOpts(r.bike, r.role, isSolo)}
         </select>
       </div>
 
-      <!-- סטוקר שותף (קפטן בלבד) -->
-      ${r.role === 'קפטן' ? `
+      <!-- סטוקר שותף — נסתר כשב-solo mode -->
+      ${r.role === 'קפטן' && !isSolo ? `
       <div style="margin-bottom:12px">
         <div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;margin-bottom:4px">סטוקר שותף</div>
         <label for="stoker-${esc(r.tid)}" class="sr-only">סטוקר ל${esc(r.name)}</label>
@@ -2415,9 +2478,9 @@ function renderAssignments() {
 
       <!-- כפתור שמור -->
       <button class="btn btn-primary" id="save-btn-${esc(r.tid)}" style="width:100%;justify-content:center"
-              aria-label="שמור שיבוץ ל${esc(r.name)}"
+              aria-label="שמור שיבוץ ל${esc(r.name)}${isSolo && r.role==='קפטן' ? ' כסינגל ללא סטוקר' : ''}"
               onclick="saveAssignment('${esc(r.tid)}','${esc(r.name)}')">
-        💾 שמור שיבוץ
+        💾 שמור שיבוץ${isSolo && r.role==='קפטן' ? ' (סינגל)' : ''}
       </button>
     </div>`;
   }).join('')
@@ -2535,12 +2598,16 @@ async function unassignCaptain(captainTid, captainName) {
 
 // ─── CANCEL EVENT ───────────────────────────────────
 async function cancelEvent(eventId, name) {
-  if (!confirm(`לבטל את האירוע "${name}"?`)) return;
   try {
+    const regs = await apiGet('getRegistrations', { eventId });
+    const regCount = Array.isArray(regs) ? regs.length : 0;
+    const confirmMsg = regCount > 0
+      ? `לבטל את האירוע "${name}"?\n\n⚠️ ${regCount} רוכבים רשומים — ביטול יסיר את כולם.`
+      : `לבטל את האירוע "${name}"?`;
+    if (!confirm(confirmMsg)) return;
     await callAPI('cancelEvent', { eventId });
     showToast(`האירוע "${name}" בוטל`, 'success');
     await loadEvents();
-    renderAllEventsTables(STATE.events);
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
   }
@@ -2575,8 +2642,7 @@ async function submitAddEvent() {
     closeModal('modalAddEvent');
     showToast(`אירוע "${desc}" נוצר (${result.id || ''}) ✅`, 'success');
     await loadEvents();
-    renderAllEventsTables(STATE.events);
-    renderAssignmentsEventSelect(STATE.events);
+    // loadEvents() קורא ל-renderAllEventsTables + renderAssignmentsEventSelect פנימית
   } catch(e) {
     unlockBtn(document.querySelector('#modalAddEvent .btn-primary'));
     errEl.textContent = 'שגיאה: ' + e.message;
@@ -2621,7 +2687,12 @@ async function submitEditRider() {
   const phone = document.getElementById('edit-phone').value.trim();
   if (!name || !phone) {
     errEl.textContent = 'שם וטלפון הם שדות חובה';
-    errEl.style.display = 'block'; errEl.focus(); return;
+    errEl.style.display = 'block'; errEl.focus(); unlockBtn(btn); return;
+  }
+  const phoneNormEdit = phone.replace(/[-\s]/g, '');
+  if (!/^0\d{9}$/.test(phoneNormEdit)) {
+    errEl.textContent = 'מספר טלפון לא תקין — יש להזין 10 ספרות (לדוגמה: 050-1234567)';
+    errEl.style.display = 'block'; errEl.focus(); unlockBtn(btn); return;
   }
   const examDate = document.getElementById('edit-exam').value;
   try {
@@ -2805,7 +2876,15 @@ function editRider(tid) {
 }
 
 async function deleteRider(tid, name) {
-  if (!confirm(`למחוק את ${name}?`)) return;
+  const futureEvents = (STATE.events || []).filter(ev => {
+    const d = ev.date ? ev.date.split('/').reverse().join('-') : '';
+    return d >= new Date().toISOString().slice(0, 10);
+  });
+  const hasUpcoming = futureEvents.length > 0;
+  const confirmMsg = hasUpcoming
+    ? `למחוק את ${name}?\n\n⚠️ ייתכן שהרוכב רשום לאירועים עתידיים — מחיקה תסיר את ההרשמות.`
+    : `למחוק את ${name}?`;
+  if (!confirm(confirmMsg)) return;
   try {
     await callAPI('deleteRider', { tid });
     await loadRiders();
@@ -2836,24 +2915,11 @@ async function refreshAll() {
 // ─── LOGOUT ────────────────────────────────────────
 function adminLogout() {
   sessionStorage.removeItem('user');
-  window.location.replace('login.html');
+  window.location.replace('index.html');
 }
 
 // ─── LOADING INDICATOR ───────────────────────────
-function showLoading(on) {
-  let el = document.getElementById('loadingBar');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'loadingBar';
-    el.setAttribute('role', 'progressbar');
-    el.setAttribute('aria-label', 'טוען נתונים');
-    el.setAttribute('aria-valuetext', 'טוען...');
-    el.style.cssText = `position:fixed;top:0;right:0;left:0;height:3px;background:var(--accent);
-      z-index:9999;transition:opacity 0.3s;transform-origin:right;`;
-    document.body.prepend(el);
-  }
-  el.style.opacity = on ? '1' : '0';
-}
+// (showLoading defined in shared/admin-common.js)
 
 // ── התראות דשבורד ─────────────────────────────────
 function renderAdminNotifications() {
@@ -2932,28 +2998,10 @@ function renderAdminNotifications() {
   area.innerHTML = banners.join('');
 }
 
-// ─── BUTTON LOCK — מניעת לחיצה כפולה ────────────
-function lockBtn(btnEl, loadingText = '...') {
-  if (!btnEl) return;
-  btnEl.disabled = true;
-  btnEl._origText = btnEl.innerHTML;
-  btnEl.innerHTML = `<span style="opacity:.7">${loadingText}</span>`;
-  btnEl.setAttribute('aria-busy', 'true');
-}
-function unlockBtn(btnEl) {
-  if (!btnEl) return;
-  btnEl.disabled = false;
-  btnEl.innerHTML = btnEl._origText || btnEl.innerHTML;
-  btnEl.removeAttribute('aria-busy');
-}
-
-// ─── UTILS ────────────────────────────────────────
-function esc(str) {
-  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+// (lockBtn, unlockBtn, esc defined in shared/admin-common.js)
 
 // ─── NAV ───────────────────────────────────────────
-const sections = ['dashboard','riders','events','assignments','bikes','maintenance','exams'];
+const sections = ['dashboard','riders','events','assignments','bikes','maintenance','exams','settings'];
 const titles   = {
   dashboard:   ['סקירה כללית',   'ניהול קבוצת אופניים / סקירה כללית'],
   riders:      ['ניהול רוכבים',  'ניהול קבוצת אופניים / רוכבים'],
@@ -2962,9 +3010,14 @@ const titles   = {
   bikes:       ['צי אופניים',    'ניהול קבוצת אופניים / צי אופניים'],
   maintenance: ['תחזוקה',        'ניהול קבוצת אופניים / תחזוקה'],
   exams:       ['בדיקות ארגומטריות','ניהול קבוצת אופניים / בדיקות'],
+  settings:    ['הגדרות מערכת',  'ניהול קבוצת אופניים / הגדרות'],
 };
 
 function showSection(name, clickedBtn) {
+  // role guard — silently redirect to dashboard if section not permitted
+  const allowed = getUserAllowedSections(adminUser);
+  if (!allowed.includes(name)) { name = 'dashboard'; }
+
   sections.forEach(s => {
     const el = document.getElementById('section-' + s);
     if (el) el.hidden = (s !== name);
@@ -2980,9 +3033,7 @@ function showSection(name, clickedBtn) {
   document.getElementById('pageTitle').textContent      = titles[name][0];
   document.getElementById('pageBreadcrumb').textContent = titles[name][1];
   document.getElementById('main-content').focus();
-  // סוגר תפריט במובייל תמיד
   closeSidebar();
-  // טעינה עצלה לתחזוקה
   if (name === 'maintenance') loadMaintenance();
 }
 
@@ -3007,59 +3058,46 @@ function closeSidebar() {
   btn.setAttribute('aria-label','פתח תפריט ניווט');
 }
 
-// ─── TABS ──────────────────────────────────────────
-function switchTab(btn, panelId) {
-  const panel = btn.closest('.panel');
-  panel.querySelectorAll('.tab-btn').forEach(b => {
-    b.classList.remove('active');
-    b.setAttribute('aria-selected','false');
-  });
-  panel.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  btn.setAttribute('aria-selected','true');
-  document.getElementById(panelId).classList.add('active');
-}
+// (switchTab, openModal, closeModal, backdropClose defined in shared/admin-common.js)
 
-// ─── MODAL ─────────────────────────────────────────
-let lastFocus = null;
-
+// openModal override — populates captain select for event modals
 function openModal(id) {
-  // אכלוס תפריט קפטנים בטופס אירוע
-  if (id === 'modalAddEvent') {
-    const sel = document.getElementById('ev-captain');
-    sel.innerHTML = '<option value="">— בחר —</option>' +
-      STATE.riders.filter(r => r.rideStyle === 'קפטן' || r.permission === 'מנהל')
-        .map(r => `<option value="${esc(r.name)}">${esc(r.name)}</option>`).join('');
+  if (id === 'modalAddEvent' || id === 'modalEditEvent') {
+    const selId = id === 'modalAddEvent' ? 'ev-captain' : 'edit-ev-captain';
+    const sel = document.getElementById(selId);
+    if (sel) {
+      sel.innerHTML = '<option value="">— בחר —</option>' +
+        STATE.riders
+          .filter(r => r.rideStyle === 'קפטן' || r.permission === 'מנהל')
+          .map(r => `<option value="${esc(r.name)}">${esc(r.name)}</option>`)
+          .join('');
+    }
   }
-  lastFocus = document.activeElement;
+  // delegate to shared openModal after populating
+  _lastFocus = document.activeElement;
   const m = document.getElementById(id);
   m.classList.add('open');
   const firstInput = m.querySelector('input, select, button');
   if (firstInput) firstInput.focus();
-  document.addEventListener('keydown', trapFocus);
+  document.addEventListener('keydown', _trapFocus);
 }
 
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-  document.removeEventListener('keydown', trapFocus);
-  if (lastFocus) lastFocus.focus();
-}
-
-function backdropClose(e, id) {
-  if (e.target === e.currentTarget) closeModal(id);
-}
-
-function trapFocus(e) {
-  if (e.key !== 'Tab') {
-    if (e.key === 'Escape') { document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open')); }
-    return;
+// ─── ROLE-BASED SECTION ACCESS ─────────────────────
+function applyRoleAccess(u) {
+  const allowed = getUserAllowedSections(u);
+  // Nav items: hide those whose section the user can't access
+  document.querySelectorAll('.nav-item[data-section]').forEach(btn => {
+    const sec = btn.dataset.section;
+    if (!allowed.includes(sec)) btn.style.display = 'none';
+  });
+  // If user can't access the current (default) section, show first allowed one
+  const currentVisible = sections.find(s => allowed.includes(s) && s !== 'dashboard') || 'dashboard';
+  if (!allowed.includes('dashboard') && allowed.length === 0) return;
+  // activate first permitted nav button after dashboard
+  if (allowed.length === 1) {
+    // only dashboard — hide the nav entirely since nothing else to show
+    document.querySelector('.nav-section')?.style.setProperty('display','none');
   }
-  const modal = document.querySelector('.modal-backdrop.open .modal');
-  if (!modal) return;
-  const focusable = modal.querySelectorAll('input, select, textarea, button, [tabindex]:not([tabindex="-1"])');
-  const first = focusable[0], last = focusable[focusable.length - 1];
-  if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
-  else            { if (document.activeElement === last)  { e.preventDefault(); first.focus(); } }
 }
 
 // ─── ADD RIDER ─────────────────────────────────────
@@ -3087,6 +3125,23 @@ async function submitAddRider() {
     errEl.textContent = 'תעודת זהות חייבת להכיל בדיוק 9 ספרות';
     errEl.style.display = 'block';
     errEl.focus();
+    return;
+  }
+
+  if (STATE.riders.some(r => String(r.tid).trim() === tid)) {
+    errEl.textContent = `רוכב עם תעודת זהות ${tid} כבר קיים במערכת`;
+    errEl.style.display = 'block';
+    errEl.focus();
+    unlockBtn(btn);
+    return;
+  }
+
+  const phoneNorm = phone.replace(/[-\s]/g, '');
+  if (!/^0\d{9}$/.test(phoneNorm)) {
+    errEl.textContent = 'מספר טלפון לא תקין — יש להזין 10 ספרות (לדוגמה: 050-1234567)';
+    errEl.style.display = 'block';
+    errEl.focus();
+    unlockBtn(btn);
     return;
   }
 
@@ -3137,8 +3192,6 @@ async function saveExamDate(tid, name) {
   try {
     await callAPI('updateExamDate', { tid, examDate });
     showToast(`תאריך הבדיקה עודכן ל${name} ✅`, 'success');
-    // רענון מהשרת — ממתינים שהנוסחאות ב-Sheets יתחשבו
-    await new Promise(r => setTimeout(r, 800));
     await loadRiders();
     updateDashboardStats();
     updateExamAlerts();
@@ -3149,8 +3202,10 @@ async function saveExamDate(tid, name) {
 }
 
 // ─── FILTER RIDERS ─────────────────────────────────
+let _filterTimer;
 function filterRiders(query) {
-  applyRidersFilter();
+  clearTimeout(_filterTimer);
+  _filterTimer = setTimeout(() => applyRidersFilter(), 250);
 }
 
 function applyRidersFilter() {
@@ -3292,15 +3347,119 @@ async function deleteBike(bikeId, name) {
   }
 }
 
-// ─── TOAST ─────────────────────────────────────────
-function showToast(message, type = 'success') {
-  const area  = document.getElementById('toastArea');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.setAttribute('role', 'status');
-  toast.innerHTML = `<span aria-hidden="true">${type === 'success' ? '✅' : '❌'}</span> ${message}`;
-  area.appendChild(toast);
-  setTimeout(() => toast.remove(), 4000);
+// (showToast defined in shared/admin-common.js)
+
+// ─── REMINDER SETTINGS ────────────────────────────
+const REMINDER_STORAGE_KEY = 'ride_exam_reminders';
+const DEFAULT_REMINDER_DAYS = [30, 7, 1];
+
+function loadReminderSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(REMINDER_STORAGE_KEY) || '{}');
+    return {
+      days: saved.days || [...DEFAULT_REMINDER_DAYS],
+      adminEmail: saved.adminEmail || '',
+    };
+  } catch { return { days: [...DEFAULT_REMINDER_DAYS], adminEmail: '' }; }
+}
+
+function initSettingsSection() {
+  const cfg = loadReminderSettings();
+  document.getElementById('adminEmailSetting').value = cfg.adminEmail;
+  const container = document.getElementById('examReminderRows');
+  container.innerHTML = '';
+  cfg.days.forEach(d => addReminderRow(d));
+}
+
+function addReminderRow(days = 30) {
+  const container = document.getElementById('examReminderRows');
+  const id = 'rem-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;align-items:center;gap:10px';
+  row.innerHTML = `
+    <label for="${id}" class="sr-only">ימים לפני פקיעה</label>
+    <input type="number" id="${id}" class="input" value="${days}" min="1" max="365"
+           style="width:90px" aria-label="שלח תזכורת ${days} ימים לפני פקיעה">
+    <span style="font-size:0.85rem;color:var(--text-muted)">ימים לפני פקיעה</span>
+    <button class="btn btn-sm" style="background:rgba(255,90,90,0.15);color:var(--red);border:none;margin-right:auto"
+            aria-label="הסר תזכורת זו"
+            onclick="this.closest('div').remove()">הסר</button>`;
+  container.appendChild(row);
+}
+
+function saveReminderSettings() {
+  const rows = document.querySelectorAll('#examReminderRows input[type="number"]');
+  const days = [...rows].map(i => parseInt(i.value)).filter(d => d > 0);
+  const adminEmail = document.getElementById('adminEmailSetting').value.trim();
+  localStorage.setItem(REMINDER_STORAGE_KEY, JSON.stringify({ days, adminEmail }));
+  showToast('הגדרות נשמרו ✅', 'success');
+  document.getElementById('reminderStatus').textContent = `נשמר: תזכורות ${days.join(', ')} ימים לפני פקיעה`;
+}
+
+async function sendExamRemindersNow() {
+  const cfg = loadReminderSettings();
+  if (!cfg.days.length) { showToast('הגדר לפחות יום תזכורת אחד', 'error'); return; }
+  const statusEl = document.getElementById('reminderStatus');
+  statusEl.textContent = 'שולח תזכורות...';
+
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // בנה רשימת רוכבים לפי פקיעה
+  const toSend   = []; // { rider, daysLeft, hasEmail }
+  const noEmail  = [];
+
+  STATE.riders.forEach(r => {
+    if (!r.examExpiry) return;
+    const exp     = new Date(r.examExpiry.split('/').reverse().join('-'));
+    const daysLeft = Math.round((exp - today) / 86400000);
+
+    const shouldNotify = cfg.days.some(d => daysLeft === d || daysLeft === 0);
+    if (!shouldNotify) return;
+
+    if (r.email && r.email.trim()) {
+      toSend.push({ tid: r.tid, name: r.name, email: r.email.trim(), daysLeft });
+    } else {
+      noEmail.push({ name: r.name, daysLeft });
+    }
+  });
+
+  try {
+    let sent = 0;
+    // שלח לרוכבים עם מייל
+    if (toSend.length) {
+      await callAPI('sendExamReminders', {
+        recipients: toSend,
+        adminEmail: cfg.adminEmail,
+      });
+      sent = toSend.length;
+    }
+
+    // שלח סיכום למנהל על רוכבים ללא מייל
+    if (noEmail.length && cfg.adminEmail) {
+      await callAPI('notifyAdminNoEmail', {
+        adminEmail: cfg.adminEmail,
+        riders: noEmail,
+      });
+    }
+
+    const parts = [];
+    if (sent)          parts.push(`נשלחו ${sent} תזכורות לרוכבים`);
+    if (noEmail.length) parts.push(`${noEmail.length} רוכבים ללא מייל — נשלחה התראה למנהל`);
+    if (!parts.length)  parts.push('אין רוכבים שמחייבים תזכורת היום');
+
+    statusEl.textContent = parts.join(' · ');
+    showToast('תזכורות נשלחו ✅', 'success');
+  } catch(e) {
+    statusEl.textContent = 'שגיאה: ' + e.message;
+    showToast('שגיאה בשליחת תזכורות: ' + e.message, 'error');
+  }
+}
+
+// אתחול הגדרות כשנכנסים לסקשן
+const _origShowSection = showSection;
+function showSection(name, clickedBtn) {
+  _origShowSection(name, clickedBtn);
+  if (name === 'settings') initSettingsSection();
 }
 </script>
 </body>
