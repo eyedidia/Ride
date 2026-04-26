@@ -383,7 +383,7 @@ let RIDER_DATA = null;
 // ── BOOTSTRAP ───────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   const stored = sessionStorage.getItem('user');
-  if (!stored) { window.location.replace('login.html'); return; }
+  if (!stored) { window.location.replace('index.html'); return; }
   USER = JSON.parse(stored);
 
   try {
