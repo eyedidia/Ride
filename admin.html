@@ -1497,16 +1497,11 @@ tbody td {
               כתובות מייל לקבלת התראות
             </legend>
             <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 12px">
-              כל כתובת ברשימה תקבל התראה על רוכבים ללא בדיקה בתוקף. מנהלי מערכת נוספים מוצגים אוטומטית.
+              מנהלי מערכת שיש להם כתובת מייל נוספים אוטומטית. ניתן להסיר כל כתובת.
             </p>
 
-            <!-- כתובות מנהלים אוטומטיות (קריאה בלבד) -->
-            <div id="adminAutoEmails" style="margin-bottom:12px">
-              <!-- נבנה דינמית -->
-            </div>
-
-            <!-- כתובות ידניות -->
-            <div id="adminEmailRows" style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px">
+            <!-- רשימה מאוחדת: אוטומטיות + ידניות -->
+            <div id="adminEmailRows" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
               <!-- נבנה דינמית -->
             </div>
 
@@ -3494,19 +3489,44 @@ function loadReminderSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(REMINDER_STORAGE_KEY) || '{}');
     return {
-      days:        saved.days        || [...DEFAULT_REMINDER_DAYS],
-      adminEmails: saved.adminEmails || (saved.adminEmail ? [saved.adminEmail] : []),
+      days:              saved.days              || [...DEFAULT_REMINDER_DAYS],
+      adminEmails:       saved.adminEmails       || (saved.adminEmail ? [saved.adminEmail] : []),
+      removedAutoEmails: saved.removedAutoEmails || [],
     };
-  } catch { return { days: [...DEFAULT_REMINDER_DAYS], adminEmails: [] }; }
+  } catch { return { days: [...DEFAULT_REMINDER_DAYS], adminEmails: [], removedAutoEmails: [] }; }
 }
 
-// Returns unique list of admin emails: auto-detected מנהל users + manually saved
+// Returns unique list of admin emails: auto-detected (not removed) + manually added
 function getEffectiveAdminEmails(cfg) {
+  const removed = new Set((cfg.removedAutoEmails || []).map(e => e.toLowerCase()));
   const auto = (STATE.riders || [])
     .filter(r => r.permission === 'מנהל' && r.email && r.email.trim())
-    .map(r => r.email.trim().toLowerCase());
+    .map(r => r.email.trim().toLowerCase())
+    .filter(e => !removed.has(e));
   const manual = (cfg.adminEmails || []).map(e => e.toLowerCase());
   return [...new Set([...auto, ...manual])];
+}
+
+function _buildEmailRow(container, email, label, isAuto) {
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;align-items:center;gap:8px';
+  row.dataset.email   = email;
+  row.dataset.isAuto  = isAuto ? '1' : '0';
+  const badge = isAuto
+    ? `<span style="flex-shrink:0;background:rgba(79,124,255,0.12);color:var(--accent);
+                    padding:3px 8px;border-radius:12px;font-size:0.72rem" aria-hidden="true">מנהל</span>`
+    : '';
+  const nameSpan = label
+    ? `<span style="flex-shrink:0;font-size:0.82rem">${esc(label)}</span>`
+    : '';
+  row.innerHTML = `
+    ${badge}${nameSpan}
+    <span style="flex:1;font-size:0.85rem;padding:6px 10px;background:var(--surface2);
+                 border-radius:6px;border:1px solid var(--border);word-break:break-all">${esc(email)}</span>
+    <button class="btn btn-sm" style="background:rgba(255,90,90,0.15);color:var(--red);border:none;flex-shrink:0"
+            aria-label="הסר כתובת ${esc(email)}"
+            onclick="this.closest('div').remove()">הסר</button>`;
+  container.appendChild(row);
 }
 
 function initSettingsSection() {
@@ -3515,50 +3535,33 @@ function initSettingsSection() {
   reminderContainer.innerHTML = '';
   cfg.days.forEach(d => addReminderRow(d));
 
-  // הצג מנהלים אוטומטיים
-  const autoEmails = (STATE.riders || [])
-    .filter(r => r.permission === 'מנהל' && r.email && r.email.trim());
-  const autoEl = document.getElementById('adminAutoEmails');
-  if (autoEl) {
-    if (autoEmails.length) {
-      autoEl.innerHTML = autoEmails.map(r => `
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:0.85rem">
-          <span style="background:rgba(79,124,255,0.12);color:var(--accent);
-                       padding:3px 8px;border-radius:12px;font-size:0.75rem">מנהל</span>
-          <span>${esc(r.name)}</span>
-          <span style="color:var(--text-muted)">${esc(r.email)}</span>
-          <span style="font-size:0.72rem;color:var(--text-muted)">(אוטומטי)</span>
-        </div>`).join('');
-    } else {
-      autoEl.innerHTML = `<p style="font-size:0.8rem;color:var(--text-muted)">אין מנהלים עם כתובת מייל מוגדרת</p>`;
-    }
-  }
+  const emailContainer = document.getElementById('adminEmailRows');
+  if (!emailContainer) return;
+  emailContainer.innerHTML = '';
 
-  // הצג כתובות ידניות שמורות
-  const manualEl = document.getElementById('adminEmailRows');
-  if (manualEl) {
-    manualEl.innerHTML = '';
-    cfg.adminEmails.forEach(email => addAdminEmailRow(email));
-  }
+  const removedSet = new Set((cfg.removedAutoEmails || []).map(e => e.toLowerCase()));
+
+  // הוסף מנהלים אוטומטיים (אם לא הוסרו)
+  (STATE.riders || [])
+    .filter(r => r.permission === 'מנהל' && r.email && r.email.trim())
+    .forEach(r => {
+      const email = r.email.trim();
+      if (!removedSet.has(email.toLowerCase())) {
+        _buildEmailRow(emailContainer, email, r.name, true);
+      }
+    });
+
+  // הוסף כתובות ידניות שמורות
+  (cfg.adminEmails || []).forEach(email => _buildEmailRow(emailContainer, email, null, false));
 }
 
 function addAdminEmailRow(email) {
-  const inputEl = document.getElementById('newAdminEmail');
-  const value = email || (inputEl ? inputEl.value.trim() : '');
+  const inputEl    = document.getElementById('newAdminEmail');
+  const value      = email || (inputEl ? inputEl.value.trim() : '');
   if (!value) return;
   if (inputEl && !email) inputEl.value = '';
-
   const container = document.getElementById('adminEmailRows');
-  const row = document.createElement('div');
-  row.style.cssText = 'display:flex;align-items:center;gap:8px';
-  row.dataset.email = value;
-  row.innerHTML = `
-    <span style="flex:1;font-size:0.85rem;padding:6px 10px;background:var(--surface2);
-                 border-radius:6px;border:1px solid var(--border)">${esc(value)}</span>
-    <button class="btn btn-sm" style="background:rgba(255,90,90,0.15);color:var(--red);border:none"
-            aria-label="הסר כתובת ${esc(value)}"
-            onclick="this.closest('div').remove()">הסר</button>`;
-  container.appendChild(row);
+  _buildEmailRow(container, value, null, false);
 }
 
 function addReminderRow(days = 30) {
@@ -3580,9 +3583,23 @@ function addReminderRow(days = 30) {
 function saveReminderSettings() {
   const rows = document.querySelectorAll('#examReminderRows input[type="number"]');
   const days = [...rows].map(i => parseInt(i.value)).filter(d => d > 0);
-  const emailRows = document.querySelectorAll('#adminEmailRows [data-email]');
-  const adminEmails = [...emailRows].map(r => r.dataset.email).filter(Boolean);
-  localStorage.setItem(REMINDER_STORAGE_KEY, JSON.stringify({ days, adminEmails }));
+
+  const allEmailRows = [...document.querySelectorAll('#adminEmailRows [data-email]')];
+  // Manual emails = rows not marked as auto
+  const adminEmails = allEmailRows
+    .filter(r => r.dataset.isAuto !== '1')
+    .map(r => r.dataset.email).filter(Boolean);
+
+  // Removed auto emails = auto emails from STATE.riders that are NO LONGER in the list
+  const presentAutoEmails = new Set(
+    allEmailRows.filter(r => r.dataset.isAuto === '1').map(r => r.dataset.email.toLowerCase())
+  );
+  const removedAutoEmails = (STATE.riders || [])
+    .filter(r => r.permission === 'מנהל' && r.email && r.email.trim())
+    .map(r => r.email.trim().toLowerCase())
+    .filter(e => !presentAutoEmails.has(e));
+
+  localStorage.setItem(REMINDER_STORAGE_KEY, JSON.stringify({ days, adminEmails, removedAutoEmails }));
   showToast('הגדרות נשמרו ✅', 'success');
   document.getElementById('reminderStatus').textContent = `נשמר: תזכורות ${days.join(', ')} ימים לפני פקיעה`;
 }

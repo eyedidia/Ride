@@ -1632,9 +1632,22 @@ let currentPage     = 1;
 async function loadHistory() {
   const container = document.getElementById('historyList');
   try {
-    const raw = await apiGet('getRideHistory', { tid: user.tid });
+    // קבל היסטוריה כקפטן/סינגל וגם כסטוקר במקביל
+    const [captainRaw, stokerRaw] = await Promise.all([
+      apiGet('getRideHistory', { tid: user.tid }),
+      apiGet('getRideHistory', { stokerTid: user.tid }).catch(() => []),
+    ]);
+
+    // מיזוג ללא כפילויות (לפי מזהה אירוע, אחרת לפי תאריך+תיאור)
+    const seen = new Set();
+    const merged = [];
+    [...captainRaw, ...stokerRaw].forEach(h => {
+      const key = h.eventId || h.id || (h.date + '|' + h.description);
+      if (!seen.has(key)) { seen.add(key); merged.push(h); }
+    });
+
     // רק אירועים שתאריך + שעתם כבר עברו
-    allHistory = raw.filter(h => eventIsPast(h.date, h.meetTime || h.time));
+    allHistory = merged.filter(h => eventIsPast(h.date, h.meetTime || h.time));
     container.setAttribute('aria-busy','false');
 
     if (!allHistory.length) {
