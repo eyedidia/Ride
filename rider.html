@@ -1377,13 +1377,11 @@ async function switchTab(name) {
 async function loadEvents() {
   const container = document.getElementById('eventsList');
   try {
-    const [events, counts] = await Promise.all([
-      apiGet('getEvents'),
-      apiGet('getEventCounts').catch(() => ({}))
-    ]);
+    const events = await apiGet('getEvents');
     cachedEvents = events;
+    // loadMyRegistrations גם מונה רשומים — יחזיר counts מדויקים
+    const counts = await loadMyRegistrations(events);
     cachedCounts = counts;
-    await loadMyRegistrations(events);
     renderEvents(events, counts);
   } catch(e) {
     container.setAttribute('aria-busy','false');
@@ -1396,18 +1394,24 @@ async function loadEvents() {
 
 async function loadMyRegistrations(events) {
   myRegs.clear();
+  const counts = {};
   try {
     const checks = await Promise.all(
       events.map(ev => apiGet('getRegistrations', { eventId: ev.id })
         .then(regs => ({
-          eventId: ev.id,
+          eventId:    ev.id,
+          count:      regs.length,
           registered: regs.some(r => normTid(r.tid) === normTid(user.tid))
         }))
-        .catch(() => ({ eventId: ev.id, registered: false }))
+        .catch(() => ({ eventId: ev.id, count: 0, registered: false }))
       )
     );
-    checks.forEach(c => { if (c.registered) myRegs.add(c.eventId); });
+    checks.forEach(c => {
+      if (c.registered) myRegs.add(c.eventId);
+      counts[c.eventId] = c.count;
+    });
   } catch(_) {}
+  return counts;
 }
 
 function normTid(val) {
@@ -1459,9 +1463,9 @@ function renderEvents(events, counts = {}) {
           <!-- שם הרכיבה — h2 כדי שVoiceOver יודיע "כותרת" -->
           <h2 class="event-title">${esc(ev.description)}</h2>
 
-          <p class="event-date">
-            <span aria-hidden="true">📅 </span><span class="sr-only">תאריך: </span>${esc(ev.date)}
-            <span aria-hidden="true"> · 🕕 </span><span class="sr-only">, שעת מפגש: </span>${esc(ev.meetTime)}
+          <p class="event-date"
+             aria-label="תאריך: ${esc(ev.date)}, שעת מפגש: ${esc(ev.meetTime)}">
+            <span aria-hidden="true">📅 ${esc(ev.date)} · 🕕 ${esc(ev.meetTime)}</span>
           </p>
         </div>
 
@@ -1478,25 +1482,21 @@ function renderEvents(events, counts = {}) {
         </div>
       </div>
 
-      <!-- פרטי אירוע — dl/dt/dd לנגישות: קורא מסך יקרא "נקודת מפגש: X", "מרחק: Y ק"מ" וכו' -->
-      <dl class="event-meta">
-        <div class="meta-chip">
-          <dt><span aria-hidden="true">📍 </span><span class="sr-only">נקודת מפגש:</span></dt>
-          <dd>${esc(ev.meetPoint)}</dd>
-        </div>
-        <div class="meta-chip">
-          <dt><span class="sr-only">מרחק:</span></dt>
-          <dd><span aria-hidden="true">🚴 </span><strong>${esc(String(ev.km))}</strong> ק"מ</dd>
-        </div>
-        <div class="meta-chip">
-          <dt><span class="sr-only">עלייה:</span></dt>
-          <dd><span aria-hidden="true">⛰️ </span><strong>${esc(String(ev.climb))}</strong> מ' עלייה</dd>
-        </div>
-        <div class="meta-chip">
-          <dt><span aria-hidden="true">👑 </span><span class="sr-only">קפטן:</span></dt>
-          <dd>${esc(ev.captain)}</dd>
-        </div>
-      </dl>
+      <!-- פרטי אירוע — p+span עם sr-only labels לקריאה אמינה בכל קוראי המסך -->
+      <div class="event-meta">
+        <p class="meta-chip">
+          <span class="sr-only">נקודת מפגש: </span><span aria-hidden="true">📍 </span>${esc(ev.meetPoint)}
+        </p>
+        <p class="meta-chip">
+          <span class="sr-only">מרחק: </span><span aria-hidden="true">🚴 </span><strong>${esc(String(ev.km))}</strong> ק"מ
+        </p>
+        <p class="meta-chip">
+          <span class="sr-only">עלייה: </span><span aria-hidden="true">⛰️ </span><strong>${esc(String(ev.climb))}</strong> מ'
+        </p>
+        <p class="meta-chip">
+          <span class="sr-only">קפטן: </span><span aria-hidden="true">👑 </span>${esc(ev.captain)}
+        </p>
+      </div>
 
       <div class="event-footer">
         <button class="btn btn-ghost"
@@ -1632,7 +1632,9 @@ let currentPage     = 1;
 async function loadHistory() {
   const container = document.getElementById('historyList');
   try {
-    allHistory = await apiGet('getRideHistory', { tid: user.tid });
+    const raw = await apiGet('getRideHistory', { tid: user.tid });
+    // רק אירועים שתאריך + שעתם כבר עברו
+    allHistory = raw.filter(h => eventIsPast(h.date, h.meetTime || h.time));
     container.setAttribute('aria-busy','false');
 
     if (!allHistory.length) {
@@ -1776,6 +1778,14 @@ function resetFilters() {
 function parseDate(str) {
   const [d,m,y] = (str||'').split('/');
   return new Date(`${y}-${m}-${d}`).getTime() || 0;
+}
+
+// Returns true if an event has already taken place (date+time in the past)
+function eventIsPast(dateStr, timeStr) {
+  const [d,m,y] = (dateStr||'').split('/');
+  if (!d || !m || !y) return false;
+  const time = timeStr ? timeStr.trim() : '23:59';
+  return new Date(`${y}-${m}-${d}T${time}:00`) <= new Date();
 }
 
 /* ─── Date View ─────────────────────────── */

@@ -8,9 +8,11 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3
 const ADMIN_ROLES = {
   'מנהל':          ['dashboard','riders','events','assignments','bikes','maintenance','exams','settings'],
   'מנהל_רוכבים':  ['dashboard','riders','exams'],
-  'מנהל_אירועים': ['dashboard','events'],
+  'מנהל_אירועים': ['dashboard','events','assignments'],
   'מנהל_שיבוצים': ['dashboard','assignments'],
   'מנהל_אופניים': ['dashboard','bikes','maintenance'],
+  'מנהל_בדיקות':  ['dashboard','exams'],
+  'מנהל_צי':      ['dashboard','bikes','maintenance'],
 };
 
 // ─── AUTH GUARD ───────────────────────────────────────
