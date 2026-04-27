@@ -1398,11 +1398,19 @@ async function loadMyRegistrations(events) {
   try {
     const checks = await Promise.all(
       events.map(ev => apiGet('getRegistrations', { eventId: ev.id })
-        .then(regs => ({
-          eventId:    ev.id,
-          count:      regs.length,
-          registered: regs.some(r => normTid(r.tid) === normTid(user.tid))
-        }))
+        .then(regs => {
+          // סטוקרים משובצים מוטמעים בשורת הקפטן — מוסיפים לספירה
+          const embeddedStokers = regs.filter(
+            r => r.partnerTid && String(r.partnerTid).trim() !== ''
+          ).length;
+          return {
+            eventId:    ev.id,
+            count:      regs.length + embeddedStokers,
+            // רשום גם אם מופיע כ-partnerTid בשורת קפטן (= סטוקר משובץ)
+            registered: regs.some(r => normTid(r.tid)       === normTid(user.tid))
+                     || regs.some(r => normTid(r.partnerTid) === normTid(user.tid))
+          };
+        })
         .catch(() => ({ eventId: ev.id, count: 0, registered: false }))
       )
     );
@@ -1629,19 +1637,57 @@ let allHistory      = [];
 let filteredHistory = [];
 let currentPage     = 1;
 
+// מגזיר היסטוריית סטוקר מרישומי אירועי עבר
+// (סטוקרים משובצים מוטמעים בשורת הקפטן ולא מופיעים ב-getRideHistory הרגיל)
+async function _deriveStokerHistory(pastEvents) {
+  if (!pastEvents.length) return [];
+  const results = await Promise.allSettled(
+    pastEvents.map(e =>
+      apiGet('getRegistrations', { eventId: e.id })
+        .then(regs => {
+          const cap = regs.find(r => normTid(r.partnerTid) === normTid(user.tid));
+          if (!cap) return null;
+          return {
+            eventId:     e.id,
+            date:        e.date,
+            meetTime:    e.meetTime  || '',
+            description: e.description,
+            role:        'סטוקר',
+            partner:     cap.name   || '',
+            bike:        cap.bike   || '',
+            km:          e.km       || 0,
+            climb:       e.climb    || 0
+          };
+        })
+        .catch(() => null)
+    )
+  );
+  return results
+    .filter(r => r.status === 'fulfilled' && r.value)
+    .map(r => r.value);
+}
+
 async function loadHistory() {
   const container = document.getElementById('historyList');
   try {
-    // קבל היסטוריה כקפטן/סינגל וגם כסטוקר במקביל
-    const [captainRaw, stokerRaw] = await Promise.all([
+    // קבל: (1) היסטוריה כקפטן/סינגל, (2) ניסיון ישיר כסטוקר אם backend תומך,
+    //       (3) רשימת אירועים (כולל past) לגזירת היסטוריית סטוקר
+    const [captainRaw, stokerDirect, allEvents] = await Promise.all([
       apiGet('getRideHistory', { tid: user.tid }),
       apiGet('getRideHistory', { stokerTid: user.tid }).catch(() => []),
+      apiGet('getEvents').catch(() => ({}))
     ]);
 
-    // מיזוג ללא כפילויות (לפי מזהה אירוע, אחרת לפי תאריך+תיאור)
+    // גזור היסטוריית סטוקר מ-getRegistrations על כל אירועי עבר
+    const pastEvents = (allEvents.past || []).filter(
+      e => eventIsPast(e.date, e.meetTime)
+    );
+    const stokerFromPast = await _deriveStokerHistory(pastEvents);
+
+    // מיזוג ללא כפילויות
     const seen = new Set();
     const merged = [];
-    [...captainRaw, ...stokerRaw].forEach(h => {
+    [...captainRaw, ...stokerDirect, ...stokerFromPast].forEach(h => {
       const key = h.eventId || h.id || (h.date + '|' + h.description);
       if (!seen.has(key)) { seen.add(key); merged.push(h); }
     });
