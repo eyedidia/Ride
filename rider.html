@@ -1663,17 +1663,28 @@ async function loadHistory() {
   const container = document.getElementById('historyList');
   try {
     // קבל: (1) היסטוריה כקפטן/סינגל, (2) ניסיון ישיר כסטוקר אם backend תומך,
-    //       (3) כל האירועים (getEvents יכול להחזיר מערך או { upcoming, past })
-    const [captainRaw, stokerDirect, eventsRaw] = await Promise.all([
+    //       (3) כל האירועים — getAllEvents מחזיר { upcoming, past, cancelled },
+    //           getEvents מחזיר מערך עתידי בלבד (fallback)
+    const [captainRaw, stokerDirect, allEventsRaw, upcomingRaw] = await Promise.all([
       apiGet('getRideHistory', { tid: user.tid }),
       apiGet('getRideHistory', { stokerTid: user.tid }).catch(() => []),
+      apiGet('getAllEvents').catch(() => null),
       apiGet('getEvents').catch(() => [])
     ]);
 
-    // תמיכה בשני פורמטים: מערך רגיל או { upcoming, past, cancelled }
-    const allEventsList = Array.isArray(eventsRaw)
-      ? eventsRaw
-      : [...(eventsRaw.upcoming || []), ...(eventsRaw.past || []), ...(eventsRaw.cancelled || [])];
+    // העדפה: getAllEvents (כולל past) → fallback: getEvents (upcoming בלבד)
+    let allEventsList;
+    if (allEventsRaw && !Array.isArray(allEventsRaw)) {
+      allEventsList = [
+        ...(allEventsRaw.upcoming  || []),
+        ...(allEventsRaw.past      || []),
+        ...(allEventsRaw.cancelled || [])
+      ];
+    } else if (Array.isArray(allEventsRaw) && allEventsRaw.length) {
+      allEventsList = allEventsRaw;
+    } else {
+      allEventsList = Array.isArray(upcomingRaw) ? upcomingRaw : [];
+    }
 
     // סנן לאירועים שכבר עברו לגזירת היסטוריית סטוקר
     const pastEvents = allEventsList.filter(e => eventIsPast(e.date, e.meetTime));
