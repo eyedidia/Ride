@@ -1398,19 +1398,11 @@ async function loadMyRegistrations(events) {
   try {
     const checks = await Promise.all(
       events.map(ev => apiGet('getRegistrations', { eventId: ev.id })
-        .then(regs => {
-          // סטוקרים משובצים מוטמעים בשורת הקפטן — מוסיפים לספירה
-          const embeddedStokers = regs.filter(
-            r => r.partnerTid && String(r.partnerTid).trim() !== ''
-          ).length;
-          return {
-            eventId:    ev.id,
-            count:      regs.length + embeddedStokers,
-            // רשום גם אם מופיע כ-partnerTid בשורת קפטן (= סטוקר משובץ)
-            registered: regs.some(r => normTid(r.tid)       === normTid(user.tid))
-                     || regs.some(r => normTid(r.partnerTid) === normTid(user.tid))
-          };
-        })
+        .then(regs => ({
+          eventId:    ev.id,
+          count:      regs.length,
+          registered: regs.some(r => normTid(r.tid) === normTid(user.tid))
+        }))
         .catch(() => ({ eventId: ev.id, count: 0, registered: false }))
       )
     );
@@ -1671,17 +1663,20 @@ async function loadHistory() {
   const container = document.getElementById('historyList');
   try {
     // קבל: (1) היסטוריה כקפטן/סינגל, (2) ניסיון ישיר כסטוקר אם backend תומך,
-    //       (3) רשימת אירועים (כולל past) לגזירת היסטוריית סטוקר
-    const [captainRaw, stokerDirect, allEvents] = await Promise.all([
+    //       (3) כל האירועים (getEvents יכול להחזיר מערך או { upcoming, past })
+    const [captainRaw, stokerDirect, eventsRaw] = await Promise.all([
       apiGet('getRideHistory', { tid: user.tid }),
       apiGet('getRideHistory', { stokerTid: user.tid }).catch(() => []),
-      apiGet('getEvents').catch(() => ({}))
+      apiGet('getEvents').catch(() => [])
     ]);
 
-    // גזור היסטוריית סטוקר מ-getRegistrations על כל אירועי עבר
-    const pastEvents = (allEvents.past || []).filter(
-      e => eventIsPast(e.date, e.meetTime)
-    );
+    // תמיכה בשני פורמטים: מערך רגיל או { upcoming, past, cancelled }
+    const allEventsList = Array.isArray(eventsRaw)
+      ? eventsRaw
+      : [...(eventsRaw.upcoming || []), ...(eventsRaw.past || []), ...(eventsRaw.cancelled || [])];
+
+    // סנן לאירועים שכבר עברו לגזירת היסטוריית סטוקר
+    const pastEvents = allEventsList.filter(e => eventIsPast(e.date, e.meetTime));
     const stokerFromPast = await _deriveStokerHistory(pastEvents);
 
     // מיזוג ללא כפילויות
