@@ -2697,29 +2697,42 @@ function shareAssignmentsWhatsApp() {
   const evDate = ev?.date || '';
   const evTime = ev?.meetTime || '';
 
-  const captains = assignRegs.filter(r => r.role === 'קפטן' || r.role === 'סינגל');
-  const stokers  = assignRegs.filter(r => r.role === 'סטוקר');
+  const allCaptains = assignRegs.filter(r => r.role === 'קפטן');
+  const singles     = assignRegs.filter(r => r.role === 'סינגל');
+  const stokers     = assignRegs.filter(r => r.role === 'סטוקר');
+
+  const assignedStokerTids = new Set(
+    allCaptains.map(c => c.partnerTid).filter(t => t && String(t).trim())
+  );
+  const assignedCaptains   = allCaptains.filter(c => c.partnerTid && String(c.partnerTid).trim());
+  const unassignedCaptains = allCaptains.filter(c => !c.partnerTid || !String(c.partnerTid).trim());
+  const unassignedStokers  = stokers.filter(s => !assignedStokerTids.has(String(s.tid)));
 
   const lines = [];
-  lines.push(`🚴 שיבוצי רכיבה`);
-  lines.push(`${eventName}`);
+  lines.push('🚴 שיבוצי רכיבה');
+  lines.push(eventName);
   if (evDate) lines.push(`📅 ${evDate}${evTime ? '  🕕 ' + evTime : ''}`);
   lines.push('');
 
-  captains.forEach(c => {
-    if (c.role === 'סינגל') {
-      lines.push(`🚲 ${c.name} — סינגל`);
-    } else {
-      const partnerName = c.partner || c.partnerTid || '(לא שובץ)';
+  if (assignedCaptains.length) {
+    assignedCaptains.forEach(c => {
+      const partnerName = c.partner || c.partnerTid;
       const bikeFull    = bikeLabel(c.bike);
       lines.push(`👑 ${c.name} + 🤝 ${partnerName}  |  ${bikeFull}`);
-    }
-  });
-
-  if (stokers.length) {
+    });
     lines.push('');
+  }
+
+  if (singles.length) {
+    lines.push('🚲 סינגלים:');
+    singles.forEach(s => lines.push(`  🚲 ${s.name}`));
+    lines.push('');
+  }
+
+  if (unassignedCaptains.length || unassignedStokers.length) {
     lines.push('⏳ ממתינים לשיבוץ:');
-    stokers.forEach(s => lines.push(`  • ${s.name}`));
+    unassignedCaptains.forEach(c => lines.push(`  • ${c.name} (קפטן)`));
+    unassignedStokers.forEach(s  => lines.push(`  • ${s.name} (סטוקר)`));
   }
 
   const text = lines.join('\n');
