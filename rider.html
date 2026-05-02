@@ -1377,9 +1377,13 @@ async function switchTab(name) {
 async function loadEvents() {
   const container = document.getElementById('eventsList');
   try {
-    const events = await apiGet('getEvents');
+    const allRaw = await apiGet('getAllEvents');
+    // Include "past" events where meetTime hasn't passed yet (backend categorises by date only)
+    const stillUpcoming = (allRaw.past || []).filter(e => !eventIsPast(e.date, e.meetTime));
+    const merged = [...(allRaw.upcoming || []), ...stillUpcoming];
+    const seen = new Set();
+    const events = merged.filter(e => !seen.has(e.id) && seen.add(e.id));
     cachedEvents = events;
-    // loadMyRegistrations גם מונה רשומים — יחזיר counts מדויקים
     const counts = await loadMyRegistrations(events);
     cachedCounts = counts;
     renderEvents(events, counts);

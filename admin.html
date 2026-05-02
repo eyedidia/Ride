@@ -1679,10 +1679,29 @@ tbody td {
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label" for="edit-perm">הרשאה</label>
-          <select id="edit-perm" class="select" style="width:100%" aria-label="הרשאת מערכת">
-            <option>משתמש</option><option>מנהל</option>
-          </select>
+          <label class="form-label">הרשאות מערכת</label>
+          <div style="display:flex;flex-direction:column;gap:5px;padding:4px 0">
+            <label style="display:flex;align-items:center;gap:7px">
+              <input type="radio" name="edit-perm-type" value="משתמש"
+                     onchange="togglePermCustom('edit',false)"> משתמש רגיל
+            </label>
+            <label style="display:flex;align-items:center;gap:7px">
+              <input type="radio" name="edit-perm-type" value="מנהל"
+                     onchange="togglePermCustom('edit',false)"> מנהל מערכת מלא
+            </label>
+            <label style="display:flex;align-items:center;gap:7px">
+              <input type="radio" name="edit-perm-type" value="custom"
+                     onchange="togglePermCustom('edit',true)"> מנהל מוגבל — בחר תפקידים:
+            </label>
+            <div id="edit-perm-custom" style="padding-right:18px;display:none;flex-direction:column;gap:3px">
+              <label><input type="checkbox" class="edit-role-cb" value="מנהל_רוכבים"> מנהל רוכבים</label>
+              <label><input type="checkbox" class="edit-role-cb" value="מנהל_אירועים"> מנהל אירועים</label>
+              <label><input type="checkbox" class="edit-role-cb" value="מנהל_שיבוצים"> מנהל שיבוצים</label>
+              <label><input type="checkbox" class="edit-role-cb" value="מנהל_אופניים"> מנהל אופניים</label>
+              <label><input type="checkbox" class="edit-role-cb" value="מנהל_בדיקות"> מנהל בדיקות</label>
+              <label><input type="checkbox" class="edit-role-cb" value="מנהל_צי"> מנהל צי</label>
+            </div>
+          </div>
         </div>
       </div>
       <div class="form-group">
@@ -1764,11 +1783,29 @@ tbody td {
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label" for="new-perm">הרשאת מערכת</label>
-        <select id="new-perm" class="select" style="width:100%" aria-label="הרשאת מערכת">
-          <option>משתמש</option>
-          <option>מנהל</option>
-        </select>
+        <label class="form-label">הרשאות מערכת</label>
+        <div style="display:flex;flex-direction:column;gap:5px;padding:4px 0">
+          <label style="display:flex;align-items:center;gap:7px">
+            <input type="radio" name="new-perm-type" value="משתמש" checked
+                   onchange="togglePermCustom('new',false)"> משתמש רגיל
+          </label>
+          <label style="display:flex;align-items:center;gap:7px">
+            <input type="radio" name="new-perm-type" value="מנהל"
+                   onchange="togglePermCustom('new',false)"> מנהל מערכת מלא
+          </label>
+          <label style="display:flex;align-items:center;gap:7px">
+            <input type="radio" name="new-perm-type" value="custom"
+                   onchange="togglePermCustom('new',true)"> מנהל מוגבל — בחר תפקידים:
+          </label>
+          <div id="new-perm-custom" style="padding-right:18px;display:none;flex-direction:column;gap:3px">
+            <label><input type="checkbox" class="new-role-cb" value="מנהל_רוכבים"> מנהל רוכבים</label>
+            <label><input type="checkbox" class="new-role-cb" value="מנהל_אירועים"> מנהל אירועים</label>
+            <label><input type="checkbox" class="new-role-cb" value="מנהל_שיבוצים"> מנהל שיבוצים</label>
+            <label><input type="checkbox" class="new-role-cb" value="מנהל_אופניים"> מנהל אופניים</label>
+            <label><input type="checkbox" class="new-role-cb" value="מנהל_בדיקות"> מנהל בדיקות</label>
+            <label><input type="checkbox" class="new-role-cb" value="מנהל_צי"> מנהל צי</label>
+          </div>
+        </div>
       </div>
 
       <div id="add-rider-error" role="alert" aria-live="assertive"
@@ -1988,11 +2025,18 @@ async function loadRiders() {
 async function loadEvents() {
   if (!API_URL) return;
   const all = await apiGet('getAllEvents');
-  STATE.events    = all.upcoming || [];
-  STATE.allEvents = all;
+  // Re-categorize: move events from "past" back to upcoming if meetTime hasn't passed
+  const stillUpcoming = (all.past || []).filter(e => !eventIsPast(e.date, e.meetTime));
+  const fixedAll = {
+    upcoming:  [...(all.upcoming || []), ...stillUpcoming],
+    past:      (all.past || []).filter(e => eventIsPast(e.date, e.meetTime)),
+    cancelled: all.cancelled || []
+  };
+  STATE.events    = fixedAll.upcoming;
+  STATE.allEvents = fixedAll;
   renderDashboardEvents(STATE.events);
   renderAssignmentsEventSelect(STATE.events);
-  renderAllEventsTables(all);
+  renderAllEventsTables(fixedAll);
 }
 
 async function loadBikes() {
@@ -2227,11 +2271,7 @@ function updateExamAlerts() {
 function renderAssignmentsEventSelect(events) {
   const sel = document.getElementById('event-select-assign');
   if (!sel) return;
-  const upcoming = events.filter(e => {
-    const d = new Date(e.date.split('/').reverse().join('-'));
-    return d >= new Date();
-  });
-  // מיון עולה לפי תאריך
+  const upcoming = events.filter(e => !eventIsPast(e.date, e.meetTime));
   upcoming.sort((a,b) => new Date(a.date.split('/').reverse().join('-')) - new Date(b.date.split('/').reverse().join('-')));
 
   sel.innerHTML = '<option value="">— בחר אירוע —</option>' +
@@ -2820,6 +2860,33 @@ async function submitAddBike() {
   }
 }
 
+// ─── PERMISSION UI HELPERS ───────────────────────────
+function togglePermCustom(prefix, show) {
+  const el = document.getElementById(prefix + '-perm-custom');
+  if (el) el.style.display = show ? 'flex' : 'none';
+}
+
+function getPermValue(prefix) {
+  const type = document.querySelector(`input[name="${prefix}-perm-type"]:checked`)?.value;
+  if (type === 'custom') {
+    const checked = [...document.querySelectorAll(`.${prefix}-role-cb:checked`)].map(c => c.value);
+    return checked.join(',') || 'משתמש';
+  }
+  return type || 'משתמש';
+}
+
+function setPermValue(prefix, perm) {
+  const roles = (perm || 'משתמש').split(',').map(r => r.trim()).filter(Boolean);
+  const isSimple = roles.length === 1 && (roles[0] === 'מנהל' || roles[0] === 'משתמש');
+  const radioVal = isSimple ? roles[0] : 'custom';
+  const radio = document.querySelector(`input[name="${prefix}-perm-type"][value="${radioVal}"]`);
+  if (radio) radio.checked = true;
+  togglePermCustom(prefix, !isSimple);
+  document.querySelectorAll(`.${prefix}-role-cb`).forEach(cb => {
+    cb.checked = roles.includes(cb.value);
+  });
+}
+
 // ─── EDIT RIDER ─────────────────────────────────────
 async function submitEditRider() {
   const errEl = document.getElementById('edit-rider-error');
@@ -2845,7 +2912,7 @@ async function submitEditRider() {
       email:     document.getElementById('edit-email').value.trim(),
       city:      document.getElementById('edit-city').value.trim(),
       rideStyle: document.getElementById('edit-style').value,
-      permission:document.getElementById('edit-perm').value,
+      permission:getPermValue('edit'),
     });
     if (examDate) await callAPI('updateExamDate', { tid, examDate });
     unlockBtn(document.querySelector('#modalEditRider .btn-primary'));
@@ -3007,7 +3074,7 @@ function editRider(tid) {
   document.getElementById('edit-email').value = r.email  || '';
   document.getElementById('edit-city').value  = r.city   || '';
   document.getElementById('edit-style').value = r.rideStyle;
-  document.getElementById('edit-perm').value  = r.permission;
+  setPermValue('edit', r.permission);
   // המרת תאריך DD/MM/YYYY → YYYY-MM-DD לשדה input date
   if (r.examDate && r.examDate !== '—') {
     const [d,m,y] = r.examDate.split('/');
@@ -3297,7 +3364,7 @@ async function submitAddRider() {
       email: document.getElementById('new-email').value.trim(),
       city, dob, gender,
       rideStyle:  document.getElementById('new-style').value,
-      permission: document.getElementById('new-perm').value,
+      permission: getPermValue('new'),
     });
     unlockBtn(document.querySelector('#modalAddRider .btn-primary'));
     closeModal('modalAddRider');

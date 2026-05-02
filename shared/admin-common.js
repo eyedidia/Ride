@@ -15,6 +15,14 @@ const ADMIN_ROLES = {
   'מנהל_צי':      ['dashboard','bikes','maintenance'],
 };
 
+// Returns true if an event date+time is in the past
+function eventIsPast(dateStr, timeStr) {
+  const [d,m,y] = (dateStr||'').split('/');
+  if (!d||!m||!y) return false;
+  const time = timeStr ? timeStr.trim() : '23:59';
+  return new Date(`${y}-${m}-${d}T${time}:00`) <= new Date();
+}
+
 // ─── AUTH GUARD ───────────────────────────────────────
 // Call at top of each admin page.
 // Returns the user object if authorised, otherwise redirects.
@@ -24,18 +32,25 @@ function checkAdminAccess(allowedSections) {
   if (!stored) { window.location.replace('index.html'); return null; }
   const u = JSON.parse(stored);
   const perm = u.permission || '';
-  if (!ADMIN_ROLES[perm]) { window.location.replace('rider.html'); return null; }
+  const roles = perm.split(',').map(r => r.trim()).filter(Boolean);
+  const hasValidRole = roles.some(r => ADMIN_ROLES[r]);
+  if (!hasValidRole) { window.location.replace('rider.html'); return null; }
   if (allowedSections) {
-    const allowed = ADMIN_ROLES[perm];
-    const ok = allowedSections.some(s => allowed.includes(s));
-    if (!ok) { window.location.replace('admin.html'); return null; }
+    const allowed = getUserAllowedSections(u);
+    if (!allowedSections.some(s => allowed.includes(s))) {
+      window.location.replace('admin.html'); return null;
+    }
   }
   return u;
 }
 
-// Returns the set of sections the current user can access.
+// Returns the set of sections the current user can access (union of all roles).
 function getUserAllowedSections(u) {
-  return ADMIN_ROLES[u?.permission] || [];
+  const perm = u?.permission || '';
+  const roles = perm.split(',').map(r => r.trim()).filter(Boolean);
+  const sections = new Set();
+  roles.forEach(role => { (ADMIN_ROLES[role] || []).forEach(s => sections.add(s)); });
+  return [...sections];
 }
 
 // ─── API ──────────────────────────────────────────────
@@ -179,9 +194,11 @@ function populateUserCard(u) {
   const avatarEl = document.querySelector('.user-avatar');
   const userCard = document.querySelector('.user-card');
   if (!u) return;
-  const roleLabel = ADMIN_ROLES[u.permission]
-    ? (u.permission === 'מנהל' ? 'מנהל מערכת' : u.permission.replace('מנהל_','מנהל '))
-    : u.permission;
+  const perm = u.permission || '';
+  const roles = perm.split(',').map(r => r.trim()).filter(Boolean);
+  const roleLabel = roles.length > 1
+    ? roles.map(r => r === 'מנהל' ? 'מנהל מערכת' : r.replace('מנהל_','מנהל ')).join(' + ')
+    : (ADMIN_ROLES[perm] ? (perm === 'מנהל' ? 'מנהל מערכת' : perm.replace('מנהל_','מנהל ')) : perm);
   if (nameEl)   nameEl.textContent   = u.name;
   if (roleEl)   roleEl.textContent   = roleLabel;
   if (avatarEl) avatarEl.textContent = u.name.trim().split(' ').map(w=>w[0]).slice(0,2).join('');
