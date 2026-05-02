@@ -1156,7 +1156,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!stored) { window.location.replace('index.html'); return; }
   user = JSON.parse(stored);
 
-  if (user.isAdmin) {
+  const perm = user.permission || '';
+  const hasAdminRole = user.isAdmin || perm === 'מנהל' ||
+    perm.split(',').some(r => r.trim().startsWith('מנהל_'));
+  if (hasAdminRole) {
     document.getElementById('btnAdmin').classList.add('visible');
   }
 
@@ -1165,7 +1168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // בנרים לפי סטטוס בדיקה
   const examStatus = user.examStatus || '';
-  if (!user.canRegister && !user.isAdmin) {
+  if (!user.canRegister && !hasAdminRole) {
     const blocked    = document.getElementById('regBlockedBanner');
     const blockedTxt = document.getElementById('regBlockedText');
     if (examStatus.includes('אין בדיקה')) {
