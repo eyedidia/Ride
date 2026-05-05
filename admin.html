@@ -2258,9 +2258,9 @@ function updateExamAlerts() {
         <div class="exam-update">
           <label for="exam-${esc(r.tid)}" class="sr-only">תאריך בדיקה חדש ל${esc(r.name)}</label>
           <input type="date" id="exam-${esc(r.tid)}" class="input-inline" aria-label="תאריך בדיקה חדש ל${esc(r.name)}">
-          <button class="btn btn-primary btn-sm"
+          <button type="button" class="btn btn-primary btn-sm"
                   aria-label="שמור תאריך בדיקה חדש ל${esc(r.name)}"
-                  onclick="saveExamDate('${esc(r.tid)}','${esc(r.name)}')">שמור</button>
+                  onclick="saveExamDate('${esc(r.tid)}','${esc(r.name)}','exam')">שמור</button>
         </div>
       </td>
     </tr>`;
@@ -2357,9 +2357,9 @@ function renderExamsTable(riders) {
                style="flex:1;min-width:0"
                value="${esc(examVal)}"
                aria-label="תאריך בדיקה ל${esc(r.name)}">
-        <button class="btn btn-primary btn-sm"
+        <button type="button" class="btn btn-primary btn-sm"
                 aria-label="שמור תאריך בדיקה ל${esc(r.name)}"
-                onclick="saveExamDate('${esc(r.tid)}','${esc(r.name)}')">שמור</button>
+                onclick="saveExamDate('${esc(r.tid)}','${esc(r.name)}','upd')">שמור</button>
       </div>
     </div>`;
   }).join('');
@@ -3380,10 +3380,10 @@ async function submitAddRider() {
 }
 
 // ─── EXAM DATE ─────────────────────────────────────
-async function saveExamDate(tid, name) {
-  // מחפש לפי שני סוגי prefix אפשריים
-  const input = document.getElementById('upd-' + tid)
-             || document.getElementById('exam-' + tid);
+async function saveExamDate(tid, name, prefix) {
+  const id    = prefix ? (prefix + '-' + tid)
+              : (document.getElementById('upd-' + tid) ? 'upd-' + tid : 'exam-' + tid);
+  const input = document.getElementById(id);
 
   if (!input) {
     showToast('שגיאה: שדה תאריך לא נמצא', 'error');
