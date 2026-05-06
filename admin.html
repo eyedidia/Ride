@@ -2472,9 +2472,11 @@ async function loadAssignments() {
 
   try {
     const raw = await apiGet('getRegistrations', { eventId });
-    raw.forEach(r => { r._fromApi = true; }); // סומן — הגיע מה-API, לא שינוי מקומי
+    raw.forEach(r => { r._fromApi = true; });
     assignRegs  = raw;
     assignBikes = STATE.bikes.filter(b => b.status === 'תקין');
+    _editMode.clear(); // איפוס מצב עריכה בכל טעינה מחדש
+    _soloMode.clear();
     renderAssignments();
   } catch(e) {
     document.getElementById('captainsBody').innerHTML =
@@ -2483,6 +2485,7 @@ async function loadAssignments() {
 }
 
 const _soloMode = new Set(); // קפטנים שנבחרו לשיבוץ כסינגל
+const _editMode = new Set(); // קפטנים שנפתחו לעריכה (מסתיר כרטיס נעול)
 
 function toggleSoloMode(tid) {
   if (_soloMode.has(tid)) _soloMode.delete(tid);
@@ -2565,7 +2568,7 @@ function renderAssignments() {
     const hasBike      = bikeVal !== '' && bikeVal !== '—';
     const hasClubBike  = hasBike && bikeVal !== 'PRIVATE';
     const hasPartner   = r.role === 'קפטן' && !!r.partnerTid;
-    const isAssigned   = hasClubBike || hasPartner || (isSolo && hasBike);
+    const isAssigned   = !_editMode.has(r.tid) && (hasClubBike || hasPartner || (isSolo && hasBike));
 
     if (isAssigned) {
       // ── כרטיס נעול — שיבוץ קיים ──
@@ -2679,11 +2682,7 @@ function renderAssignments() {
 }
 
 function editAssignment(captainTid) {
-  const captain = assignRegs.find(r => r.tid === captainTid);
-  if (captain) {
-    captain.bike     = '';
-    captain._fromApi = false; // ← שחרר נעילה
-  }
+  _editMode.add(captainTid);
   renderAssignments();
 }
 
@@ -2741,6 +2740,7 @@ async function saveAssignment(captainTid, captainName) {
       if (stokerTid) captain.partnerTid = stokerTid;
     }
 
+    _editMode.delete(captainTid);
     showToast(`שיבוץ נשמר ל${captainName} ✅`, 'success');
     renderAssignments(); // רנדר מיד עם נעילה
 
