@@ -2475,8 +2475,8 @@ async function loadAssignments() {
     raw.forEach(r => { r._fromApi = true; });
     assignRegs  = raw;
     assignBikes = STATE.bikes.filter(b => b.status === 'תקין');
-    _editMode.clear(); // איפוס מצב עריכה בכל טעינה מחדש
-    _soloMode.clear();
+    _editMode.clear();
+    refreshSoloMode(raw); // מסיק סינגל לפי frame האופניים
     renderAssignments();
   } catch(e) {
     document.getElementById('captainsBody').innerHTML =
@@ -2486,6 +2486,18 @@ async function loadAssignments() {
 
 const _soloMode = new Set(); // קפטנים שנבחרו לשיבוץ כסינגל
 const _editMode = new Set(); // קפטנים שנפתחו לעריכה (מסתיר כרטיס נעול)
+
+// מסיק מחדש מי סינגל לפי frame האופניים שלו (ללא שותף)
+function refreshSoloMode(regs) {
+  _soloMode.clear();
+  regs.forEach(r => {
+    if (r.role !== 'קפטן' || r.partnerTid) return;
+    const bv = (r.bike || '').toString().trim();
+    if (!bv || bv === 'PRIVATE' || bv === '—') return;
+    const bike = (STATE.bikes || []).find(b => String(b.id) === String(bv));
+    if (bike?.frame === 'סינגל') _soloMode.add(r.tid);
+  });
+}
 
 function toggleSoloMode(tid) {
   if (_soloMode.has(tid)) _soloMode.delete(tid);
@@ -2722,32 +2734,45 @@ async function saveAssignment(captainTid, captainName) {
   const stokerSel = document.getElementById('stoker-' + captainTid);
   const stokerTid = stokerSel ? stokerSel.value : '';
 
+  const isSolo = _soloMode.has(captainTid);
+
   try {
-    // סטוקר שכבר שובץ (שורתו נמחקה ע"י assignPartner) — לא מנסים assignBike שנית
+    const captain = assignRegs.find(r => r.tid === captainTid);
+
+    // קפטן שעובר לסינגל אבל עדיין מקושר לסטוקר — פורקים קודם
+    if (isSolo && captain?.partnerTid) {
+      const oldStokerTid  = captain.partnerTid;
+      const oldStokerName = captain.partner || oldStokerTid;
+      await callAPI('unassignPartner', { eventId, captainTid, stokerTid: oldStokerTid, stokerName: oldStokerName });
+      captain.partnerTid = '';
+    }
+
+    // שמירת אופניים
+    if (bikeId) await callAPI('assignBike', { eventId, tid: captainTid, bikeId });
+
+    // שיבוץ עם סטוקר — רק אם הסטוקר עדיין רשום בפני עצמו
     const stokerHasOwnRow = stokerTid &&
       assignRegs.some(r => r.tid === stokerTid && r.role === 'סטוקר');
-
-    if (bikeId) await callAPI('assignBike', { eventId, tid: captainTid, bikeId });
     if (stokerHasOwnRow) {
-      await callAPI('assignBike', { eventId, tid: stokerTid, bikeId: bikeId || '' });
+      await callAPI('assignBike',   { eventId, tid: stokerTid, bikeId: bikeId || '' });
       await callAPI('assignPartner', { eventId, captainTid, stokerTid });
     }
 
     // עדכון אופטימיסטי
-    const captain = assignRegs.find(r => r.tid === captainTid);
     if (captain) {
-      if (bikeId) captain.bike = bikeId;
+      if (bikeId)    captain.bike       = bikeId;
       if (stokerTid) captain.partnerTid = stokerTid;
     }
 
     _editMode.delete(captainTid);
     showToast(`שיבוץ נשמר ל${captainName} ✅`, 'success');
-    renderAssignments(); // רנדר מיד עם נעילה
+    renderAssignments();
 
     // טעינה מחדש ברקע לעדכון השמות
     const fresh = await apiGet('getRegistrations', { eventId });
     fresh.forEach(r => { r._fromApi = true; });
     assignRegs = fresh;
+    refreshSoloMode(fresh); // שמור solo state לפי frame האופניים
     renderAssignments();
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
