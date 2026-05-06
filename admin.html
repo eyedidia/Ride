@@ -422,6 +422,7 @@ tbody tr {
 
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: var(--surface2); }
+tbody tr[style*="cursor:pointer"]:hover { background: var(--surface2); outline:1px solid var(--border); }
 
 tbody td {
   padding: 13px 16px;
@@ -1273,6 +1274,7 @@ tbody td {
                   <th scope="col">ק"מ</th>
                   <th scope="col">עליות</th>
                   <th scope="col">קפטן</th>
+                  <th scope="col">נרשמים</th>
                   <th scope="col"><span class="sr-only">פעולות</span></th>
                 </tr></thead>
                 <tbody id="eventsUpcomingBody" aria-live="polite" aria-label="אירועים קרובים">
@@ -1288,7 +1290,10 @@ tbody td {
                   <th scope="col">תאריך</th>
                   <th scope="col">מסלול</th>
                   <th scope="col">ק"מ</th>
+                  <th scope="col">עליות</th>
                   <th scope="col">קפטן</th>
+                  <th scope="col">נרשמים</th>
+                  <th scope="col"><span class="sr-only">פרטים</span></th>
                 </tr></thead>
                 <tbody id="eventsPastBody">
                   <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">טוען...</td></tr>
@@ -1879,6 +1884,24 @@ tbody td {
   </div>
 </div>
 
+<!-- ── EVENT VIEW MODAL (read-only — past / cancelled) ── -->
+<div class="modal-backdrop" id="modalEventView" role="dialog" aria-modal="true"
+     aria-labelledby="ev-view-title" onclick="backdropClose(event,'modalEventView')">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header">
+      <h2 class="modal-title" id="ev-view-title">פרטי אירוע</h2>
+      <button class="modal-close" onclick="closeModal('modalEventView')" aria-label="סגור">✕</button>
+    </div>
+    <div class="modal-body" id="ev-view-body" style="max-height:70vh;overflow-y:auto">
+      <p style="color:var(--text-muted);text-align:center">טוען...</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalEventView')">סגור</button>
+      <button class="btn btn-primary" onclick="shareEventViewWhatsApp()">📤 שתף בוואצאפ</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════════════
      MODAL — עריכת אופניים
 ═══════════════════════════ -->
@@ -2034,9 +2057,11 @@ async function loadEvents() {
   };
   STATE.events    = fixedAll.upcoming;
   STATE.allEvents = fixedAll;
+  STATE.regCounts = STATE.regCounts || {};
   renderDashboardEvents(STATE.events);
   renderAssignmentsEventSelect(STATE.events);
   renderAllEventsTables(fixedAll);
+  loadAllRegCounts(fixedAll); // async — מעדכן תאים בלי לחסום
 }
 
 async function loadBikes() {
@@ -2092,18 +2117,19 @@ function renderEventsTable(events) {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted)">אין אירועים קרובים</td></tr>`;
     return;
   }
+  const counts = STATE.regCounts || {};
   tbody.innerHTML = events.map(e => `
-    <tr>
+    <tr style="cursor:pointer" onclick="openAssignments('${esc(e.id)}')">
       <td><strong>${esc(e.date)}</strong><div class="td-sub">${esc(e.meetTime)}</div></td>
       <td><div class="td-name">${esc(e.description)}</div><div class="td-sub">${esc(e.meetPoint)}</div></td>
       <td>${esc(String(e.km))}</td>
       <td>${esc(String(e.climb))} מ'</td>
       <td>—</td>
       <td>${esc(e.captain)}</td>
-      <td>
+      <td id="reg-count-${esc(e.id)}" style="text-align:center">${counts[e.id] != null ? counts[e.id] : '—'}</td>
+      <td onclick="event.stopPropagation()">
         <div class="row-actions">
           <button class="icon-btn" aria-label="ערוך אירוע ${esc(e.description)}" title="עריכה">✏️</button>
-          <button class="icon-btn" aria-label="הרשמות לאירוע ${esc(e.description)}" title="הרשמות" onclick="loadRegistrations('${esc(e.id)}')">👥</button>
           <button class="icon-btn danger" aria-label="בטל אירוע ${esc(e.description)}" title="ביטול">🚫</button>
         </div>
       </td>
@@ -2367,19 +2393,24 @@ function renderExamsTable(riders) {
 
 // ─── RENDER EVENTS TABLES ──────────────────────────
 function renderAllEventsTables(all) {
-  const upcoming  = all.upcoming  || all; // תמיכה בשני פורמטים
+  const upcoming  = all.upcoming  || all;
   const past      = all.past      || [];
   const cancelled = all.cancelled || [];
+  const counts    = STATE.regCounts || {};
+
+  const regCell = id =>
+    `<td id="reg-count-${esc(id)}" style="text-align:center">${counts[id] != null ? counts[id] : '<span style="color:var(--text-muted)">—</span>'}</td>`;
 
   const upTbody = document.getElementById('eventsUpcomingBody');
   upTbody.innerHTML = upcoming.length ? upcoming.map(e => `
-    <tr>
+    <tr style="cursor:pointer" title="לחץ לפתיחת שיבוץ" onclick="openAssignments('${esc(e.id)}')">
       <td><strong>${esc(e.date)}</strong><div class="td-sub">${esc(e.meetTime)}</div></td>
       <td><div class="td-name">${esc(e.description)}</div><div class="td-sub">${esc(e.meetPoint)}</div></td>
       <td>${esc(String(e.km))}</td>
       <td>${esc(String(e.climb))} מ'</td>
       <td>${esc(e.captain)}</td>
-      <td>
+      ${regCell(e.id)}
+      <td onclick="event.stopPropagation()">
         <div class="row-actions">
           <button class="icon-btn" aria-label="ערוך אירוע ${esc(e.description)}" title="עריכה"
                   onclick="editEvent('${esc(e.id)}')">✏️</button>
@@ -2388,25 +2419,35 @@ function renderAllEventsTables(all) {
         </div>
       </td>
     </tr>`).join('')
-  : `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted)">אין אירועים קרובים</td></tr>`;
+  : `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted)">אין אירועים קרובים</td></tr>`;
 
   const pastTbody = document.getElementById('eventsPastBody');
   pastTbody.innerHTML = past.length ? past.map(e => `
-    <tr>
-      <td>${esc(e.date)}</td>
-      <td>${esc(e.description)}</td>
+    <tr style="cursor:pointer" title="לחץ לצפייה בפרטים" onclick="openEventView('${esc(e.id)}')">
+      <td><strong>${esc(e.date)}</strong><div class="td-sub">${esc(e.meetTime||'')}</div></td>
+      <td><div class="td-name">${esc(e.description)}</div><div class="td-sub">${esc(e.meetPoint||'')}</div></td>
       <td>${esc(String(e.km))} ק"מ</td>
-      <td>${esc(e.captain)}</td>
+      <td>${esc(String(e.climb||0))} מ'</td>
+      <td>${esc(e.captain||'')}</td>
+      ${regCell(e.id)}
+      <td><button class="icon-btn" title="פרטי אירוע" aria-label="פרטי אירוע ${esc(e.description)}"
+                  onclick="openEventView('${esc(e.id)}')">🔍</button></td>
     </tr>`).join('')
-  : `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">אין אירועים שעברו</td></tr>`;
+  : `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted)">אין אירועים שעברו</td></tr>`;
 
   const cancelTbody = document.getElementById('tabp-cancelled');
   if (cancelTbody) {
     cancelTbody.innerHTML = cancelled.length
       ? `<div class="table-wrap"><table><thead><tr>
-           <th>תאריך</th><th>מסלול</th>
+           <th>תאריך</th><th>מסלול</th><th>נרשמים</th><th><span class="sr-only">פרטים</span></th>
          </tr></thead><tbody>${cancelled.map(e => `
-           <tr><td>${esc(e.date)}</td><td>${esc(e.description)}</td></tr>`).join('')}
+           <tr style="cursor:pointer" onclick="openEventView('${esc(e.id)}')">
+             <td>${esc(e.date)}</td>
+             <td>${esc(e.description)}</td>
+             ${regCell(e.id)}
+             <td><button class="icon-btn" title="פרטי אירוע" aria-label="פרטי ${esc(e.description)}"
+                         onclick="openEventView('${esc(e.id)}')">🔍</button></td>
+           </tr>`).join('')}
          </tbody></table></div>`
       : `<p style="padding:20px;color:var(--text-muted);text-align:center">אין אירועים מבוטלים</p>`;
   }
@@ -2797,6 +2838,184 @@ function shareAssignmentsWhatsApp() {
 
   const text = lines.join('\n');
   const url  = 'https://wa.me/?text=' + encodeURIComponent(text);
+  window.open(url, '_blank', 'noopener');
+}
+
+// ─── REG COUNTS (async background) ────────────────
+async function loadAllRegCounts(allEvents) {
+  if (!API_URL) return;
+  STATE.regCounts = STATE.regCounts || {};
+  const allEvs = [
+    ...(allEvents.upcoming  || []),
+    ...(allEvents.past      || []),
+    ...(allEvents.cancelled || [])
+  ];
+  await Promise.all(allEvs.map(async e => {
+    try {
+      const regs = await apiGet('getRegistrations', { eventId: e.id });
+      STATE.regCounts[e.id] = Array.isArray(regs) ? regs.length : 0;
+      const cell = document.getElementById('reg-count-' + e.id);
+      if (cell) cell.textContent = STATE.regCounts[e.id];
+    } catch { /* אי אפשר לקבל ספירה — משאירים — */ }
+  }));
+}
+
+// ─── OPEN ASSIGNMENTS FROM EVENTS TABLE ────────────
+function openAssignments(eventId) {
+  const navBtn = document.querySelector('.nav-item[onclick*="assignments"]');
+  showSection('assignments', navBtn);
+  if (navBtn) {
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    navBtn.classList.add('active');
+    navBtn.setAttribute('aria-current', 'page');
+  }
+  const sel = document.getElementById('event-select-assign');
+  if (sel) { sel.value = eventId; loadAssignments(); }
+}
+
+// ─── EVENT VIEW MODAL (read-only) ──────────────────
+let _viewEvent    = null;
+let _viewEventRegs = [];
+
+async function openEventView(eventId) {
+  const allEvs = [
+    ...(STATE.allEvents?.past      || []),
+    ...(STATE.allEvents?.cancelled || []),
+    ...(STATE.allEvents?.upcoming  || [])
+  ];
+  const ev = allEvs.find(e => String(e.id) === String(eventId));
+  if (!ev) { showToast('אירוע לא נמצא', 'error'); return; }
+
+  document.getElementById('ev-view-title').textContent = ev.description || 'פרטי אירוע';
+  document.getElementById('ev-view-body').innerHTML =
+    '<p style="color:var(--text-muted);text-align:center;padding:20px">טוען נרשמים...</p>';
+  openModal('modalEventView');
+
+  try {
+    const regs = await apiGet('getRegistrations', { eventId });
+    _viewEvent     = ev;
+    _viewEventRegs = Array.isArray(regs) ? regs : [];
+    document.getElementById('ev-view-body').innerHTML = buildEventViewHTML(ev, _viewEventRegs);
+  } catch(err) {
+    document.getElementById('ev-view-body').innerHTML =
+      `<p style="color:var(--red);padding:16px">שגיאה: ${esc(err.message)}</p>`;
+  }
+}
+
+function buildEventViewHTML(ev, regs) {
+  const isCancelled = (STATE.allEvents?.cancelled || []).some(e => String(e.id) === String(ev.id));
+  const statusBadge = isCancelled
+    ? '<span style="color:var(--red);font-weight:600">בוטל</span>'
+    : '<span style="color:var(--text-muted)">עבר</span>';
+
+  const details = `
+    <div style="background:var(--surface2);border-radius:8px;padding:14px 16px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;font-size:0.9rem">
+      <div><span style="color:var(--text-muted)">תאריך:</span> <strong>${esc(ev.date||'—')}</strong></div>
+      <div><span style="color:var(--text-muted)">שעה:</span> ${esc(ev.meetTime||'—')}</div>
+      <div><span style="color:var(--text-muted)">נקודת מפגש:</span> ${esc(ev.meetPoint||'—')}</div>
+      <div><span style="color:var(--text-muted)">קפטן:</span> ${esc(ev.captain||'—')}</div>
+      <div><span style="color:var(--text-muted)">ק"מ:</span> ${esc(String(ev.km||0))}</div>
+      <div><span style="color:var(--text-muted)">עליות:</span> ${esc(String(ev.climb||0))} מ'</div>
+      <div><span style="color:var(--text-muted)">סטטוס:</span> ${statusBadge}</div>
+      <div><span style="color:var(--text-muted)">נרשמים:</span> <strong>${regs.length}</strong></div>
+    </div>`;
+
+  if (!regs.length) {
+    return details + '<p style="color:var(--text-muted);text-align:center;padding:12px">לא היו נרשמים לאירוע זה</p>';
+  }
+
+  const captains = regs.filter(r => r.role === 'קפטן');
+  const singles  = regs.filter(r => r.role === 'סינגל');
+  const stokers  = regs.filter(r => r.role === 'סטוקר');
+
+  const assignedStokerTids = new Set(captains.map(c => c.partnerTid).filter(Boolean));
+  const pairedCaptains     = captains.filter(c => c.partnerTid);
+  const unpairedCaptains   = captains.filter(c => !c.partnerTid);
+  const freeStokers        = stokers.filter(s => !assignedStokerTids.has(s.tid));
+
+  let html = details;
+
+  if (pairedCaptains.length) {
+    html += `<h4 style="margin:12px 0 6px;font-size:0.85rem;color:var(--text-muted);text-transform:uppercase">זוגות שובצו</h4>
+    <table style="width:100%;font-size:0.88rem;border-collapse:collapse">
+      <thead><tr style="color:var(--text-muted);font-size:0.78rem">
+        <th style="text-align:right;padding:4px 8px">קפטן</th>
+        <th style="text-align:right;padding:4px 8px">סטוקר</th>
+        <th style="text-align:right;padding:4px 8px">אופניים</th>
+      </tr></thead><tbody>
+      ${pairedCaptains.map(c => `
+        <tr style="border-top:1px solid var(--border)">
+          <td style="padding:5px 8px">👑 ${esc(c.name)}</td>
+          <td style="padding:5px 8px">🤝 ${esc(c.partner || c.partnerTid || '—')}</td>
+          <td style="padding:5px 8px;color:var(--text-muted)">${esc(bikeLabel(c.bike))}</td>
+        </tr>`).join('')}
+      </tbody></table>`;
+  }
+
+  if (singles.length) {
+    html += `<h4 style="margin:14px 0 6px;font-size:0.85rem;color:var(--text-muted);text-transform:uppercase">סינגלים</h4>
+    <ul style="margin:0;padding-right:18px;font-size:0.88rem">
+      ${singles.map(s => `<li>🚲 ${esc(s.name)}${s.bike ? ' · ' + esc(bikeLabel(s.bike)) : ''}</li>`).join('')}
+    </ul>`;
+  }
+
+  if (unpairedCaptains.length || freeStokers.length) {
+    html += `<h4 style="margin:14px 0 6px;font-size:0.85rem;color:var(--orange,#f59e0b);text-transform:uppercase">לא שובצו</h4>
+    <ul style="margin:0;padding-right:18px;font-size:0.88rem">
+      ${unpairedCaptains.map(c => `<li>${esc(c.name)} (קפטן)</li>`).join('')}
+      ${freeStokers.map(s => `<li>${esc(s.name)} (סטוקר)</li>`).join('')}
+    </ul>`;
+  }
+
+  return html;
+}
+
+function shareEventViewWhatsApp() {
+  const ev   = _viewEvent;
+  const regs = _viewEventRegs;
+  if (!ev || !regs) { showToast('אין נתונים לשיתוף', 'error'); return; }
+
+  const captains = regs.filter(r => r.role === 'קפטן');
+  const singles  = regs.filter(r => r.role === 'סינגל');
+  const stokers  = regs.filter(r => r.role === 'סטוקר');
+
+  const assignedStokerTids = new Set(captains.map(c => c.partnerTid).filter(Boolean));
+  const pairedCaptains     = captains.filter(c => c.partnerTid);
+  const unpairedCaptains   = captains.filter(c => !c.partnerTid);
+  const freeStokers        = stokers.filter(s => !assignedStokerTids.has(s.tid));
+
+  const isCancelled = (STATE.allEvents?.cancelled || []).some(e => String(e.id) === String(ev.id));
+  const lines = [];
+  lines.push(isCancelled ? '🚫 אירוע בוטל' : '🚴 סיכום רכיבה');
+  lines.push(ev.description || '');
+  if (ev.date) lines.push(`📅 ${ev.date}${ev.meetTime ? '  🕕 ' + ev.meetTime : ''}`);
+  if (ev.meetPoint) lines.push(`📍 ${ev.meetPoint}`);
+  lines.push('');
+
+  if (pairedCaptains.length) {
+    lines.push('👥 זוגות:');
+    pairedCaptains.forEach(c => {
+      lines.push(`  👑 ${c.name} + 🤝 ${c.partner || c.partnerTid}  |  ${bikeLabel(c.bike)}`);
+    });
+    lines.push('');
+  }
+
+  if (singles.length) {
+    lines.push('🚲 סינגלים:');
+    singles.forEach(s => lines.push(`  🚲 ${s.name}${s.bike ? '  |  ' + bikeLabel(s.bike) : ''}`));
+    lines.push('');
+  }
+
+  if (unpairedCaptains.length || freeStokers.length) {
+    lines.push('⏳ לא שובצו:');
+    unpairedCaptains.forEach(c => lines.push(`  • ${c.name} (קפטן)`));
+    freeStokers.forEach(s => lines.push(`  • ${s.name} (סטוקר)`));
+    lines.push('');
+  }
+
+  lines.push(`סה"כ: ${regs.length} נרשמים`);
+
+  const url = 'https://wa.me/?text=' + encodeURIComponent(lines.join('\n'));
   window.open(url, '_blank', 'noopener');
 }
 
