@@ -2476,7 +2476,8 @@ async function loadAssignments() {
     assignRegs  = raw;
     assignBikes = STATE.bikes.filter(b => b.status === 'תקין');
     _editMode.clear();
-    refreshSoloMode(raw); // מסיק סינגל לפי frame האופניים
+    refreshSoloMode(raw);     // מסיק סינגל לפי frame
+    _restoreSolo(eventId);    // שחזר solo שנשמר ידנית (כולל PRIVATE)
     renderAssignments();
   } catch(e) {
     document.getElementById('captainsBody').innerHTML =
@@ -2502,10 +2503,31 @@ function refreshSoloMode(regs, keepTids = []) {
   keepTids.forEach(tid => _soloMode.add(String(tid)));
 }
 
+// ─── SOLO STATE PERSISTENCE (localStorage per event) ──
+function _soloKey(eventId) { return 'soloMode_ev_' + eventId; }
+
+function _persistSolo(eventId) {
+  try { localStorage.setItem(_soloKey(eventId), JSON.stringify([..._soloMode])); } catch {}
+}
+
+function _restoreSolo(eventId) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(_soloKey(eventId)) || '[]');
+    saved.forEach(tid => _soloMode.add(String(tid)));
+  } catch {}
+}
+
+function _clearSoloEntry(eventId, tid) {
+  _soloMode.delete(String(tid));
+  _persistSolo(eventId);
+}
+
 function toggleSoloMode(tid) {
-  const stid = String(tid);
+  const stid    = String(tid);
+  const eventId = document.getElementById('event-select-assign')?.value || '';
   if (_soloMode.has(stid)) _soloMode.delete(stid);
   else _soloMode.add(stid);
+  if (eventId) _persistSolo(eventId);
   renderAssignments();
 }
 
@@ -2589,11 +2611,16 @@ function renderAssignments() {
 
     if (isAssigned) {
       // ── כרטיס נעול — שיבוץ קיים ──
+      const isSoloCard  = isSolo && !hasPartner;
       const bikeFull    = bikeLabel(r.bike);
       const partnerName = r.partner || r.partnerTid || '';
-      const ariaDesc    = `${r.name}, ${r.role}, משובץ. אופניים: ${bikeFull}${hasPartner ? `. שותף: ${partnerName}` : ''}`;
+      const borderColor = isSoloCard ? 'var(--orange,#f59e0b)' : 'var(--green)';
+      const badgeBg     = isSoloCard ? 'rgba(245,158,11,0.15)' : 'rgba(45,212,160,0.15)';
+      const badgeColor  = isSoloCard ? 'var(--orange,#f59e0b)'  : 'var(--green)';
+      const badgeLabel  = isSoloCard ? '🚴 סינגל ✅' : '✅ משובץ';
+      const ariaDesc    = `${r.name}, ${r.role}${isSoloCard ? ', סינגל' : ''}, משובץ. אופניים: ${bikeFull}${hasPartner ? `. שותף: ${partnerName}` : ''}`;
       return `
-      <div style="background:var(--surface2);border:2px solid var(--green);
+      <div style="background:var(--surface2);border:2px solid ${borderColor};
                   border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;
                   width:100%;box-sizing:border-box;min-width:0"
            role="listitem" aria-label="${esc(ariaDesc)}">
@@ -2602,13 +2629,16 @@ function renderAssignments() {
              aria-hidden="true">
           <div>
             <div style="font-weight:700;font-size:0.95rem">${esc(r.name)}</div>
-            <div style="margin-top:3px"><span class="role-tag">${esc(r.role)}</span></div>
+            <div style="margin-top:3px">
+              <span class="role-tag">${esc(r.role)}</span>
+              ${isSoloCard ? '<span style="font-size:0.72rem;color:var(--orange,#f59e0b);margin-right:6px">🚴 ללא סטוקר</span>' : ''}
+            </div>
           </div>
-          <span style="font-size:0.75rem;background:rgba(45,212,160,0.15);color:var(--green);
-                       padding:3px 9px;border-radius:20px;font-weight:700">✅ משובץ</span>
+          <span style="font-size:0.75rem;background:${badgeBg};color:${badgeColor};
+                       padding:3px 9px;border-radius:20px;font-weight:700">${badgeLabel}</span>
         </div>
         <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:6px" aria-hidden="true">
-          <span>🚲 ${esc(bikeFull)}</span>
+          <span>${isSoloCard ? '🚴' : '🚲'} ${esc(bikeFull)}</span>
           ${hasPartner ? `<span> &nbsp;·&nbsp; 🤝 ${esc(partnerName)}</span>` : ''}
         </div>
         <div style="display:flex;gap:8px;margin-top:10px">
@@ -2771,6 +2801,7 @@ async function saveAssignment(captainTid, captainName) {
     }
 
     _editMode.delete(stid);
+    if (isSolo) { _soloMode.add(stid); _persistSolo(eventId); }
     showToast(`שיבוץ נשמר ל${captainName} ✅`, 'success');
     renderAssignments();
 
@@ -2778,8 +2809,8 @@ async function saveAssignment(captainTid, captainName) {
     const fresh = await apiGet('getRegistrations', { eventId });
     fresh.forEach(r => { r._fromApi = true; });
     assignRegs = fresh;
-    // העבר את keepTids כדי לשמור קפטנים שהוגדרו סינגל במפורש (כולל PRIVATE)
-    refreshSoloMode(fresh, isSolo ? [captainTid] : []);
+    refreshSoloMode(fresh, isSolo ? [stid] : []);
+    _restoreSolo(eventId); // שחזר כל ה-solo שנשמרו
     renderAssignments();
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
@@ -2800,9 +2831,12 @@ async function unassignCaptain(captainTid, captainName) {
     await callAPI('unassignPartner', { eventId, captainTid, stokerTid: partnerTid, stokerName: partnerName });
     // אפס אופניים לקפטן
     await callAPI('assignBike', { eventId, tid: captainTid, bikeId: 'PRIVATE' });
+    _clearSoloEntry(eventId, captainTid); // הסר solo state גם מ-localStorage
 
     showToast(`שיבוץ ${captainName} פורק`, 'success');
     assignRegs = await apiGet('getRegistrations', { eventId });
+    refreshSoloMode(assignRegs);
+    _restoreSolo(eventId);
     renderAssignments();
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
