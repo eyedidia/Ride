@@ -1382,9 +1382,10 @@ async function loadEvents() {
   const container = document.getElementById('eventsList');
   try {
     const allRaw = await apiGet('getAllEvents');
-    // Include "past" events where meetTime hasn't passed yet (backend categorises by date only)
+    // Backend categorises by date only — filter both lists by actual meetTime
     const stillUpcoming = (allRaw.past || []).filter(e => !eventIsPast(e.date, e.meetTime));
-    const merged = [...(allRaw.upcoming || []), ...stillUpcoming];
+    const upcoming      = (allRaw.upcoming || []).filter(e => !eventIsPast(e.date, e.meetTime));
+    const merged = [...upcoming, ...stillUpcoming];
     const seen = new Set();
     const events = merged.filter(e => !seen.has(e.id) && seen.add(e.id));
     cachedEvents = events;
@@ -1454,10 +1455,11 @@ function renderEvents(events, counts = {}) {
   }
 
   container.innerHTML = events.map(rawEv => {
-    const ev     = normalizeEvent(rawEv);
-    const isReg  = myRegs.has(ev.id);
-    const canReg = user.canRegister;
-    const count  = counts[ev.id] || 0;
+    const ev      = normalizeEvent(rawEv);
+    const isReg   = myRegs.has(ev.id);
+    const canReg  = user.canRegister;
+    const isPast  = eventIsPast(ev.date, ev.meetTime);
+    const count   = counts[ev.id] || 0;
 
     // ── הערה: אין aria-label על ה-article ––
     // VoiceOver/iOS מנווט בין אלמנטים פנימיים ולא קורא את label המכיל.
@@ -1514,7 +1516,9 @@ function renderEvents(events, counts = {}) {
           <span aria-hidden="true">👥 </span>נרשמים${count > 0 ? ` (${count})` : ''}
         </button>
 
-        ${isReg
+        ${isPast
+          ? `<span style="font-size:0.8rem;color:var(--muted);font-style:italic" aria-label="האירוע הסתיים">האירוע הסתיים</span>`
+          : isReg
           ? `<button class="btn btn-cancel"
                      aria-label="בטל הרשמה לרכיבה ${esc(ev.description)}"
                      onclick="cancelReg('${esc(ev.id)}','${esc(ev.description)}',this)">
