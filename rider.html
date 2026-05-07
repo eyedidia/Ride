@@ -1227,7 +1227,8 @@ async function checkUpcomingEventNotifications() {
 
       const parts = [];
       if (myReg.role)    parts.push(`תפקיד: ${myReg.role}`);
-      if (myReg.partner && myReg.partner !== '—') parts.push(`שותף: ${myReg.partner}`);
+      if (myReg.partner && myReg.partner !== '—' && myReg.partner !== 'solo') parts.push(`שותף: ${myReg.partner}`);
+      if (myReg.partnerTid === 'solo') parts.push('רכיבה כסינגל');
       if (myReg.bike    && myReg.bike    !== '—') parts.push(`אופניים: ${myReg.bike}`);
       if (ev.meetPoint)  parts.push(`נקודת מפגש: ${ev.meetPoint}`);
       assignmentHtml = parts.map(p => `<p>${esc(p)}</p>`).join('');
@@ -1591,8 +1592,8 @@ async function cancelReg(eventId, eventName, btn) {
     const myReg = regs.find(r => normTid(r.tid) === normTid(user.tid));
 
     if (myReg) {
-      // שלב 2א: אם קפטן עם סטוקר — פרק את הצמד קודם
-      if (myReg.role === 'קפטן' && myReg.partnerTid) {
+      // שלב 2א: אם קפטן עם סטוקר אמיתי — פרק את הצמד קודם
+      if (myReg.role === 'קפטן' && myReg.partnerTid && myReg.partnerTid !== 'solo') {
         await callAPI('unassignPartner', {
           eventId,
           captainTid:  user.tid,
@@ -1644,7 +1645,7 @@ async function _deriveStokerHistory(pastEvents) {
     pastEvents.map(e =>
       apiGet('getRegistrations', { eventId: e.id })
         .then(regs => {
-          const cap = regs.find(r => normTid(r.partnerTid) === normTid(user.tid));
+          const cap = regs.find(r => r.partnerTid !== 'solo' && normTid(r.partnerTid) === normTid(user.tid));
           if (!cap) return null;
           return {
             eventId:     e.id,
@@ -2051,7 +2052,8 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
       return;
     }
 
-    const captains        = regs.filter(r => r.role === 'קפטן');
+    const soloCaptains    = regs.filter(r => r.role === 'קפטן' && r.partnerTid === 'solo');
+    const captains        = regs.filter(r => r.role === 'קפטן' && r.partnerTid !== 'solo');
     const singles         = regs.filter(r => r.role === 'סינגל');
     const unpairedStokers = regs.filter(r => r.role === 'סטוקר');
 
@@ -2066,7 +2068,7 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
                </div>`;
 
       html += captains.map(c => {
-        const partnerName = c.partner && c.partner !== '—' && c.partner !== '' ? c.partner : null;
+        const partnerName = c.partner && c.partner !== '—' && c.partner !== '' && c.partner !== 'solo' ? c.partner : null;
         const isMe = normTid(c.tid) === normTid(user.tid);
         const teamLabel = partnerName
           ? `צוות טנדם: קפטן ${c.name}${isMe ? ' (אתה)' : ''}, סטוקר ${partnerName}`
@@ -2146,25 +2148,26 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
       }).join('');
     }
 
-    if (singles.length) {
+    const allSingles = [...singles, ...soloCaptains];
+    if (allSingles.length) {
       html += `<div aria-hidden="true" style="font-size:0.78rem;font-weight:700;color:var(--muted);
                            text-transform:uppercase;letter-spacing:0.08em;
                            margin-top:${captains.length || unpairedStokers.length ? '14px' : '0'};margin-bottom:8px">
-                 רוכבי סינגל (${singles.length})
+                 סינגלים (${allSingles.length})
                </div>`;
-
-      html += singles.map(s => {
+      html += allSingles.map(s => {
         const isMe = normTid(s.tid) === normTid(user.tid);
+        const isCaptainSolo = s.role === 'קפטן';
+        const label = `${isCaptainSolo ? 'קפטן סינגל' : 'סינגל'}: ${s.name}${isMe ? ' (אתה)' : ''}${s.bike && s.bike !== '—' ? '. אופניים: ' + bikeLabel(s.bike) : ''}`;
         return `
         <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;
                     background:var(--surface2);border-radius:10px;margin-bottom:8px;
                     border:1px solid ${isMe ? 'var(--accent)' : 'var(--border)'}"
-             role="listitem" tabindex="0"
-             aria-label="סינגל: ${esc(s.name)}${isMe ? ', זה אתה' : ''}${s.bike && s.bike !== '—' ? '. אופניים: ' + bikeLabel(s.bike) : ''}">
+             role="listitem" tabindex="0" aria-label="${esc(label)}">
           <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;
-                      background:var(--surface);border:1px solid var(--border);
+                      background:linear-gradient(135deg,#f97316,#fb923c);
                       display:flex;align-items:center;justify-content:center;
-                      font-weight:800;font-size:0.78rem;color:var(--text)" aria-hidden="true">
+                      font-weight:800;font-size:0.78rem;color:#fff" aria-hidden="true">
             ${esc(s.name.trim().split(' ').map(w=>w[0]).slice(0,2).join(''))}
           </div>
           <div style="flex:1">
@@ -2172,7 +2175,7 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
               ${esc(s.name)}
               ${isMe ? '<span style="font-size:0.7rem;background:rgba(79,124,255,0.2);color:var(--accent);padding:2px 7px;border-radius:20px;margin-right:4px;font-weight:700" aria-label="זה אתה">אתה</span>' : ''}
             </div>
-            <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">סינגל${s.bike && s.bike !== '—' ? ` · ${esc(bikeLabel(s.bike))}` : ''}</div>
+            <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">${isCaptainSolo ? 'קפטן סינגל' : 'סינגל'}${s.bike && s.bike !== '—' ? ` · ${esc(bikeLabel(s.bike))}` : ''}</div>
           </div>
         </div>`;
       }).join('');

@@ -2490,17 +2490,19 @@ const _editMode = new Set(); // קפטנים שנפתחו לעריכה (מסתי
 
 // מסיק מחדש מי סינגל לפי frame האופניים (ללא שותף, לא PRIVATE)
 // keepTids — tids שתמיד נשארים בסינגל (למשל קפטן שנשמר זה עתה)
-function refreshSoloMode(regs, keepTids = []) {
+function refreshSoloMode(regs) {
   _soloMode.clear();
   regs.forEach(r => {
+    const stid = String(r.tid);
+    // סינגל לפי API (partnerTid='solo') — הכי אמין
+    if (r.partnerTid === 'solo') { _soloMode.add(stid); return; }
     if (r.role !== 'קפטן' || r.partnerTid) return;
-    const bv = (r.bike || '').toString().trim();
+    // הסקה: אופניים מסוג סינגל + ללא שותף
+    const bv   = (r.bike || '').toString().trim();
     if (!bv || bv === 'PRIVATE' || bv === '—') return;
     const bike = (STATE.bikes || []).find(b => String(b.id) === String(bv));
-    if (bike?.frame === 'סינגל') _soloMode.add(String(r.tid));
+    if (bike?.frame === 'סינגל') _soloMode.add(stid);
   });
-  // קפטנים שהוגדרו סינגל במפורש (כולל PRIVATE) — שמור אותם
-  keepTids.forEach(tid => _soloMode.add(String(tid)));
 }
 
 // ─── SOLO STATE PERSISTENCE (localStorage per event) ──
@@ -2603,15 +2605,18 @@ function renderAssignments() {
   captainsBody.innerHTML = captains.length ? captains.map(r => {
     const stid         = String(r.tid);
     const bikeVal      = (r.bike || '').toString().trim();
-    const isSolo       = _soloMode.has(stid) || r.role === 'סינגל';
+    const isSoloData   = r.partnerTid === 'solo'; // סינגל שנשמר ב-API
+    const isSoloNow    = _soloMode.has(stid) || r.role === 'סינגל'; // מצב עריכה נוכחי
+    const isSolo       = isSoloData || isSoloNow;
     const hasBike      = bikeVal !== '' && bikeVal !== '—';
     const hasClubBike  = hasBike && bikeVal !== 'PRIVATE';
-    const hasPartner   = r.role === 'קפטן' && !!r.partnerTid;
-    const isAssigned   = !_editMode.has(stid) && (hasClubBike || hasPartner || (isSolo && hasBike));
+    const hasPartner   = r.role === 'קפטן' && !!r.partnerTid && !isSoloData;
+    // isSoloData = שובץ → תמיד נעול; isSoloNow+hasBike = בחר אופניים → נעול
+    const isAssigned   = !_editMode.has(stid) && (hasClubBike || hasPartner || isSoloData || (isSoloNow && hasBike));
 
     if (isAssigned) {
       // ── כרטיס נעול — שיבוץ קיים ──
-      const isSoloCard  = isSolo && !hasPartner;
+      const isSoloCard  = isSolo && !hasPartner; // isSolo כולל isSoloData ו-isSoloNow
       const bikeFull    = bikeLabel(r.bike);
       const partnerName = r.partner || r.partnerTid || '';
       const borderColor = isSoloCard ? 'var(--orange,#f59e0b)' : 'var(--green)';
@@ -2729,7 +2734,11 @@ function renderAssignments() {
 }
 
 function editAssignment(captainTid) {
-  _editMode.add(String(captainTid));
+  const stid = String(captainTid);
+  _editMode.add(stid);
+  // אם הקפטן שמור כסינגל ב-API — פתח את כרטיס העריכה במצב סינגל
+  const cap = assignRegs.find(r => String(r.tid) === stid);
+  if (cap?.partnerTid === 'solo' || cap?.role === 'סינגל') _soloMode.add(stid);
   renderAssignments();
 }
 
@@ -2775,29 +2784,33 @@ async function saveAssignment(captainTid, captainName) {
   try {
     const captain = assignRegs.find(r => String(r.tid) === stid);
 
-    // קפטן שעובר לסינגל אבל עדיין מקושר לסטוקר — פורקים קודם
-    if (isSolo && captain?.partnerTid) {
+    // קפטן שעובר לסינגל אבל עדיין מקושר לסטוקר אמיתי — פורקים קודם
+    if (isSolo && captain?.partnerTid && captain.partnerTid !== 'solo') {
       const oldStokerTid  = captain.partnerTid;
       const oldStokerName = captain.partner || oldStokerTid;
       await callAPI('unassignPartner', { eventId, captainTid, stokerTid: oldStokerTid, stokerName: oldStokerName });
       captain.partnerTid = '';
     }
 
-    // שמירת אופניים
-    if (bikeId) await callAPI('assignBike', { eventId, tid: captainTid, bikeId });
-
-    // שיבוץ עם סטוקר — רק אם הסטוקר עדיין רשום בפני עצמו
-    const stokerHasOwnRow = stokerTid &&
-      assignRegs.some(r => r.tid === stokerTid && r.role === 'סטוקר');
-    if (stokerHasOwnRow) {
-      await callAPI('assignBike',   { eventId, tid: stokerTid, bikeId: bikeId || '' });
-      await callAPI('assignPartner', { eventId, captainTid, stokerTid });
+    if (isSolo) {
+      // שמור אופניים + סמן כסינגל ב-API (partnerTid='solo')
+      if (bikeId) await callAPI('assignBike', { eventId, tid: captainTid, bikeId });
+      await callAPI('assignPartner', { eventId, captainTid, stokerTid: 'solo', stokerName: 'solo' });
+    } else {
+      // שמור אופניים + שבץ סטוקר (אם נבחר)
+      if (bikeId) await callAPI('assignBike', { eventId, tid: captainTid, bikeId });
+      const stokerHasOwnRow = stokerTid &&
+        assignRegs.some(r => String(r.tid) === String(stokerTid) && r.role === 'סטוקר');
+      if (stokerHasOwnRow) {
+        await callAPI('assignBike',    { eventId, tid: stokerTid, bikeId: bikeId || '' });
+        await callAPI('assignPartner', { eventId, captainTid, stokerTid });
+      }
     }
 
     // עדכון אופטימיסטי
     if (captain) {
-      if (bikeId)    captain.bike       = bikeId;
-      if (stokerTid) captain.partnerTid = stokerTid;
+      if (bikeId) captain.bike = bikeId;
+      captain.partnerTid = isSolo ? 'solo' : (stokerTid || captain.partnerTid);
     }
 
     _editMode.delete(stid);
