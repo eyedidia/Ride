@@ -54,9 +54,9 @@ function getUserAllowedSections(u) {
 }
 
 // ─── API ──────────────────────────────────────────────
-async function apiGet(action, params = {}) {
+async function apiGet(action, params = {}, _retry = true) {
   const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  const timeoutId  = setTimeout(() => controller.abort(), 20000);
   try {
     const qs  = new URLSearchParams({ action, ...params }).toString();
     const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
@@ -64,16 +64,19 @@ async function apiGet(action, params = {}) {
     if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
     return data.data;
   } catch(err) {
-    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    if (err.name === 'AbortError') {
+      if (_retry) return apiGet(action, params, false);
+      throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    }
     throw err;
   } finally {
     clearTimeout(timeoutId);
   }
 }
 
-async function callAPI(action, body = {}) {
+async function callAPI(action, body = {}, _retry = true) {
   const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  const timeoutId  = setTimeout(() => controller.abort(), 20000);
   try {
     const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
     const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
@@ -81,11 +84,25 @@ async function callAPI(action, body = {}) {
     if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
     return data.data;
   } catch(err) {
-    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    if (err.name === 'AbortError') {
+      if (_retry) return callAPI(action, body, false);
+      throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    }
     throw err;
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+const _regCache = {};
+async function getRegistrationsCached(eventId, bustCache) {
+  const now = Date.now();
+  if (!bustCache && _regCache[eventId] && (now - _regCache[eventId].ts) < 60000) {
+    return _regCache[eventId].data;
+  }
+  const regs = await apiGet('getRegistrations', { eventId });
+  _regCache[eventId] = { data: regs, ts: now };
+  return regs;
 }
 
 // ─── UI UTILITIES ─────────────────────────────────────

@@ -1214,7 +1214,7 @@ async function checkUpcomingEventNotifications() {
   let assignmentHtml = '<p>רשום כ-סינגל</p>';
 
   try {
-    const regs = await apiGet('getRegistrations', { eventId: ev.id });
+    const regs = await getRegistrationsCached(ev.id);
     const myReg = regs.find(r => normTid(r.tid) === normTid(user.tid));
     if (myReg) {
       const minsLeft = Math.round((new Date(
@@ -1406,7 +1406,7 @@ async function loadMyRegistrations(events) {
   const counts = {};
   try {
     const checks = await Promise.all(
-      events.map(ev => apiGet('getRegistrations', { eventId: ev.id })
+      events.map(ev => getRegistrationsCached(ev.id)
         .then(regs => ({
           eventId:    ev.id,
           count:      regs.length,
@@ -1592,7 +1592,7 @@ async function cancelReg(eventId, eventName, btn) {
   btn.textContent = '...';
   try {
     // שלב 1: בדוק אם יש שיבוץ (שותף / אופניים) לרוכב זה
-    const regs = await apiGet('getRegistrations', { eventId }).catch(() => []);
+    const regs = await getRegistrationsCached(eventId).catch(() => []);
     const myReg = regs.find(r => normTid(r.tid) === normTid(user.tid));
 
     if (myReg) {
@@ -1647,7 +1647,7 @@ async function _deriveStokerHistory(pastEvents) {
   if (!pastEvents.length) return [];
   const results = await Promise.allSettled(
     pastEvents.map(e =>
-      apiGet('getRegistrations', { eventId: e.id })
+      getRegistrationsCached(e.id)
         .then(regs => {
           const cap = regs.find(r => r.partnerTid !== 'solo' && normTid(r.partnerTid) === normTid(user.tid));
           if (!cap) return null;
@@ -2050,7 +2050,7 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
   modal.addEventListener('keydown', trapFocus);
 
   try {
-    const regs = await apiGet('getRegistrations', { eventId });
+    const regs = await getRegistrationsCached(eventId);
     if (!regs.length) {
       body.innerHTML = `<p style="text-align:center;color:var(--muted);padding:20px" role="status">אין נרשמים עדיין</p>`;
       return;
@@ -2288,9 +2288,9 @@ function logout() {
 // ══════════════════════════════════════════
 // API HELPERS
 // ══════════════════════════════════════════
-async function apiGet(action, params = {}) {
+async function apiGet(action, params = {}, _retry = true) {
   const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  const timeoutId  = setTimeout(() => controller.abort(), 20000);
   try {
     const qs  = new URLSearchParams({ action, ...params }).toString();
     const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
@@ -2298,16 +2298,19 @@ async function apiGet(action, params = {}) {
     if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
     return data.data;
   } catch(err) {
-    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    if (err.name === 'AbortError') {
+      if (_retry) return apiGet(action, params, false);
+      throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    }
     throw err;
   } finally {
     clearTimeout(timeoutId);
   }
 }
 
-async function callAPI(action, body = {}) {
+async function callAPI(action, body = {}, _retry = true) {
   const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  const timeoutId  = setTimeout(() => controller.abort(), 20000);
   try {
     const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
     const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
@@ -2315,11 +2318,25 @@ async function callAPI(action, body = {}) {
     if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
     return data.data;
   } catch(err) {
-    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    if (err.name === 'AbortError') {
+      if (_retry) return callAPI(action, body, false);
+      throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    }
     throw err;
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+const _regCache = {};
+async function getRegistrationsCached(eventId, bustCache) {
+  const now = Date.now();
+  if (!bustCache && _regCache[eventId] && (now - _regCache[eventId].ts) < 60000) {
+    return _regCache[eventId].data;
+  }
+  const regs = await apiGet('getRegistrations', { eventId });
+  _regCache[eventId] = { data: regs, ts: now };
+  return regs;
 }
 
 // ══════════════════════════════════════════

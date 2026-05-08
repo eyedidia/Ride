@@ -2471,7 +2471,7 @@ async function loadAssignments() {
     `<span style="color:var(--text-muted);font-size:0.85rem">טוען...</span>`;
 
   try {
-    const raw = await apiGet('getRegistrations', { eventId });
+    const raw = await getRegistrationsCached(eventId);
     raw.forEach(r => { r._fromApi = true; });
     assignRegs  = raw;
     assignBikes = STATE.bikes.filter(b => b.status === 'תקין');
@@ -2819,7 +2819,7 @@ async function saveAssignment(captainTid, captainName) {
     renderAssignments();
 
     // טעינה מחדש ברקע לעדכון השמות
-    const fresh = await apiGet('getRegistrations', { eventId });
+    const fresh = await getRegistrationsCached(eventId, true);
     fresh.forEach(r => { r._fromApi = true; });
     assignRegs = fresh;
     refreshSoloMode(fresh, isSolo ? [stid] : []);
@@ -2847,7 +2847,7 @@ async function unassignCaptain(captainTid, captainName) {
     _clearSoloEntry(eventId, captainTid); // הסר solo state גם מ-localStorage
 
     showToast(`שיבוץ ${captainName} פורק`, 'success');
-    assignRegs = await apiGet('getRegistrations', { eventId });
+    assignRegs = await getRegistrationsCached(eventId, true);
     refreshSoloMode(assignRegs);
     _restoreSolo(eventId);
     renderAssignments();
@@ -2920,7 +2920,7 @@ function shareAssignmentsWhatsApp() {
   window.open(url, '_blank', 'noopener');
 }
 
-// ─── REG COUNTS (sequential — GAS can't handle parallel) ──
+// ─── REG COUNTS (batched — 6 parallel requests) ──
 async function loadAllRegCounts(allEvents) {
   if (!API_URL) return;
   STATE.regCounts = STATE.regCounts || {};
@@ -2929,15 +2929,20 @@ async function loadAllRegCounts(allEvents) {
     ...(allEvents.past      || []),
     ...(allEvents.cancelled || [])
   ];
-  for (const e of allEvs) {
-    try {
-      const regs = await apiGet('getRegistrations', { eventId: e.id });
-      const count = Array.isArray(regs) ? regs.length : 0;
-      STATE.regCounts[e.id] = count;
-      // cell ID uses raw e.id (no esc) to match getElementById
-      const cell = document.getElementById('reg-count-' + e.id);
-      if (cell) cell.textContent = count;
-    } catch { STATE.regCounts[e.id] = 0; }
+  const BATCH = 6;
+  for (let i = 0; i < allEvs.length; i += BATCH) {
+    await Promise.all(
+      allEvs.slice(i, i + BATCH).map(e =>
+        getRegistrationsCached(e.id)
+          .then(regs => {
+            const count = Array.isArray(regs) ? regs.length : 0;
+            STATE.regCounts[e.id] = count;
+            const cell = document.getElementById('reg-count-' + e.id);
+            if (cell) cell.textContent = count;
+          })
+          .catch(() => { STATE.regCounts[e.id] = 0; })
+      )
+    );
   }
 }
 
@@ -2973,7 +2978,7 @@ async function openEventView(eventId) {
   openModal('modalEventView');
 
   try {
-    const regs = await apiGet('getRegistrations', { eventId });
+    const regs = await getRegistrationsCached(eventId);
     _viewEvent     = ev;
     _viewEventRegs = Array.isArray(regs) ? regs : [];
     document.getElementById('ev-view-body').innerHTML = buildEventViewHTML(ev, _viewEventRegs);
@@ -3103,7 +3108,7 @@ function shareEventViewWhatsApp() {
 // ─── CANCEL EVENT ───────────────────────────────────
 async function cancelEvent(eventId, name) {
   try {
-    const regs = await apiGet('getRegistrations', { eventId });
+    const regs = await getRegistrationsCached(eventId);
     const regCount = Array.isArray(regs) ? regs.length : 0;
     const confirmMsg = regCount > 0
       ? `לבטל את האירוע "${name}"?\n\n⚠️ ${regCount} רוכבים רשומים — ביטול יסיר את כולם.`
@@ -3249,7 +3254,7 @@ async function submitEditRider() {
 }
 async function loadRegistrations(eventId) {
   try {
-    const regs = await apiGet('getRegistrations', { eventId });
+    const regs = await getRegistrationsCached(eventId);
     showToast(`נטענו ${regs.length} הרשמות לאירוע`, 'success');
   } catch(e) {
     showToast('שגיאה בטעינת הרשמות: ' + e.message, 'error');
