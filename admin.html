@@ -2485,8 +2485,9 @@ async function loadAssignments() {
   }
 }
 
-const _soloMode = new Set(); // קפטנים שנבחרו לשיבוץ כסינגל
-const _editMode = new Set(); // קפטנים שנפתחו לעריכה (מסתיר כרטיס נעול)
+const _soloMode     = new Set();
+const _editMode     = new Set();
+const _pendingDelete = new Set();
 
 // מסיק מחדש מי סינגל לפי frame האופניים (ללא שותף, לא PRIVATE)
 // keepTids — tids שתמיד נשארים בסינגל (למשל קפטן שנשמר זה עתה)
@@ -2831,9 +2832,11 @@ async function saveAssignment(captainTid, captainName) {
 }
 
 async function unassignCaptain(captainTid, captainName) {
+  if (_pendingDelete.has('unassign_' + captainTid)) return;
   const eventId = document.getElementById('event-select-assign').value;
   if (!eventId) { showToast('לא נבחר אירוע', 'error'); return; }
   if (!confirm(`לפרק את השיבוץ של ${captainName}?`)) return;
+  _pendingDelete.add('unassign_' + captainTid);
   try {
     // מצא את ה-partnerTid הנוכחי לפני הפירוק
     const captain = assignRegs.find(r => r.tid === captainTid);
@@ -2853,6 +2856,8 @@ async function unassignCaptain(captainTid, captainName) {
     renderAssignments();
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
+  } finally {
+    _pendingDelete.delete('unassign_' + captainTid);
   }
 }
 
@@ -3412,6 +3417,7 @@ function editRider(tid) {
 }
 
 async function deleteRider(tid, name) {
+  if (_pendingDelete.has('rider_' + tid)) return;
   const futureEvents = (STATE.events || []).filter(ev => {
     const d = ev.date ? ev.date.split('/').reverse().join('-') : '';
     return d >= new Date().toISOString().slice(0, 10);
@@ -3421,12 +3427,15 @@ async function deleteRider(tid, name) {
     ? `למחוק את ${name}?\n\n⚠️ ייתכן שהרוכב רשום לאירועים עתידיים — מחיקה תסיר את ההרשמות.`
     : `למחוק את ${name}?`;
   if (!confirm(confirmMsg)) return;
+  _pendingDelete.add('rider_' + tid);
   try {
     await callAPI('deleteRider', { tid });
     await loadRiders();
     showToast(`רוכב ${name} נמחק`, 'success');
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
+  } finally {
+    _pendingDelete.delete('rider_' + tid);
   }
 }
 
@@ -3874,13 +3883,17 @@ async function submitEditBike() {
 }
 
 async function deleteBike(bikeId, name) {
+  if (_pendingDelete.has('bike_' + bikeId)) return;
   if (!confirm(`למחוק את האופניים "${name}"?`)) return;
+  _pendingDelete.add('bike_' + bikeId);
   try {
     await callAPI('deleteBike', { bikeId });
     showToast(`אופניים "${name}" נמחקו`, 'success');
     await loadBikes();
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
+  } finally {
+    _pendingDelete.delete('bike_' + bikeId);
   }
 }
 
