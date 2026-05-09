@@ -373,40 +373,41 @@ async function handleLogin(e) {
   btn.disabled = true;
   btn.setAttribute('aria-label', 'מתחבר...');
 
-  const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 8000);
-
   try {
-    const params = new URLSearchParams({
-      action: 'login',
-      data: JSON.stringify({ phone, name })
-    });
-    const res  = await fetch(`${API_URL}?${params}`, { signal: controller.signal });
-    const data = await res.json();
-
-    if (!data.success) {
-      showError((data.error || 'פרטי הכניסה שגויים') +
-        ' — ודא שהטלפון והשם זהים לאלו שנרשמו בקבוצה');
-      return;
-    }
-
-    const user = data.data;
+    const user = await _loginRequest(phone, name);
     saveRememberMe(phone, name);
     sessionStorage.clear();
     sessionStorage.setItem('user', JSON.stringify(user));
     window.location.href = 'rider.html';
-
   } catch (err) {
-    if (err.name === 'AbortError') {
-      showError('הקישור לשרת עלה על הזמן המוקצב. בדוק חיבור לאינטרנט ונסה שוב.');
-    } else {
-      showError('שגיאת חיבור — בדוק חיבור לאינטרנט ונסה שוב');
-    }
+    showError(err.message || 'שגיאת חיבור — בדוק חיבור לאינטרנט ונסה שוב');
   } finally {
-    clearTimeout(timeoutId);
     btn.classList.remove('loading');
     btn.disabled = false;
     btn.setAttribute('aria-label', 'כניסה למערכת');
+  }
+}
+
+async function _loginRequest(phone, name, _retry = true) {
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 20000);
+  try {
+    const params = new URLSearchParams({ action: 'login', data: JSON.stringify({ phone, name }) });
+    const res  = await fetch(`${API_URL}?${params}`, { signal: controller.signal });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error((data.error || 'פרטי הכניסה שגויים') +
+        ' — ודא שהטלפון והשם זהים לאלו שנרשמו בקבוצה');
+    }
+    return data.data;
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      if (_retry) return _loginRequest(phone, name, false);
+      throw new Error('הקישור לשרת עלה על הזמן המוקצב. בדוק חיבור לאינטרנט ונסה שוב.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
