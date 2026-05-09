@@ -1,0 +1,54 @@
+name: Fix base64-encoded HTML files
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/supabase-backend
+
+      - name: Check if files are base64 encoded
+        id: check
+        run: |
+          RIDER_FIRST=$(head -c 20 rider.html)
+          ADMIN_FIRST=$(head -c 20 admin.html)
+          echo "rider_first=$RIDER_FIRST"
+          echo "admin_first=$ADMIN_FIRST"
+          # If starts with HTML doctype it's already decoded
+          if echo "$RIDER_FIRST" | grep -q '<'; then
+            echo "rider_needs_decode=false" >> $GITHUB_OUTPUT
+          else
+            echo "rider_needs_decode=true" >> $GITHUB_OUTPUT
+          fi
+          if echo "$ADMIN_FIRST" | grep -q '<'; then
+            echo "admin_needs_decode=false" >> $GITHUB_OUTPUT
+          else
+            echo "admin_needs_decode=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Decode rider.html
+        if: steps.check.outputs.rider_needs_decode == 'true'
+        run: base64 -d rider.html > /tmp/rider_fixed.html && mv /tmp/rider_fixed.html rider.html
+
+      - name: Decode admin.html
+        if: steps.check.outputs.admin_needs_decode == 'true'
+        run: base64 -d admin.html > /tmp/admin_fixed.html && mv /tmp/admin_fixed.html admin.html
+
+      - name: Commit and push fixed files
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add rider.html admin.html
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+          else
+            git commit -m "fix: decode base64-corrupted HTML files"
+            git push
+          fi
