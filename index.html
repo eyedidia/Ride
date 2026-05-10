@@ -354,11 +354,9 @@ body::before {
   </div>
 </main>
 
-<!-- Supabase CDN + client (מחליף GAS API) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="shared/supabase-client.js"></script>
-
 <script>
+const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec";
+
 async function handleLogin(e) {
   e.preventDefault();
 
@@ -376,7 +374,7 @@ async function handleLogin(e) {
   btn.setAttribute('aria-label', 'מתחבר...');
 
   try {
-    const user = await callAPI('login', { phone, name });
+    const user = await _loginRequest(phone, name);
     saveRememberMe(phone, name);
     sessionStorage.clear();
     sessionStorage.setItem('user', JSON.stringify(user));
@@ -387,6 +385,29 @@ async function handleLogin(e) {
     btn.classList.remove('loading');
     btn.disabled = false;
     btn.setAttribute('aria-label', 'כניסה למערכת');
+  }
+}
+
+async function _loginRequest(phone, name, _retry = true) {
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 20000);
+  try {
+    const params = new URLSearchParams({ action: 'login', data: JSON.stringify({ phone, name }) });
+    const res  = await fetch(`${API_URL}?${params}`, { signal: controller.signal });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error((data.error || 'פרטי הכניסה שגויים') +
+        ' — ודא שהטלפון והשם זהים לאלו שנרשמו בקבוצה');
+    }
+    return data.data;
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      if (_retry) return _loginRequest(phone, name, false);
+      throw new Error('הקישור לשרת עלה על הזמן המוקצב. בדוק חיבור לאינטרנט ונסה שוב.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
