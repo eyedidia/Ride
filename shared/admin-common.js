@@ -1,8 +1,7 @@
 // ═══════════════════════════════════════════════════
 // admin-common.js — shared utilities for all admin pages
+// API: apiGet / callAPI מוגדרים ב-shared/supabase-client.js
 // ═══════════════════════════════════════════════════
-
-const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec";
 
 // Sections each role may access (dashboard always included)
 const ADMIN_ROLES = {
@@ -53,47 +52,7 @@ function getUserAllowedSections(u) {
   return [...sections];
 }
 
-// ─── API ──────────────────────────────────────────────
-async function apiGet(action, params = {}, _retry = true) {
-  const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 20000);
-  try {
-    const qs  = new URLSearchParams({ action, ...params }).toString();
-    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
-    return data.data;
-  } catch(err) {
-    if (err.name === 'AbortError') {
-      if (_retry) return apiGet(action, params, false);
-      throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
-    }
-    throw err;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-async function callAPI(action, body = {}, _retry = true) {
-  const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 20000);
-  try {
-    const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
-    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
-    return data.data;
-  } catch(err) {
-    if (err.name === 'AbortError') {
-      if (_retry) return callAPI(action, body, false);
-      throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
-    }
-    throw err;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
+// ─── REGISTRATIONS CACHE ──────────────────────────────
 const _regCache = {};
 async function getRegistrationsCached(eventId, bustCache) {
   const now = Date.now();

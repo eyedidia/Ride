@@ -1990,7 +1990,11 @@ tbody td {
 <!-- Visually hidden helper -->
 <style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>
 
-<!-- Shared admin utilities (API, auth guard, toast, lockBtn, modal, tabs) -->
+<!-- Supabase CDN + client (מחליף GAS API) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="shared/supabase-client.js"></script>
+
+<!-- Shared admin utilities (auth guard, toast, lockBtn, modal, tabs) -->
 <script src="shared/admin-common.js"></script>
 
 <script>
@@ -2035,10 +2039,6 @@ const STATE = { riders: [], events: [], bikes: [] };
 // ══════════════════════════════════════════════════
 
 async function loadRiders() {
-  // Apps Script: doGet?action=getAllRiders (endpoint מנהל)
-  // כרגע נשתמש ב-getPhoneBook ונרחיב — בגרסת מנהל
-  // הקוד הבא ירוץ כשה-API_URL מוגדר:
-  if (!API_URL) return; // אם אין URL — שומר נתוני דוגמה
   const riders = await apiGet('getAllRiders');
   STATE.riders = riders;
   renderRidersTable(riders);
@@ -2046,7 +2046,6 @@ async function loadRiders() {
 }
 
 async function loadEvents() {
-  if (!API_URL) return;
   const all = await apiGet('getAllEvents');
   // Re-categorize: move events from "past" back to upcoming if meetTime hasn't passed
   const stillUpcoming = (all.past || []).filter(e => !eventIsPast(e.date, e.meetTime));
@@ -2065,7 +2064,6 @@ async function loadEvents() {
 }
 
 async function loadBikes() {
-  if (!API_URL) return;
   const bikes = await apiGet('getBikes');
   STATE.bikes = bikes;
   renderBikesTable(bikes);
@@ -2927,7 +2925,6 @@ function shareAssignmentsWhatsApp() {
 
 // ─── REG COUNTS (batched — 6 parallel requests) ──
 async function loadAllRegCounts(allEvents) {
-  if (!API_URL) return;
   STATE.regCounts = STATE.regCounts || {};
   const allEvs = [
     ...(allEvents.upcoming  || []),
