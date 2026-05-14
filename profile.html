@@ -386,7 +386,8 @@ let RIDER_DATA = null;
 document.addEventListener('DOMContentLoaded', async () => {
   const stored = sessionStorage.getItem('user');
   if (!stored) { window.location.replace('index.html'); return; }
-  USER = JSON.parse(stored);
+  try { USER = JSON.parse(stored); } catch { sessionStorage.clear(); window.location.replace('index.html'); return; }
+  if (!USER?.tid || !USER?.name) { sessionStorage.clear(); window.location.replace('index.html'); return; }
 
   try {
     // טוען נתונים עדכניים מהשרת

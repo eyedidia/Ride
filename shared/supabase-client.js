@@ -6,6 +6,11 @@
 const SUPABASE_URL      = 'https://gritbcrdxpeycnxrlulp.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdyaXRiY3JkeHBleWNueHJsdWxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDI1NzgsImV4cCI6MjA5MzkxODU3OH0.PRk_DQeHF4vGy-0qZH2XFIUOoOQ_cekPOW_gWdmHXXc';
 
+if (!window.supabase) {
+  const _cdnErr = () => Promise.reject(new Error('שגיאת חיבור: ספריית Supabase לא נטענה. בדוק חיבור לאינטרנט ורענן את הדף.'));
+  window.apiGet = window.callAPI = _cdnErr;
+  throw new Error('Supabase CDN missing');
+}
 const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ─────────────────────────────────────────────

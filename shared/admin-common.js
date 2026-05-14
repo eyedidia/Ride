@@ -177,6 +177,6 @@ function populateUserCard(u) {
     : (ADMIN_ROLES[perm] ? (perm === 'מנהל' ? 'מנהל מערכת' : perm.replace('מנהל_','מנהל ')) : perm);
   if (nameEl)   nameEl.textContent   = u.name;
   if (roleEl)   roleEl.textContent   = roleLabel;
-  if (avatarEl) avatarEl.textContent = u.name.trim().split(' ').map(w=>w[0]).slice(0,2).join('');
+  if (avatarEl) avatarEl.textContent = (u.name||'').trim().split(' ').map(w=>w[0]).filter(Boolean).slice(0,2).join('');
   if (userCard) userCard.setAttribute('aria-label', `משתמש מחובר: ${u.name}, ${roleLabel}`);
 }
