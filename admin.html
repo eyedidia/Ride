@@ -1228,7 +1228,7 @@ tbody td {
           </div>
         </div>
         <div class="panel-body table-wrap">
-          <table id="ridersTable" aria-label="טבלת רוכבים" aria-live="polite">
+          <table id="ridersTable" aria-label="טבלת רוכבים">
             <thead>
               <tr>
                 <th scope="col">שם</th>
@@ -1241,7 +1241,7 @@ tbody td {
                 <th scope="col"><span class="sr-only">פעולות</span></th>
               </tr>
             </thead>
-            <tbody id="ridersBody" aria-live="polite" aria-label="רשימת רוכבים">
+            <tbody id="ridersBody" aria-label="רשימת רוכבים">
               <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</td></tr>
             </tbody>
           </table>
@@ -1277,7 +1277,7 @@ tbody td {
                   <th scope="col">נרשמים</th>
                   <th scope="col"><span class="sr-only">פעולות</span></th>
                 </tr></thead>
-                <tbody id="eventsUpcomingBody" aria-live="polite" aria-label="אירועים קרובים">
+                <tbody id="eventsUpcomingBody" aria-label="אירועים קרובים">
                   <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</td></tr>
                 </tbody>
               </table>
@@ -1425,7 +1425,7 @@ tbody td {
                 <th scope="col">סטטוס</th>
               </tr>
             </thead>
-            <tbody id="maintenanceBody" aria-live="polite" aria-label="רשומות תחזוקה">
+            <tbody id="maintenanceBody" aria-label="רשומות תחזוקה">
               <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</td></tr>
             </tbody>
           </table>
@@ -2119,7 +2119,11 @@ function renderEventsTable(events) {
   }
   const counts = STATE.regCounts || {};
   tbody.innerHTML = events.map(e => `
-    <tr style="cursor:pointer" onclick="openAssignments('${esc(e.id)}')">
+    <tr style="cursor:pointer"
+        tabindex="0"
+        aria-label="פתח שיבוץ לאירוע ${esc(e.description)} - ${esc(e.date)}"
+        onclick="openAssignments('${esc(e.id)}')"
+        onkeydown="if(event.key==='Enter'||event.key===' '){openAssignments('${esc(e.id)}');event.preventDefault();}">
       <td><strong>${esc(e.date)}</strong><div class="td-sub">${esc(e.meetTime)}</div></td>
       <td><div class="td-name">${esc(e.description)}</div><div class="td-sub">${esc(e.meetPoint)}</div></td>
       <td>${esc(String(e.km))}</td>
@@ -2403,7 +2407,11 @@ function renderAllEventsTables(all) {
 
   const upTbody = document.getElementById('eventsUpcomingBody');
   upTbody.innerHTML = upcoming.length ? upcoming.map(e => `
-    <tr style="cursor:pointer" title="לחץ לפתיחת שיבוץ" onclick="openAssignments('${esc(e.id)}')">
+    <tr style="cursor:pointer"
+        tabindex="0"
+        aria-label="פתח שיבוץ לאירוע ${esc(e.description)} - ${esc(e.date)}"
+        onclick="openAssignments('${esc(e.id)}')"
+        onkeydown="if(event.key==='Enter'||event.key===' '){openAssignments('${esc(e.id)}');event.preventDefault();}">
       <td><strong>${esc(e.date)}</strong><div class="td-sub">${esc(e.meetTime)}</div></td>
       <td><div class="td-name">${esc(e.description)}</div><div class="td-sub">${esc(e.meetPoint)}</div></td>
       <td>${esc(String(e.km))}</td>
@@ -2423,7 +2431,11 @@ function renderAllEventsTables(all) {
 
   const pastTbody = document.getElementById('eventsPastBody');
   pastTbody.innerHTML = past.length ? past.map(e => `
-    <tr style="cursor:pointer" title="לחץ לצפייה בפרטים" onclick="openEventView('${esc(e.id)}')">
+    <tr style="cursor:pointer"
+        tabindex="0"
+        aria-label="צפה בפרטי אירוע ${esc(e.description)} - ${esc(e.date)}"
+        onclick="openEventView('${esc(e.id)}')"
+        onkeydown="if(event.key==='Enter'||event.key===' '){openEventView('${esc(e.id)}');event.preventDefault();}">
       <td><strong>${esc(e.date)}</strong><div class="td-sub">${esc(e.meetTime||'')}</div></td>
       <td><div class="td-name">${esc(e.description)}</div><div class="td-sub">${esc(e.meetPoint||'')}</div></td>
       <td>${esc(String(e.km))} ק"מ</td>
@@ -2431,7 +2443,7 @@ function renderAllEventsTables(all) {
       <td>${esc(e.captain||'')}</td>
       ${regCell(e.id)}
       <td><button class="icon-btn" title="פרטי אירוע" aria-label="פרטי אירוע ${esc(e.description)}"
-                  onclick="openEventView('${esc(e.id)}')">🔍</button></td>
+                  onclick="openEventView('${esc(e.id)}');event.stopPropagation();">🔍</button></td>
     </tr>`).join('')
   : `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted)">אין אירועים שעברו</td></tr>`;
 
@@ -2441,12 +2453,16 @@ function renderAllEventsTables(all) {
       ? `<div class="table-wrap"><table><thead><tr>
            <th>תאריך</th><th>מסלול</th><th>נרשמים</th><th><span class="sr-only">פרטים</span></th>
          </tr></thead><tbody>${cancelled.map(e => `
-           <tr style="cursor:pointer" onclick="openEventView('${esc(e.id)}')">
+           <tr style="cursor:pointer"
+               tabindex="0"
+               aria-label="צפה בפרטי אירוע מבוטל ${esc(e.description)} - ${esc(e.date)}"
+               onclick="openEventView('${esc(e.id)}')"
+               onkeydown="if(event.key==='Enter'||event.key===' '){openEventView('${esc(e.id)}');event.preventDefault();}">
              <td>${esc(e.date)}</td>
              <td>${esc(e.description)}</td>
              ${regCell(e.id)}
              <td><button class="icon-btn" title="פרטי אירוע" aria-label="פרטי ${esc(e.description)}"
-                         onclick="openEventView('${esc(e.id)}')">🔍</button></td>
+                         onclick="openEventView('${esc(e.id)}');event.stopPropagation();">🔍</button></td>
            </tr>`).join('')}
          </tbody></table></div>`
       : `<p style="padding:20px;color:var(--text-muted);text-align:center">אין אירועים מבוטלים</p>`;
@@ -3577,7 +3593,11 @@ function showSection(name, clickedBtn) {
   }
   document.getElementById('pageTitle').textContent      = titles[name][0];
   document.getElementById('pageBreadcrumb').textContent = titles[name][1];
-  document.getElementById('main-content').focus();
+  // העברת focus לכותרת הסעיף כדי ש-VoiceOver יתחיל לקרוא מהמקום הנכון
+  const _sec = document.getElementById('section-' + name);
+  const _hId = _sec?.getAttribute('aria-labelledby');
+  const _h   = _hId ? document.getElementById(_hId) : null;
+  if (_h) { _h.setAttribute('tabindex', '-1'); _h.focus(); }
   closeSidebar();
   if (name === 'maintenance') loadMaintenance();
   if (name === 'settings')    initSettingsSection();

@@ -766,7 +766,7 @@ body::before {
 <!-- אזור זה מודיע לקוראי מסך על שינויים דינמיים -->
 <div id="sr-announcer"
      class="sr-only"
-     aria-live="assertive"
+     aria-live="polite"
      aria-atomic="true"
      role="status"></div>
 
@@ -837,7 +837,6 @@ body::before {
     <div id="eventsList"
          class="events-list"
          role="list"
-         aria-live="polite"
          aria-busy="true"
          aria-label="רשימת רכיבות קרובות">
       <!-- skeletons מוסתרות מקוראי מסך -->
@@ -863,15 +862,15 @@ body::before {
          aria-label="סטטיסטיקות רכיבה">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
         <div class="stat-mini blue" aria-label="סך הרכיבות">
-          <div class="stat-mini-val" id="stat-total" aria-live="polite">—</div>
+          <div class="stat-mini-val" id="stat-total">—</div>
           <div class="stat-mini-lbl">רכיבות סה"כ</div>
         </div>
         <div class="stat-mini green" aria-label="קילומטרים מצטברים">
-          <div class="stat-mini-val" id="stat-km" aria-live="polite">—</div>
+          <div class="stat-mini-val" id="stat-km">—</div>
           <div class="stat-mini-lbl">ק"מ מצטבר</div>
         </div>
         <div class="stat-mini" style="background:var(--surface);border:1px solid var(--border)" aria-label="מטרי עלייה מצטברים">
-          <div class="stat-mini-val" id="stat-climb" style="color:var(--orange)" aria-live="polite">—</div>
+          <div class="stat-mini-val" id="stat-climb" style="color:var(--orange)">—</div>
           <div class="stat-mini-lbl">מטרי עלייה מצטברים</div>
         </div>
       </div>
@@ -948,7 +947,6 @@ body::before {
     <div id="historyList"
          class="history-list"
          role="list"
-         aria-live="polite"
          aria-busy="true"
          aria-label="היסטוריית רכיבות">
       <div class="skeleton" aria-hidden="true"></div>
@@ -997,7 +995,6 @@ body::before {
     <div id="contactList"
          class="contact-list"
          role="list"
-         aria-live="polite"
          aria-busy="true"
          aria-label="רשימת אנשי קשר">
       <div class="skeleton" style="height:60px" aria-hidden="true"></div>
@@ -1362,9 +1359,14 @@ async function switchTab(name) {
   // הודעה לקורא מסך על מעבר לאגף
   announce(`עברת ל${TAB_LABELS[name]}`);
 
-  // העברת focus לתוכן הראשי
-  const main = document.getElementById('main-content');
-  main.focus();
+  // העברת focus לכותרת הסעיף כדי ש-VoiceOver יתחיל לקרוא מהמקום הנכון
+  const section = document.querySelector(`[id="section-${name}"]`);
+  const headingId = section?.getAttribute('aria-labelledby');
+  const heading = headingId ? document.getElementById(headingId) : null;
+  if (heading) {
+    heading.setAttribute('tabindex', '-1');
+    heading.focus();
+  }
 
   // טעינה עצלה
   if (name === 'history' && document.getElementById('historyList').children[0]?.classList.contains('skeleton')) {
@@ -1536,6 +1538,7 @@ function renderEvents(events, counts = {}) {
       </div>
     </article>`;
   }).join('');
+  announce(`נטענו ${events.length} רכיבות קרובות`);
 }
 
 // ══════════════════════════════════════════
@@ -1744,6 +1747,7 @@ function renderStats(history) {
   document.getElementById('stat-total').textContent = history.length;
   document.getElementById('stat-km').textContent    = totalKm.toLocaleString('he-IL') + ' ק"מ';
   document.getElementById('stat-climb').textContent = totalClimb.toLocaleString('he-IL') + ' מ\'';
+  announce(`נטענו ${history.length} רכיבות. סה"כ ${totalKm.toLocaleString('he-IL')} ק"מ`);
 
   const partners = {};
   history.forEach(h => {
