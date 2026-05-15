@@ -142,17 +142,21 @@ def map_event(e):
         'status':      e.get('status', 'פעיל'),
     }
 
+def norm_tid(val):
+    """מסיר .0 של float ורווחים מ-tid."""
+    return re.sub(r'\.0+$', '', str(val or '').strip())
+
 def map_registration(reg, event_id=None):
     eid = event_id or reg.get('eventId', '')
-    tid = str(reg.get('tid', ''))
+    tid = norm_tid(reg.get('tid', ''))
     return {
         'id':           f"{eid}-{tid}",
         'event_id':     eid,
         'tid':          tid,
         'role':         reg.get('role', ''),
-        'bike_id':      reg.get('bikeId', ''),
-        'partner_name': reg.get('partnerName', '—'),
-        'partner_tid':  str(reg.get('partnerTid', '')),
+        'bike_id':      reg.get('bike', '') or reg.get('bikeId', ''),
+        'partner_name': reg.get('partner', '—') or reg.get('partnerName', '—'),
+        'partner_tid':  norm_tid(reg.get('partnerTid', '') or reg.get('partner_tid', '')),
     }
 
 def map_maintenance(m):
