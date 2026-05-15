@@ -104,9 +104,11 @@ async function gasGet(url, action, extra = {}) {
 async function sbUpsert(sb, table, rows) {
   if (!rows.length) return 0;
   const BATCH = 200;
+  // riders משתמש ב-tid (UNIQUE) ולא ב-id (UUID אוטומטי) כמפתח התנגשות
+  const onConflict = table === 'riders' ? 'tid' : 'id';
   let total = 0;
   for (let i = 0; i < rows.length; i += BATCH) {
-    const { error } = await sb.from(table).upsert(rows.slice(i, i + BATCH), { ignoreDuplicates: false });
+    const { error } = await sb.from(table).upsert(rows.slice(i, i + BATCH), { onConflict, ignoreDuplicates: false });
     if (error) throw new Error(`${table}: ${error.message}`);
     total += rows.slice(i, i + BATCH).length;
   }
