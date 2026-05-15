@@ -214,11 +214,14 @@ function setStep(id, state, countText = '') {
 async function gasGet(url, action, extra = {}) {
   const qs = new URLSearchParams({ action, ...extra }).toString();
   const res = await fetch(`${url}?${qs}`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
-  if (json.success === false) throw new Error(json.error || `GAS error: ${action}`);
-  const data = (json && typeof json === 'object' && 'data' in json) ? json.data : json;
-  return Array.isArray(data) ? data : data;
+  if (!res.ok) throw new Error(`HTTP ${res.status} on ${action}`);
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); }
+  catch { throw new Error(`GAS החזיר HTML עבור "${action}" — בדוק שה-URL פרוס כ"כל אחד" ללא התחברות`); }
+  if (Array.isArray(data)) return data;
+  if (data.success === false) throw new Error(data.error || `GAS error: ${action}`);
+  return (data && 'data' in data) ? data.data : data;
 }
 
 // ── SUPABASE FETCH ────────────────────────────────────────────────

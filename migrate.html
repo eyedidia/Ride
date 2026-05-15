@@ -101,9 +101,13 @@ function normTid(val) {
 async function gasGet(url, action, extra = {}) {
   const qs = new URLSearchParams({ action, ...extra }).toString();
   const res = await fetch(`${url}?${qs}`);
-  const json = await res.json();
-  if (!json.success) throw new Error(json.error || `GAS error on ${action}`);
-  return json.data;
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); }
+  catch { throw new Error(`GAS החזיר HTML עבור "${action}" — בדוק שה-URL פרוס כ"כל אחד" ללא התחברות`); }
+  if (Array.isArray(data)) return data;
+  if (data.success === false) throw new Error(data.error || `GAS error: ${action}`);
+  return data.data ?? data;
 }
 
 async function sbUpsert(sb, table, rows) {
