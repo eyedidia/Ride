@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>השוואת נתונים GAS ↔ Supabase</title>
+<style>
+:root {
+  --bg: #0b0e18; --surface: #13172a; --border: #252a45;
+  --accent: #4f7cff; --green: #2dd4a0; --red: #ff5a5a;
+  --orange: #ffb347; --text: #e8eaf6; --muted: #6b728f;
+  --font: 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px 16px 60px; }
+h1 { font-size: 1.4rem; font-weight: 800; margin-bottom: 6px; }
+.sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 24px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+.card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 12px; }
+label { font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 4px; }
+input { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 9px;
+        color: var(--text); font-family: var(--font); font-size: 0.9rem; padding: 10px 12px;
+        margin-bottom: 12px; direction: ltr; }
+input:focus { outline: none; border-color: var(--accent); }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 12px 24px;
+       border-radius: 9px; font-family: var(--font); font-size: 0.95rem; font-weight: 700;
+       cursor: pointer; border: none; transition: all 0.2s; min-height: 48px; }
+.btn-primary { background: var(--accent); color: #fff; width: 100%; justify-content: center; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Steps */
+.step { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0;
+        border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+.step:last-child { border-bottom: none; }
+.step-icon { flex-shrink: 0; font-size: 1.1rem; margin-top: 1px; }
+.step-label { flex: 1; color: var(--muted); }
+.step.done   .step-label { color: var(--green); }
+.step.error  .step-label { color: var(--red); }
+.step.active .step-label { color: var(--text); font-weight: 600; }
+.step-count { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+.step.done  .step-count { color: var(--green); }
+.step.warn  .step-count { color: var(--orange); }
+
+/* Log */
+#log { background: #060810; border: 1px solid var(--border); border-radius: 9px;
+       padding: 14px; font-size: 0.78rem; font-family: monospace; direction: ltr;
+       max-height: 220px; overflow-y: auto; color: #aac4ff; white-space: pre-wrap; margin-top: 12px; }
+
+/* Summary grid */
+.summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 16px; }
+@media (max-width: 600px) { .summary { grid-template-columns: 1fr 1fr; } }
+.stat { background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+        padding: 12px; text-align: center; }
+.stat.ok   { border-color: rgba(45,212,160,0.4); }
+.stat.warn { border-color: rgba(255,179,71,0.4); }
+.stat-val  { font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+.stat.ok   .stat-val { color: var(--green); }
+.stat.warn .stat-val { color: var(--orange); }
+.stat-lbl  { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+/* Diff table */
+.diff-section { margin-top: 16px; }
+.diff-section h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 10px; color: var(--text); }
+.diff-block { background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+              margin-bottom: 10px; overflow: hidden; }
+.diff-header { display: flex; align-items: center; justify-content: space-between;
+               padding: 10px 14px; border-bottom: 1px solid var(--border);
+               font-size: 0.85rem; font-weight: 700; }
+.diff-header .badge { font-size: 0.75rem; font-weight: 600; padding: 3px 9px;
+                      border-radius: 20px; }
+.badge-miss  { background: rgba(255,90,90,0.15);  color: var(--red); }
+.badge-extra { background: rgba(255,179,71,0.15); color: var(--orange); }
+.badge-diff  { background: rgba(79,124,255,0.15); color: var(--accent); }
+.diff-rows   { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+.diff-row    { font-size: 0.8rem; font-family: monospace; direction: ltr; color: #aac4ff; }
+.diff-field  { color: var(--muted); margin-right: 6px; }
+.diff-gas    { color: var(--red);    margin-left: 4px; }
+.diff-sb     { color: var(--green);  margin-left: 4px; }
+
+/* Recommendation box */
+.rec-box { margin-top: 16px; background: rgba(79,124,255,0.07);
+           border: 1px solid rgba(79,124,255,0.3); border-radius: 12px; padding: 16px; }
+.rec-box h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 10px; color: var(--accent); }
+.rec-item { display: flex; align-items: flex-start; gap: 10px;
+            padding: 8px 0; border-bottom: 1px solid var(--border);
+            font-size: 0.85rem; line-height: 1.5; }
+.rec-item:last-child { border-bottom: none; padding-bottom: 0; }
+.rec-icon { flex-shrink: 0; font-size: 1rem; margin-top: 1px; }
+.rec-ok { background: rgba(45,212,160,0.07); border-color: rgba(45,212,160,0.3); }
+.rec-ok h3 { color: var(--green); }
+</style>
+</head>
+<body>
+
+<h1>🔍 השוואת נתונים GAS ↔ Supabase</h1>
+<p class="sub">בודק שכל הנתונים הועברו נכון ומציג המלצות לתיקון הפרשים.</p>
+
+<div class="card">
+  <h2>הגדרות</h2>
+  <label>GAS API URL</label>
+  <input type="url" id="gasUrl"
+    value="https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec">
+  <label>Supabase URL</label>
+  <input type="url" id="sbUrl" value="https://gritbcrdxpeycnxrlulp.supabase.co" readonly>
+  <label>Supabase Anon Key</label>
+  <input type="text" id="sbKey"
+    value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdyaXRiY3JkeHBleWNueHJsdWxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDI1NzgsImV4cCI6MjA5MzkxODU3OH0.PRk_DQeHF4vGy-0qZH2XFIUOoOQ_cekPOW_gWdmHXXc"
+    readonly>
+  <button class="btn btn-primary" id="runBtn" onclick="runCompare()">▶ התחל השוואה</button>
+</div>
+
+<div class="card" id="progressCard" style="display:none">
+  <h2>התקדמות</h2>
+  <div id="steps"></div>
+  <div id="log"></div>
+</div>
+
+<div class="card" id="resultsCard" style="display:none">
+  <h2>תוצאות</h2>
+  <div class="summary" id="summary"></div>
+  <div id="diffDetails"></div>
+  <div id="recommendations"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ── STEP DEFINITIONS ────────────────────────────────────────────
+const STEP_DEFS = [
+  { id: 'riders',        label: 'רוכבים' },
+  { id: 'bikes',         label: 'אופניים' },
+  { id: 'events',        label: 'אירועים' },
+  { id: 'registrations', label: 'רישומים לאירועים' },
+  { id: 'maintenance',   label: 'תחזוקה' },
+];
+
+// ── COMPARISON FIELDS ────────────────────────────────────────────
+const TABLE_META = {
+  riders:        { key: 'tid',       fields: ['name','phone','email','city','dob','gender','permission','ride_style','exam_date'] },
+  events:        { key: 'id',        fields: ['date','description','km','climb','meet_point','meet_time','captain','status'] },
+  registrations: { key: 'id',        fields: ['role','bike_id','partner_name','partner_tid'] },
+  bikes:         { key: 'id',        fields: ['name','frame','drive','status'] },
+  maintenance:   { key: 'id',        fields: ['bike_id','fault','date_in','date_out','status'] },
+};
+
+const TABLE_LABELS = {
+  riders: 'רוכבים', events: 'אירועים',
+  registrations: 'רישומים', bikes: 'אופניים', maintenance: 'תחזוקה'
+};
+
+// ── UTILITIES ────────────────────────────────────────────────────
+function gasDateToISO(s) {
+  if (!s || s === '—') return null;
+  s = String(s).trim();
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  return null;
+}
+
+function normPhone(phone) {
+  let p = String(phone || '').replace(/[\s\-\(\)]/g, '');
+  if (p.startsWith('+972')) p = '0' + p.slice(4);
+  else if (p.startsWith('972')) p = '0' + p.slice(3);
+  if (p && !p.startsWith('0')) p = '0' + p;
+  return p;
+}
+
+function normVal(v) {
+  if (v === null || v === undefined || v === '' || v === '—') return '';
+  if (typeof v === 'number' && Number.isInteger(v)) return v;
+  if (typeof v === 'number') return v;
+  const n = Number(v);
+  if (!isNaN(n) && String(v).trim() !== '') return n;
+  return String(v).trim();
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── LOG ─────────────────────────────────────────────────────────
+function log(msg) {
+  const el = document.getElementById('log');
+  el.textContent += msg + '\n';
+  el.scrollTop = el.scrollHeight;
+}
+
+// ── STEPS ────────────────────────────────────────────────────────
+const ICONS = { pending:'⏳', active:'🔄', done:'✅', warn:'⚠️', error:'❌', skip:'⏭' };
+
+function initSteps() {
+  const container = document.getElementById('steps');
+  container.innerHTML = STEP_DEFS.map(s => `
+    <div class="step" id="step-${s.id}">
+      <span class="step-icon">${ICONS.pending}</span>
+      <span class="step-label">${s.label}</span>
+      <span class="step-count" id="cnt-${s.id}"></span>
+    </div>`).join('');
+}
+
+function setStep(id, state, countText = '') {
+  const el = document.getElementById('step-' + id);
+  el.className = 'step ' + state;
+  el.querySelector('.step-icon').textContent = ICONS[state] || '⏳';
+  document.getElementById('cnt-' + id).textContent = countText;
+}
+
+// ── GAS FETCH ────────────────────────────────────────────────────
+async function gasGet(url, action, extra = {}) {
+  const qs = new URLSearchParams({ action, ...extra }).toString();
+  const res = await fetch(`${url}?${qs}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  if (json.success === false) throw new Error(json.error || `GAS error: ${action}`);
+  const data = (json && typeof json === 'object' && 'data' in json) ? json.data : json;
+  return Array.isArray(data) ? data : data;
+}
+
+// ── SUPABASE FETCH ────────────────────────────────────────────────
+async function sbGetAll(sb, table) {
+  const { data, error } = await sb.from(table).select('*').range(0, 9999);
+  if (error) throw new Error(`${table}: ${error.message}`);
+  return data || [];
+}
+
+// ── GAS DATA MAPPERS ─────────────────────────────────────────────
+function mapRider(r) {
+  return {
+    tid:        String(r.tid || ''),
+    name:       r.name       || '',
+    phone:      normPhone(r.phone),
+    email:      r.email      || '',
+    city:       r.city       || '',
+    dob:        gasDateToISO(r.dob),
+    gender:     r.gender     || '',
+    permission: r.permission || 'משתמש',
+    ride_style: r.rideStyle  || 'סינגל',
+    exam_date:  gasDateToISO(r.examDate),
+  };
+}
+
+function mapBike(b) {
+  return { id: b.id||'', name: b.name||'', frame: b.frame||'', drive: b.drive||'', status: b.status||'תקין' };
+}
+
+function mapEvent(e) {
+  return {
+    id:          e.id||'',
+    date:        gasDateToISO(e.date) || '2000-01-01',
+    description: e.description||'',
+    km:          parseFloat(e.km||0)||0,
+    climb:       parseFloat(e.climb||0)||0,
+    meet_point:  e.meetPoint||'',
+    meet_time:   e.meetTime||'06:00',
+    captain:     e.captain||'',
+    status:      e.status||'פעיל',
+  };
+}
+
+function mapReg(r, eventId) {
+  const eid = eventId || r.eventId || '';
+  const tid = String(r.tid||'');
+  return {
+    id:           `${eid}-${tid}`,
+    event_id:     eid,
+    tid:          tid,
+    role:         r.role||'',
+    bike_id:      r.bikeId||'',
+    partner_name: r.partnerName||'—',
+    partner_tid:  String(r.partnerTid||''),
+  };
+}
+
+function mapMaint(m) {
+  return {
+    id:        m.id||'',
+    bike_id:   m.bikeId||'',
+    bike_name: m.bikeName||'',
+    fault:     m.fault||'',
+    date_in:   gasDateToISO(m.dateIn),
+    date_out:  gasDateToISO(m.dateOut),
+    status:    m.status||'בתיקון',
+  };
+}
+
+// ── COMPARE ENGINE ───────────────────────────────────────────────
+function compareTable(name, gasRows, sbRows) {
+  const { key, fields } = TABLE_META[name];
+
+  // נרמול SB
+  const sbNorm = sbRows.map(r => {
+    const out = { ...r };
+    if (name === 'riders') out.phone = normPhone(out.phone);
+    if (!out.id && out.event_id && out.tid) out.id = `${out.event_id}-${out.tid}`;
+    // המר מספרים
+    for (const f of fields) {
+      if (f === 'km' || f === 'climb') out[f] = parseFloat(out[f]||0)||0;
+    }
+    return out;
+  });
+
+  const gasMap = Object.fromEntries(gasRows.map(r => [String(r[key]||''), r]));
+  const sbMap  = Object.fromEntries(sbNorm.map(r  => [String(r[key]||''), r]));
+
+  const gasKeys = new Set(Object.keys(gasMap));
+  const sbKeys  = new Set(Object.keys(sbMap));
+
+  const missing = [...gasKeys].filter(k => !sbKeys.has(k));
+  const extra   = [...sbKeys].filter(k  => !gasKeys.has(k));
+
+  const mismatches = [];
+  for (const k of gasKeys) {
+    if (!sbKeys.has(k)) continue;
+    const gr = gasMap[k], sr = sbMap[k];
+    const diffs = [];
+    for (const f of fields) {
+      const gv = normVal(gr[f]);
+      const sv = normVal(sr[f]);
+      if (String(gv) !== String(sv)) diffs.push({ field: f, gas: gv, sb: sv });
+    }
+    if (diffs.length) mismatches.push({ key: k, diffs });
+  }
+
+  return { gasCount: gasRows.length, sbCount: sbNorm.length, missing, extra, mismatches };
+}
+
+// ── RENDER RESULTS ────────────────────────────────────────────────
+function renderResults(allResults) {
+  // summary cards
+  const summaryEl = document.getElementById('summary');
+  summaryEl.innerHTML = Object.entries(allResults).map(([name, r]) => {
+    const issues = r.missing.length + r.extra.length + r.mismatches.length;
+    const cls = issues ? 'warn' : 'ok';
+    const icon = issues ? '⚠️' : '✅';
+    return `<div class="stat ${cls}">
+      <div class="stat-val">${issues}</div>
+      <div class="stat-lbl">${icon} ${TABLE_LABELS[name]}</div>
+    </div>`;
+  }).join('');
+
+  // diff details
+  const detailEl = document.getElementById('diffDetails');
+  let detailHtml = '';
+  for (const [name, r] of Object.entries(allResults)) {
+    const blocks = [];
+
+    if (r.missing.length) {
+      blocks.push(`
+        <div class="diff-block">
+          <div class="diff-header">
+            <span>חסרים ב-Supabase</span>
+            <span class="badge badge-miss">${r.missing.length} רשומות</span>
+          </div>
+          <div class="diff-rows">
+            ${r.missing.map(k => `<div class="diff-row">${esc(k)}</div>`).join('')}
+          </div>
+        </div>`);
+    }
+
+    if (r.extra.length) {
+      blocks.push(`
+        <div class="diff-block">
+          <div class="diff-header">
+            <span>קיים ב-Supabase בלבד (לא ב-GAS)</span>
+            <span class="badge badge-extra">${r.extra.length} רשומות</span>
+          </div>
+          <div class="diff-rows">
+            ${r.extra.map(k => `<div class="diff-row">${esc(k)}</div>`).join('')}
+          </div>
+        </div>`);
+    }
+
+    if (r.mismatches.length) {
+      const rows = r.mismatches.map(({ key: k, diffs }) => `
+        <div class="diff-row" style="margin-bottom:6px">
+          <strong>${esc(k)}</strong>
+          ${diffs.map(d => `<br>
+            <span class="diff-field">${esc(d.field)}:</span>
+            <span class="diff-gas">GAS: ${esc(String(d.gas ?? '—'))}</span>
+            <span style="color:var(--muted)">→</span>
+            <span class="diff-sb">SB: ${esc(String(d.sb ?? '—'))}</span>
+          `).join('')}
+        </div>`).join('');
+
+      blocks.push(`
+        <div class="diff-block">
+          <div class="diff-header">
+            <span>ערכים שונים</span>
+            <span class="badge badge-diff">${r.mismatches.length} רשומות</span>
+          </div>
+          <div class="diff-rows">${rows}</div>
+        </div>`);
+    }
+
+    if (blocks.length) {
+      detailHtml += `<div class="diff-section"><h3>${TABLE_LABELS[name]}</h3>${blocks.join('')}</div>`;
+    }
+  }
+  detailEl.innerHTML = detailHtml;
+
+  // recommendations
+  renderRecommendations(allResults);
+}
+
+function renderRecommendations(allResults) {
+  const recs = [];
+  let totalIssues = 0;
+
+  for (const [name, r] of Object.entries(allResults)) {
+    totalIssues += r.missing.length + r.extra.length + r.mismatches.length;
+
+    if (r.missing.length) {
+      recs.push({
+        icon: '🔁',
+        text: `<strong>${r.missing.length} ${TABLE_LABELS[name]}</strong> חסרות ב-Supabase — הרץ את <strong>migrate.html</strong> שוב כדי להוסיף אותן.`
+      });
+    }
+    if (r.extra.length && name !== 'maintenance') {
+      recs.push({
+        icon: '🗑️',
+        text: `<strong>${r.extra.length} ${TABLE_LABELS[name]}</strong> קיימות ב-Supabase אך לא ב-GAS — ייתכן שנמחקו ב-GAS לאחר המיגרציה. בדוק אם יש למחוק מ-Supabase.`
+      });
+    }
+    if (r.mismatches.length) {
+      const hasPhone = r.mismatches.some(m => m.diffs.some(d => d.field === 'phone'));
+      const hasDate  = r.mismatches.some(m => m.diffs.some(d => d.field.includes('date') || d.field === 'dob'));
+      const hasOther = r.mismatches.some(m => m.diffs.some(d => d.field !== 'phone' && !d.field.includes('date') && d.field !== 'dob'));
+
+      if (hasPhone) {
+        recs.push({ icon: '📞', text: `חלק מ<strong>הטלפונים</strong> שונים — הבדל בנרמול (0X vs 9X). בדרך כלל ניתן להתעלם אם המספרים זהים בפועל.` });
+      }
+      if (hasDate) {
+        recs.push({ icon: '📅', text: `הבדלי <strong>תאריכים</strong> עלולים לנבוע מהמרת פורמט DD/MM/YYYY → YYYY-MM-DD. אמת ידנית אם הערכים שגויים בפועל.` });
+      }
+      if (hasOther) {
+        recs.push({
+          icon: '✏️',
+          text: `<strong>${r.mismatches.length} ${TABLE_LABELS[name]}</strong> עם ערכים שונים — ייתכן שעודכנו ב-GAS או ב-Supabase לאחר המיגרציה. בחר את המקור הסמכותי ועדכן בהתאם.`
+        });
+      }
+    }
+  }
+
+  const recEl = document.getElementById('recommendations');
+  if (totalIssues === 0) {
+    recEl.innerHTML = `
+      <div class="rec-box rec-ok">
+        <h3>✅ הנתונים זהים בשני מסדי הנתונים</h3>
+        <div class="rec-item"><span class="rec-icon">🎉</span>
+          <span>המיגרציה הושלמה בהצלחה — אין הפרשים בין GAS ל-Supabase.</span>
+        </div>
+      </div>`;
+    return;
+  }
+
+  recEl.innerHTML = `
+    <div class="rec-box" style="margin-top:16px">
+      <h3>💡 המלצות</h3>
+      ${recs.map(r => `
+        <div class="rec-item">
+          <span class="rec-icon">${r.icon}</span>
+          <span>${r.text}</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ── MAIN ─────────────────────────────────────────────────────────
+async function runCompare() {
+  const gasUrl = document.getElementById('gasUrl').value.trim();
+  const sbUrl  = document.getElementById('sbUrl').value.trim();
+  const sbKey  = document.getElementById('sbKey').value.trim();
+
+  if (!gasUrl || !sbUrl || !sbKey) { alert('נא למלא את כל השדות'); return; }
+
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ משווה...';
+
+  document.getElementById('progressCard').style.display = 'block';
+  document.getElementById('resultsCard').style.display = 'none';
+  initSteps();
+
+  const sb = window.supabase.createClient(sbUrl, sbKey);
+  const allResults = {};
+
+  try {
+    // ── 1. RIDERS ──
+    setStep('riders', 'active');
+    log('← GAS getAllRiders...');
+    const gasRidersRaw = await gasGet(gasUrl, 'getAllRiders');
+    log(`  GAS: ${gasRidersRaw.length} רוכבים`);
+    log('→ SB riders...');
+    const sbRiders = await sbGetAll(sb, 'riders');
+    log(`  SB: ${sbRiders.length} רוכבים`);
+    const resRiders = compareTable('riders', gasRidersRaw.map(mapRider), sbRiders);
+    allResults.riders = resRiders;
+    const rIssues = resRiders.missing.length + resRiders.extra.length + resRiders.mismatches.length;
+    setStep('riders', rIssues ? 'warn' : 'done', rIssues ? `${rIssues} הפרשים` : '✓');
+
+    // ── 2. BIKES ──
+    setStep('bikes', 'active');
+    log('\n← GAS getBikes...');
+    const gasBikesRaw = await gasGet(gasUrl, 'getBikes');
+    log(`  GAS: ${gasBikesRaw.length} אופניים`);
+    log('→ SB bikes...');
+    const sbBikes = await sbGetAll(sb, 'bikes');
+    log(`  SB: ${sbBikes.length} אופניים`);
+    const resBikes = compareTable('bikes', gasBikesRaw.map(mapBike), sbBikes);
+    allResults.bikes = resBikes;
+    const bIssues = resBikes.missing.length + resBikes.extra.length + resBikes.mismatches.length;
+    setStep('bikes', bIssues ? 'warn' : 'done', bIssues ? `${bIssues} הפרשים` : '✓');
+
+    // ── 3. EVENTS ──
+    setStep('events', 'active');
+    log('\n← GAS getAllEvents...');
+    const eventsResp = await gasGet(gasUrl, 'getAllEvents');
+    let gasEventsRaw;
+    if (eventsResp && !Array.isArray(eventsResp)) {
+      gasEventsRaw = [
+        ...(eventsResp.upcoming  || []),
+        ...(eventsResp.past      || []),
+        ...(eventsResp.cancelled || [])
+      ];
+    } else {
+      gasEventsRaw = Array.isArray(eventsResp) ? eventsResp : [];
+    }
+    // ביטול כפילויות
+    const seenEvIds = new Set();
+    gasEventsRaw = gasEventsRaw.filter(e => {
+      if (seenEvIds.has(e.id)) return false;
+      seenEvIds.add(e.id); return true;
+    });
+    log(`  GAS: ${gasEventsRaw.length} אירועים`);
+    log('→ SB events...');
+    const sbEvents = await sbGetAll(sb, 'events');
+    log(`  SB: ${sbEvents.length} אירועים`);
+    const resEvents = compareTable('events', gasEventsRaw.map(mapEvent), sbEvents);
+    allResults.events = resEvents;
+    const eIssues = resEvents.missing.length + resEvents.extra.length + resEvents.mismatches.length;
+    setStep('events', eIssues ? 'warn' : 'done', eIssues ? `${eIssues} הפרשים` : '✓');
+
+    // ── 4. REGISTRATIONS ──
+    setStep('registrations', 'active');
+    log('\n← GAS getRegistrations (לכל אירוע)...');
+    const gasRegsRaw = [];
+    for (const ev of gasEventsRaw) {
+      try {
+        const regs = await gasGet(gasUrl, 'getRegistrations', { eventId: ev.id });
+        if (Array.isArray(regs)) {
+          gasRegsRaw.push(...regs.map(r => mapReg(r, ev.id)));
+        }
+      } catch (e) {
+        log(`  ⚠ ${ev.id}: ${e.message}`);
+      }
+    }
+    log(`  GAS: ${gasRegsRaw.length} רישומים`);
+    log('→ SB registrations...');
+    const sbRegs = await sbGetAll(sb, 'registrations');
+    log(`  SB: ${sbRegs.length} רישומים`);
+    const resRegs = compareTable('registrations', gasRegsRaw, sbRegs);
+    allResults.registrations = resRegs;
+    const regIssues = resRegs.missing.length + resRegs.extra.length + resRegs.mismatches.length;
+    setStep('registrations', regIssues ? 'warn' : 'done', regIssues ? `${regIssues} הפרשים` : '✓');
+
+    // ── 5. MAINTENANCE ──
+    setStep('maintenance', 'active');
+    log('\n← GAS getMaintenance...');
+    let gasMaintRaw = [];
+    try {
+      gasMaintRaw = await gasGet(gasUrl, 'getMaintenance');
+    } catch (e) {
+      log(`  ⚠ getMaintenance: ${e.message} — ממשיך`);
+    }
+    log(`  GAS: ${gasMaintRaw.length} רשומות תחזוקה`);
+    log('→ SB maintenance...');
+    const sbMaint = await sbGetAll(sb, 'maintenance');
+    log(`  SB: ${sbMaint.length} רשומות תחזוקה`);
+    const resMaint = compareTable('maintenance', gasMaintRaw.map(mapMaint), sbMaint);
+    allResults.maintenance = resMaint;
+    const mIssues = resMaint.missing.length + resMaint.extra.length + resMaint.mismatches.length;
+    setStep('maintenance', mIssues ? 'warn' : 'done', mIssues ? `${mIssues} הפרשים` : '✓');
+
+  } catch (err) {
+    log(`\n❌ שגיאה: ${err.message}`);
+    console.error(err);
+  }
+
+  // הצג תוצאות
+  document.getElementById('resultsCard').style.display = 'block';
+  renderResults(allResults);
+
+  btn.disabled = false;
+  btn.textContent = '▶ הרץ שוב';
+  document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
