@@ -166,6 +166,10 @@ function normPhone(phone) {
   return p;
 }
 
+function normTid(val) {
+  return String(val ?? '').trim().replace(/\.0+$/, '');
+}
+
 function normVal(v) {
   if (v === null || v === undefined || v === '' || v === '—') return '';
   if (typeof v === 'number' && Number.isInteger(v)) return v;
@@ -227,7 +231,7 @@ async function sbGetAll(sb, table) {
 // ── GAS DATA MAPPERS ─────────────────────────────────────────────
 function mapRider(r) {
   return {
-    tid:        String(r.tid || ''),
+    tid:        normTid(r.tid),
     name:       r.name       || '',
     phone:      normPhone(r.phone),
     email:      r.email      || '',
@@ -236,7 +240,7 @@ function mapRider(r) {
     gender:     r.gender     || '',
     permission: r.permission || 'משתמש',
     ride_style: r.rideStyle  || 'סינגל',
-    exam_date:  gasDateToISO(r.examDate),
+    exam_date:  gasDateToISO(r.examDate || r.exam_date || r['Exam Date'] || ''),
   };
 }
 
@@ -260,15 +264,15 @@ function mapEvent(e) {
 
 function mapReg(r, eventId) {
   const eid = eventId || r.eventId || '';
-  const tid = String(r.tid||'');
+  const tid = normTid(r.tid);
   return {
     id:           `${eid}-${tid}`,
     event_id:     eid,
     tid:          tid,
     role:         r.role||'',
-    bike_id:      r.bikeId||'',
-    partner_name: r.partnerName||'—',
-    partner_tid:  String(r.partnerTid||''),
+    bike_id:      r.bike         || r.bikeId      || '',
+    partner_name: r.partner      || r.partnerName || '—',
+    partner_tid:  normTid(r.partnerTid || r.partner_tid || ''),
   };
 }
 

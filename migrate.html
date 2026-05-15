@@ -93,6 +93,11 @@ function normPhone(phone) {
   return p;
 }
 
+function normTid(val) {
+  // Google Sheets עלול להחזיר tid כ-float (12345.0) — מסיר את הסיומת
+  return String(val ?? '').trim().replace(/\.0+$/, '');
+}
+
 async function gasGet(url, action, extra = {}) {
   const qs = new URLSearchParams({ action, ...extra }).toString();
   const res = await fetch(`${url}?${qs}`);
@@ -180,10 +185,11 @@ async function runMigration() {
     const gasRiders = await gasGet(gasUrl, 'getAllRiders');
     log(`[riders] got ${gasRiders.length} riders`);
     const sbRiders = gasRiders.map(r => ({
-      tid: String(r.tid), name: r.name || '', phone: normPhone(r.phone),
+      tid: normTid(r.tid), name: r.name || '', phone: normPhone(r.phone),
       email: r.email || '', city: r.city || '', gender: r.gender || '',
       permission: r.permission || 'משתמש', ride_style: r.rideStyle || 'סינגל',
-      dob: gasDateToISO(r.dob), exam_date: gasDateToISO(r.examDate),
+      dob: gasDateToISO(r.dob),
+      exam_date: gasDateToISO(r.examDate || r.exam_date || r['Exam Date'] || ''),
     }));
     totals.riders = await sbUpsert(sb, 'riders', sbRiders);
     log(`[riders] upserted ${totals.riders}`);
@@ -231,18 +237,32 @@ async function runMigration() {
       try {
         const regs = await gasGet(gasUrl, 'getRegistrations', { eventId: ev.id });
         for (const r of (regs||[])) {
+          const tid = normTid(r.tid);
+          if (!tid) continue; // דלג על רשומות ללא tid
           allRegs.push({
-            id: `${ev.id}-${String(r.tid)}`, event_id: ev.id, tid: String(r.tid),
-            role: r.role||'', bike_id: r.bike||'',
-            partner_name: r.partner||'—', partner_tid: r.partnerTid||'',
+            id:           `${ev.id}-${tid}`,
+            event_id:     ev.id,
+            tid:          tid,
+            role:         r.role         || '',
+            bike_id:      r.bike         || r.bikeId      || '',
+            partner_name: r.partner      || r.partnerName || '—',
+            partner_tid:  normTid(r.partnerTid || r.partner_tid || ''),
           });
         }
         log(`[registrations] ${ev.id}: ${(regs||[]).length} regs`);
       } catch(e) { log(`[registrations] ${ev.id}: ERROR — ${e.message}`); }
     }
-    totals.registrations = await sbUpsert(sb, 'registrations', allRegs);
-    log(`[registrations] upserted ${totals.registrations} total`);
-    setStep('registrations', 'done', totals.registrations);
+    // upsert אחד-אחד כדי לזהות בדיוק אילו רשומות נכשלות (FK violation)
+    let regOk = 0, regFail = 0;
+    for (const reg of allRegs) {
+      const { error } = await sb.from('registrations').upsert([reg], { onConflict: 'id', ignoreDuplicates: false });
+      if (error) { log(`  ✗ ${reg.id}: ${error.message}`); regFail++; }
+      else regOk++;
+    }
+    totals.registrations = regOk;
+    if (regFail) log(`[registrations] ${regOk} הצליחו, ${regFail} נכשלו`);
+    log(`[registrations] upserted ${regOk} total`);
+    setStep('registrations', regFail ? 'error' : 'done', regOk);
 
     // 5. MAINTENANCE
     setStep('maintenance', 'active');
