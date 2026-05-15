@@ -6,13 +6,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: feature/supabase-backend
-      - name: Install psql
-        run: sudo apt-get install -y postgresql-client
-      - name: Apply rpc.sql
+      - name: Apply rpc.sql via Management API
         env:
-          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PAT: ${{ secrets.SUPABASE_PAT }}
         run: |
-          psql "host=aws-1-eu-central-1.pooler.supabase.com port=5432 dbname=postgres user=postgres.gritbcrdxpeycnxrlulp sslmode=require" \
-            -f supabase/rpc.sql
+          python3 - << 'PYEOF'
+          import json, os, sys, urllib.request, urllib.error
+          sql = open("supabase/rpc.sql").read()
+          req = urllib.request.Request(
+            "https://api.supabase.com/v1/projects/gritbcrdxpeycnxrlulp/database/query",
+            data=json.dumps({"query": sql}).encode(),
+            headers={
+              "Authorization": f"Bearer {os.environ['SUPABASE_PAT']}",
+              "Content-Type": "application/json",
+            }
+          )
+          try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+              print("Success:", r.read().decode()[:300])
+          except urllib.error.HTTPError as e:
+            print(f"Error {e.code}: {e.read().decode()[:500]}", file=sys.stderr)
+            sys.exit(1)
+          PYEOF
