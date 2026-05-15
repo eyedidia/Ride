@@ -19,6 +19,26 @@ BEGIN
 END;
 $$;
 
+-- בדיקת הרשאות מנהל — מאמתת שה-tid הנתון שייך לרוכב עם role מנהל
+CREATE OR REPLACE FUNCTION _require_admin(p_caller_tid TEXT)
+RETURNS VOID LANGUAGE plpgsql AS $$
+DECLARE v_perm TEXT;
+BEGIN
+  IF p_caller_tid IS NULL OR p_caller_tid = '' THEN
+    RAISE EXCEPTION 'אין הרשאה: לא זוהה משתמש';
+  END IF;
+  SELECT permission INTO v_perm FROM riders WHERE tid = p_caller_tid;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'אין הרשאה: משתמש לא נמצא';
+  END IF;
+  IF v_perm IS NULL OR NOT (
+    v_perm LIKE '%מנהל%'
+  ) THEN
+    RAISE EXCEPTION 'אין הרשאה לביצוע פעולה זו';
+  END IF;
+END;
+$$;
+
 CREATE OR REPLACE FUNCTION next_event_id()
 RETURNS TEXT LANGUAGE plpgsql AS $$
 DECLARE max_num INT;
@@ -247,7 +267,7 @@ CREATE OR REPLACE FUNCTION register_to_event(
   p_role     TEXT DEFAULT '',
   p_bike_id  TEXT DEFAULT ''
 )
-RETURNS JSONB LANGUAGE plpgsql AS $$
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
   v_exam_status TEXT;
   v_reg_id      TEXT;
@@ -283,14 +303,16 @@ $$;
 -- ─────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION assign_partner(
-  p_event_id   TEXT,
+  p_caller_tid  TEXT,
+  p_event_id    TEXT,
   p_captain_tid TEXT,
   p_stoker_tid  TEXT DEFAULT NULL
 )
-RETURNS JSONB LANGUAGE plpgsql AS $$
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
   v_stoker_name TEXT;
 BEGIN
+  PERFORM _require_admin(p_caller_tid);
   IF p_stoker_tid IS NOT NULL AND p_stoker_tid <> '' THEN
     -- שם הסטוקר מהטבלה
     SELECT name INTO v_stoker_name FROM riders WHERE tid = p_stoker_tid;
@@ -323,12 +345,14 @@ $$;
 -- ─────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION unassign_partner(
+  p_caller_tid  TEXT,
   p_event_id    TEXT,
   p_captain_tid TEXT,
   p_stoker_tid  TEXT DEFAULT NULL
 )
-RETURNS JSONB LANGUAGE plpgsql AS $$
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
+  PERFORM _require_admin(p_caller_tid);
   -- ניקוי שורת הקפטן
   UPDATE registrations
   SET partner_name = '—', partner_tid = ''
@@ -354,12 +378,13 @@ $$;
 -- 10. DISABLE_BIKE
 -- ─────────────────────────────────────────────
 
-CREATE OR REPLACE FUNCTION disable_bike(p_bike_id TEXT, p_fault TEXT DEFAULT 'לא צוין')
-RETURNS JSONB LANGUAGE plpgsql AS $$
+CREATE OR REPLACE FUNCTION disable_bike(p_caller_tid TEXT, p_bike_id TEXT, p_fault TEXT DEFAULT 'לא צוין')
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
   v_bike_name TEXT;
   v_rec_id    TEXT;
 BEGIN
+  PERFORM _require_admin(p_caller_tid);
   UPDATE bikes SET status = 'מושבת'
   WHERE id = p_bike_id
   RETURNING name INTO v_bike_name;
@@ -379,9 +404,10 @@ $$;
 -- 11. ENABLE_BIKE
 -- ─────────────────────────────────────────────
 
-CREATE OR REPLACE FUNCTION enable_bike(p_bike_id TEXT)
-RETURNS JSONB LANGUAGE plpgsql AS $$
+CREATE OR REPLACE FUNCTION enable_bike(p_caller_tid TEXT, p_bike_id TEXT)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
+  PERFORM _require_admin(p_caller_tid);
   UPDATE bikes SET status = 'תקין' WHERE id = p_bike_id;
   IF NOT FOUND THEN RAISE EXCEPTION 'אופניים לא נמצאו'; END IF;
 
@@ -404,6 +430,7 @@ $$;
 -- ─────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION add_rider(
+  p_caller_tid TEXT,
   p_tid        TEXT,
   p_name       TEXT,
   p_phone      TEXT,
@@ -414,8 +441,9 @@ CREATE OR REPLACE FUNCTION add_rider(
   p_permission TEXT    DEFAULT 'משתמש',
   p_ride_style TEXT    DEFAULT 'סינגל'
 )
-RETURNS JSONB LANGUAGE plpgsql AS $$
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
+  PERFORM _require_admin(p_caller_tid);
   IF EXISTS (SELECT 1 FROM riders WHERE tid = p_tid) THEN
     RAISE EXCEPTION 'תעודת זהות כבר קיימת במערכת';
   END IF;
@@ -433,6 +461,7 @@ $$;
 -- ─────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION add_event(
+  p_caller_tid  TEXT,
   p_date        DATE,
   p_description TEXT,
   p_km          NUMERIC DEFAULT 0,
@@ -442,9 +471,10 @@ CREATE OR REPLACE FUNCTION add_event(
   p_captain     TEXT    DEFAULT '',
   p_status      TEXT    DEFAULT 'פעיל'
 )
-RETURNS JSONB LANGUAGE plpgsql AS $$
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE v_id TEXT;
 BEGIN
+  PERFORM _require_admin(p_caller_tid);
   v_id := next_event_id();
   INSERT INTO events(id, date, description, km, climb, meet_point, meet_time, captain, status)
   VALUES (v_id, p_date, p_description, p_km, p_climb, p_meet_point, p_meet_time, p_captain, p_status);
@@ -457,14 +487,16 @@ $$;
 -- ─────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION add_bike(
-  p_name   TEXT,
-  p_frame  TEXT DEFAULT '',
-  p_drive  TEXT DEFAULT '',
-  p_status TEXT DEFAULT 'תקין'
+  p_caller_tid TEXT,
+  p_name       TEXT,
+  p_frame      TEXT DEFAULT '',
+  p_drive      TEXT DEFAULT '',
+  p_status     TEXT DEFAULT 'תקין'
 )
-RETURNS JSONB LANGUAGE plpgsql AS $$
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE v_id TEXT;
 BEGIN
+  PERFORM _require_admin(p_caller_tid);
   v_id := next_bike_id();
   INSERT INTO bikes(id, name, frame, drive, status)
   VALUES (v_id, p_name, p_frame, p_drive, p_status);
@@ -477,6 +509,7 @@ $$;
 -- ─────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION update_event(
+  p_caller_tid  TEXT,
   p_event_id    TEXT,
   p_date        DATE,
   p_description TEXT,
@@ -486,8 +519,9 @@ CREATE OR REPLACE FUNCTION update_event(
   p_meet_time   TEXT    DEFAULT '06:00',
   p_captain     TEXT    DEFAULT ''
 )
-RETURNS JSONB LANGUAGE plpgsql AS $$
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
+  PERFORM _require_admin(p_caller_tid);
   UPDATE events
   SET date = p_date, description = p_description,
       km = p_km, climb = p_climb,
@@ -500,22 +534,203 @@ BEGIN
 END;
 $$;
 
+-- ─────────────────────────────────────────────
+-- 16. UPDATE_RIDER (admin)
+-- ─────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION update_rider(
+  p_caller_tid TEXT,
+  p_tid        TEXT,
+  p_name       TEXT,
+  p_phone      TEXT,
+  p_email      TEXT    DEFAULT '',
+  p_city       TEXT    DEFAULT '',
+  p_ride_style TEXT    DEFAULT 'סינגל',
+  p_permission TEXT    DEFAULT 'משתמש'
+)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  PERFORM _require_admin(p_caller_tid);
+  UPDATE riders
+  SET name = p_name, phone = normalize_phone(p_phone),
+      email = p_email, city = p_city,
+      ride_style = p_ride_style, permission = p_permission
+  WHERE tid = p_tid;
+  IF NOT FOUND THEN RAISE EXCEPTION 'רוכב לא נמצא'; END IF;
+  RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+-- ─────────────────────────────────────────────
+-- 17. DELETE_RIDER (admin)
+-- ─────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION delete_rider(p_caller_tid TEXT, p_tid TEXT)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  PERFORM _require_admin(p_caller_tid);
+  DELETE FROM registrations WHERE tid = p_tid;
+  DELETE FROM riders WHERE tid = p_tid;
+  IF NOT FOUND THEN RAISE EXCEPTION 'רוכב לא נמצא'; END IF;
+  RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+-- ─────────────────────────────────────────────
+-- 18. UPDATE_BIKE (admin)
+-- ─────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION update_bike(
+  p_caller_tid TEXT,
+  p_bike_id    TEXT,
+  p_name       TEXT,
+  p_frame      TEXT DEFAULT '',
+  p_drive      TEXT DEFAULT ''
+)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  PERFORM _require_admin(p_caller_tid);
+  UPDATE bikes SET name = p_name, frame = p_frame, drive = p_drive
+  WHERE id = p_bike_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'אופניים לא נמצאו'; END IF;
+  RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+-- ─────────────────────────────────────────────
+-- 19. DELETE_BIKE (admin)
+-- ─────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION delete_bike(p_caller_tid TEXT, p_bike_id TEXT)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  PERFORM _require_admin(p_caller_tid);
+  DELETE FROM bikes WHERE id = p_bike_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'אופניים לא נמצאו'; END IF;
+  RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+-- ─────────────────────────────────────────────
+-- 20. CANCEL_EVENT (admin)
+-- ─────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION cancel_event(p_caller_tid TEXT, p_event_id TEXT)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  PERFORM _require_admin(p_caller_tid);
+  UPDATE events SET status = 'בוטל' WHERE id = p_event_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'אירוע לא נמצא'; END IF;
+  RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+-- ─────────────────────────────────────────────
+-- 21. ASSIGN_BIKE (admin)
+-- ─────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION assign_bike(
+  p_caller_tid TEXT,
+  p_event_id   TEXT,
+  p_tid        TEXT,
+  p_bike_id    TEXT
+)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  PERFORM _require_admin(p_caller_tid);
+  UPDATE registrations SET bike_id = p_bike_id
+  WHERE event_id = p_event_id AND tid = p_tid;
+  RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+-- ─────────────────────────────────────────────
+-- 22. UPDATE_EXAM_DATE (admin)
+-- ─────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION update_exam_date(
+  p_caller_tid TEXT,
+  p_tid        TEXT,
+  p_exam_date  DATE
+)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  PERFORM _require_admin(p_caller_tid);
+  UPDATE riders SET exam_date = p_exam_date WHERE tid = p_tid;
+  IF NOT FOUND THEN RAISE EXCEPTION 'רוכב לא נמצא'; END IF;
+  RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+-- ─────────────────────────────────────────────
+-- 23. UPDATE_MY_PROFILE (self — no admin check)
+-- ─────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION update_my_profile(
+  p_tid    TEXT,
+  p_phone  TEXT    DEFAULT NULL,
+  p_city   TEXT    DEFAULT NULL,
+  p_email  TEXT    DEFAULT NULL,
+  p_gender TEXT    DEFAULT NULL,
+  p_dob    DATE    DEFAULT NULL
+)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM riders WHERE tid = p_tid) THEN
+    RAISE EXCEPTION 'רוכב לא נמצא';
+  END IF;
+  UPDATE riders SET
+    phone  = COALESCE(CASE WHEN p_phone  IS NOT NULL THEN normalize_phone(p_phone) END, phone),
+    city   = COALESCE(p_city,   city),
+    email  = COALESCE(p_email,  email),
+    gender = COALESCE(p_gender, gender),
+    dob    = COALESCE(p_dob,    dob)
+  WHERE tid = p_tid;
+  RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+-- ─────────────────────────────────────────────
+-- 24. CANCEL_REGISTRATION (self — no admin check)
+-- ─────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION cancel_registration(p_tid TEXT, p_event_id TEXT)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM riders WHERE tid = p_tid) THEN
+    RAISE EXCEPTION 'רוכב לא נמצא';
+  END IF;
+  DELETE FROM registrations WHERE event_id = p_event_id AND tid = p_tid;
+  RETURN jsonb_build_object('success', true);
+END;
+$$;
+
 -- Grant execute to anon role
-GRANT EXECUTE ON FUNCTION normalize_phone(TEXT)            TO anon;
-GRANT EXECUTE ON FUNCTION next_event_id()                  TO anon;
-GRANT EXECUTE ON FUNCTION next_bike_id()                   TO anon;
-GRANT EXECUTE ON FUNCTION login(TEXT, TEXT)                TO anon;
-GRANT EXECUTE ON FUNCTION get_events()                     TO anon;
-GRANT EXECUTE ON FUNCTION get_all_events()                 TO anon;
-GRANT EXECUTE ON FUNCTION get_registrations(TEXT)          TO anon;
-GRANT EXECUTE ON FUNCTION get_event_counts()               TO anon;
-GRANT EXECUTE ON FUNCTION get_ride_history(TEXT)           TO anon;
-GRANT EXECUTE ON FUNCTION register_to_event(TEXT,TEXT,TEXT,TEXT) TO anon;
-GRANT EXECUTE ON FUNCTION assign_partner(TEXT,TEXT,TEXT)   TO anon;
-GRANT EXECUTE ON FUNCTION unassign_partner(TEXT,TEXT,TEXT) TO anon;
-GRANT EXECUTE ON FUNCTION disable_bike(TEXT,TEXT)          TO anon;
-GRANT EXECUTE ON FUNCTION enable_bike(TEXT)                TO anon;
-GRANT EXECUTE ON FUNCTION add_rider(TEXT,TEXT,TEXT,TEXT,TEXT,DATE,TEXT,TEXT,TEXT) TO anon;
-GRANT EXECUTE ON FUNCTION add_event(DATE,TEXT,NUMERIC,NUMERIC,TEXT,TEXT,TEXT,TEXT) TO anon;
-GRANT EXECUTE ON FUNCTION add_bike(TEXT,TEXT,TEXT,TEXT)    TO anon;
-GRANT EXECUTE ON FUNCTION update_event(TEXT,DATE,TEXT,NUMERIC,NUMERIC,TEXT,TEXT,TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION normalize_phone(TEXT)                          TO anon;
+GRANT EXECUTE ON FUNCTION next_event_id()                                TO anon;
+GRANT EXECUTE ON FUNCTION next_bike_id()                                 TO anon;
+GRANT EXECUTE ON FUNCTION login(TEXT,TEXT)                               TO anon;
+GRANT EXECUTE ON FUNCTION get_events()                                   TO anon;
+GRANT EXECUTE ON FUNCTION get_all_events()                               TO anon;
+GRANT EXECUTE ON FUNCTION get_registrations(TEXT)                        TO anon;
+GRANT EXECUTE ON FUNCTION get_event_counts()                             TO anon;
+GRANT EXECUTE ON FUNCTION get_ride_history(TEXT)                         TO anon;
+GRANT EXECUTE ON FUNCTION register_to_event(TEXT,TEXT,TEXT,TEXT)         TO anon;
+-- פונקציות admin — הגישה דרך anon מוגבלת ע"י _require_admin בתוך הפונקציה
+GRANT EXECUTE ON FUNCTION assign_partner(TEXT,TEXT,TEXT,TEXT)            TO anon;
+GRANT EXECUTE ON FUNCTION unassign_partner(TEXT,TEXT,TEXT,TEXT)          TO anon;
+GRANT EXECUTE ON FUNCTION disable_bike(TEXT,TEXT,TEXT)                   TO anon;
+GRANT EXECUTE ON FUNCTION enable_bike(TEXT,TEXT)                         TO anon;
+GRANT EXECUTE ON FUNCTION add_rider(TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,DATE,TEXT,TEXT,TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION add_event(TEXT,DATE,TEXT,NUMERIC,NUMERIC,TEXT,TEXT,TEXT,TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION add_bike(TEXT,TEXT,TEXT,TEXT,TEXT)             TO anon;
+GRANT EXECUTE ON FUNCTION update_event(TEXT,TEXT,DATE,TEXT,NUMERIC,NUMERIC,TEXT,TEXT,TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION update_rider(TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION delete_rider(TEXT,TEXT)                        TO anon;
+GRANT EXECUTE ON FUNCTION update_bike(TEXT,TEXT,TEXT,TEXT,TEXT)          TO anon;
+GRANT EXECUTE ON FUNCTION delete_bike(TEXT,TEXT)                         TO anon;
+GRANT EXECUTE ON FUNCTION cancel_event(TEXT,TEXT)                        TO anon;
+GRANT EXECUTE ON FUNCTION assign_bike(TEXT,TEXT,TEXT,TEXT)               TO anon;
+GRANT EXECUTE ON FUNCTION update_exam_date(TEXT,TEXT,DATE)               TO anon;
+GRANT EXECUTE ON FUNCTION update_my_profile(TEXT,TEXT,TEXT,TEXT,TEXT,DATE) TO anon;
+GRANT EXECUTE ON FUNCTION cancel_registration(TEXT,TEXT)                 TO anon;

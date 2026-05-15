@@ -5,18 +5,21 @@ compare.py — השוואת נתונים: GAS ↔ Supabase
 """
 
 import json
+import os
 import urllib.request
 import urllib.parse
 import urllib.error
 import re
 import sys
 
-GAS_URL = (
+GAS_URL = os.environ.get(
+    "GAS_URL",
     "https://script.google.com/macros/s/"
     "AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec"
 )
-SB_URL = "https://gritbcrdxpeycnxrlulp.supabase.co"
-SB_KEY = (
+SB_URL = os.environ.get("SUPABASE_URL", "https://gritbcrdxpeycnxrlulp.supabase.co")
+SB_KEY = os.environ.get(
+    "SUPABASE_ANON_KEY",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
     ".eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdyaXRiY3JkeHBleWNueHJsdWxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDI1NzgsImV4cCI6MjA5MzkxODU3OH0"
     ".PRk_DQeHF4vGy-0qZH2XFIUOoOQ_cekPOW_gWdmHXXc"

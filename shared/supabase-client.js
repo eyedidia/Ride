@@ -25,12 +25,21 @@ function normalizePhone(phone) {
 }
 
 // ─────────────────────────────────────────────
+// קריאת tid של המשתמש המחובר מה-sessionStorage
+// ─────────────────────────────────────────────
+function _getCallerTid() {
+  try {
+    return (JSON.parse(sessionStorage.getItem('user') || '{}')).tid || '';
+  } catch { return ''; }
+}
+
+// ─────────────────────────────────────────────
 // ROUTER — מיפוי action → Supabase
 // ─────────────────────────────────────────────
 
 async function _route(action, data) {
 
-  // ── REST ישיר ────────────────────────────────────────────────
+  // ── REST ישיר (קריאה בלבד) ───────────────────────────────────
 
   if (action === 'getAllRiders') {
     const { data: d, error } = await _sb.from('riders_view').select('*');
@@ -75,74 +84,103 @@ async function _route(action, data) {
 
   if (action === 'updateRider') {
     const { tid, name, phone, email, city, rideStyle, permission } = data;
-    const { error } = await _sb.from('riders')
-      .update({ name, phone: normalizePhone(phone), email: email || '', city: city || '',
-                ride_style: rideStyle || 'סינגל', permission: permission || 'משתמש' })
-      .eq('tid', tid);
+    const { data: d, error } = await _sb.rpc('update_rider', {
+      p_caller_tid: _getCallerTid(),
+      p_tid:        tid,
+      p_name:       name,
+      p_phone:      phone,
+      p_email:      email      || '',
+      p_city:       city       || '',
+      p_ride_style: rideStyle  || 'סינגל',
+      p_permission: permission || 'משתמש',
+    });
     if (error) throw error;
-    return { success: true };
+    return d || { success: true };
   }
 
   if (action === 'deleteRider') {
-    const { error } = await _sb.from('riders').delete().eq('tid', data.tid);
+    const { data: d, error } = await _sb.rpc('delete_rider', {
+      p_caller_tid: _getCallerTid(),
+      p_tid:        data.tid,
+    });
     if (error) throw error;
-    return { success: true };
+    return d || { success: true };
   }
 
   if (action === 'updateBike') {
     const { bikeId, name, frame, drive } = data;
-    const { error } = await _sb.from('bikes')
-      .update({ name, frame: frame || '', drive: drive || '' })
-      .eq('id', bikeId);
+    const { data: d, error } = await _sb.rpc('update_bike', {
+      p_caller_tid: _getCallerTid(),
+      p_bike_id:    bikeId,
+      p_name:       name,
+      p_frame:      frame || '',
+      p_drive:      drive || '',
+    });
     if (error) throw error;
-    return { success: true };
+    return d || { success: true };
   }
 
   if (action === 'deleteBike') {
-    const { error } = await _sb.from('bikes').delete().eq('id', data.bikeId);
+    const { data: d, error } = await _sb.rpc('delete_bike', {
+      p_caller_tid: _getCallerTid(),
+      p_bike_id:    data.bikeId,
+    });
     if (error) throw error;
-    return { success: true };
+    return d || { success: true };
   }
 
   if (action === 'assignBike') {
     const { tid, eventId, bikeId } = data;
-    const { error } = await _sb.from('registrations')
-      .update({ bike_id: bikeId })
-      .eq('event_id', eventId).eq('tid', tid);
+    const { data: d, error } = await _sb.rpc('assign_bike', {
+      p_caller_tid: _getCallerTid(),
+      p_event_id:   eventId,
+      p_tid:        tid,
+      p_bike_id:    bikeId,
+    });
     if (error) throw error;
-    return { success: true };
+    return d || { success: true };
   }
 
   if (action === 'cancelEvent') {
-    const { error } = await _sb.from('events').update({ status: 'בוטל' }).eq('id', data.eventId);
+    const { data: d, error } = await _sb.rpc('cancel_event', {
+      p_caller_tid: _getCallerTid(),
+      p_event_id:   data.eventId,
+    });
     if (error) throw error;
-    return { success: true };
+    return d || { success: true };
   }
 
   if (action === 'updateExamDate') {
-    const { error } = await _sb.from('riders').update({ exam_date: data.examDate }).eq('tid', data.tid);
+    const { data: d, error } = await _sb.rpc('update_exam_date', {
+      p_caller_tid: _getCallerTid(),
+      p_tid:        data.tid,
+      p_exam_date:  data.examDate,
+    });
     if (error) throw error;
-    return { success: true };
+    return d || { success: true };
   }
 
   if (action === 'updateMyProfile') {
     const { tid, phone, city, email, gender, dob } = data;
-    const updates = {};
-    if (phone  !== undefined) updates.phone  = normalizePhone(phone);
-    if (city   !== undefined) updates.city   = city;
-    if (email  !== undefined) updates.email  = email;
-    if (gender !== undefined) updates.gender = gender;
-    if (dob    !== undefined) updates.dob    = dob;
-    const { error } = await _sb.from('riders').update(updates).eq('tid', tid);
+    const { data: d, error } = await _sb.rpc('update_my_profile', {
+      p_tid:    tid,
+      p_phone:  phone  !== undefined ? phone  : null,
+      p_city:   city   !== undefined ? city   : null,
+      p_email:  email  !== undefined ? email  : null,
+      p_gender: gender !== undefined ? gender : null,
+      p_dob:    dob    !== undefined ? dob    : null,
+    });
     if (error) throw error;
-    return { success: true };
+    return d || { success: true };
   }
 
   if (action === 'cancelRegistration') {
-    const { error } = await _sb.from('registrations')
-      .delete().eq('event_id', data.eventId).eq('tid', data.tid);
+    const { data: d, error } = await _sb.rpc('cancel_registration', {
+      p_tid:      data.tid,
+      p_event_id: data.eventId,
+    });
     if (error) throw error;
-    return { success: true };
+    return d || { success: true };
   }
 
   // ── RPC פשוטה ────────────────────────────────────────────────
@@ -182,10 +220,15 @@ async function _route(action, data) {
   if (action === 'updateEvent') {
     const { eventId, date, description, km, climb, meetPoint, meetTime, captain } = data;
     const { data: d, error } = await _sb.rpc('update_event', {
-      p_event_id: eventId, p_date: date, p_description: description,
-      p_km: km || 0, p_climb: climb || 0,
-      p_meet_point: meetPoint || '', p_meet_time: meetTime || '06:00',
-      p_captain: captain || '',
+      p_caller_tid:  _getCallerTid(),
+      p_event_id:    eventId,
+      p_date:        date,
+      p_description: description,
+      p_km:          km || 0,
+      p_climb:       climb || 0,
+      p_meet_point:  meetPoint || '',
+      p_meet_time:   meetTime  || '06:00',
+      p_captain:     captain   || '',
     });
     if (error) throw error;
     return d || { success: true };
@@ -215,6 +258,7 @@ async function _route(action, data) {
 
   if (action === 'assignPartner') {
     const { data: d, error } = await _sb.rpc('assign_partner', {
+      p_caller_tid:  _getCallerTid(),
       p_event_id:    data.eventId,
       p_captain_tid: data.captainTid,
       p_stoker_tid:  data.stokerTid || null,
@@ -225,6 +269,7 @@ async function _route(action, data) {
 
   if (action === 'unassignPartner') {
     const { data: d, error } = await _sb.rpc('unassign_partner', {
+      p_caller_tid:  _getCallerTid(),
       p_event_id:    data.eventId,
       p_captain_tid: data.captainTid,
       p_stoker_tid:  data.stokerTid || null,
@@ -235,21 +280,26 @@ async function _route(action, data) {
 
   if (action === 'disableBike') {
     const { data: d, error } = await _sb.rpc('disable_bike', {
-      p_bike_id: data.bikeId,
-      p_fault:   data.fault || 'לא צוין',
+      p_caller_tid: _getCallerTid(),
+      p_bike_id:    data.bikeId,
+      p_fault:      data.fault || 'לא צוין',
     });
     if (error) throw error;
     return d || { success: true };
   }
 
   if (action === 'enableBike') {
-    const { data: d, error } = await _sb.rpc('enable_bike', { p_bike_id: data.bikeId });
+    const { data: d, error } = await _sb.rpc('enable_bike', {
+      p_caller_tid: _getCallerTid(),
+      p_bike_id:    data.bikeId,
+    });
     if (error) throw error;
     return d || { success: true };
   }
 
   if (action === 'addRider') {
     const { data: d, error } = await _sb.rpc('add_rider', {
+      p_caller_tid: _getCallerTid(),
       p_tid:        data.tid,
       p_name:       data.name,
       p_phone:      data.phone,
@@ -266,6 +316,7 @@ async function _route(action, data) {
 
   if (action === 'addEvent') {
     const { data: d, error } = await _sb.rpc('add_event', {
+      p_caller_tid:  _getCallerTid(),
       p_date:        data.date,
       p_description: data.description,
       p_km:          data.km          || 0,
@@ -281,10 +332,11 @@ async function _route(action, data) {
 
   if (action === 'addBike') {
     const { data: d, error } = await _sb.rpc('add_bike', {
-      p_name:   data.name,
-      p_frame:  data.frame  || '',
-      p_drive:  data.drive  || '',
-      p_status: data.status || 'תקין',
+      p_caller_tid: _getCallerTid(),
+      p_name:       data.name,
+      p_frame:      data.frame  || '',
+      p_drive:      data.drive  || '',
+      p_status:     data.status || 'תקין',
     });
     if (error) throw error;
     return d || { success: true };

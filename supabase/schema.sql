@@ -89,9 +89,9 @@ FROM riders r;
 
 -- ─────────────────────────────────────────────
 -- ROW LEVEL SECURITY
--- הערה: הפעל RLS בדשבורד עבור כל טבלה.
--- בשלב זה מדיניות ברירת מחדל: anon יכול לקרוא/לכתוב.
--- לאחר הטמעת auth מלא — הגבל לפי role.
+-- מדיניות: anon יכול לקרוא הכל, אך כתיבה ישירה חסומה.
+-- כל mutation חייב לעבור דרך פונקציות RPC (SECURITY DEFINER)
+-- שבודקות הרשאות בצד ה-DB לפני הביצוע.
 -- ─────────────────────────────────────────────
 
 ALTER TABLE riders        ENABLE ROW LEVEL SECURITY;
@@ -100,14 +100,18 @@ ALTER TABLE registrations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bikes         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE maintenance   ENABLE ROW LEVEL SECURITY;
 
--- Allow anon to read/write (open policy — tighten after auth is implemented)
-CREATE POLICY "anon_all_riders"        ON riders        FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "anon_all_events"        ON events        FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "anon_all_registrations" ON registrations FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "anon_all_bikes"         ON bikes         FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "anon_all_maintenance"   ON maintenance   FOR ALL TO anon USING (true) WITH CHECK (true);
+-- קריאה פתוחה לכולם (נדרש לתפקוד האפליקציה)
+CREATE POLICY "anon_read_riders"        ON riders        FOR SELECT TO anon USING (true);
+CREATE POLICY "anon_read_events"        ON events        FOR SELECT TO anon USING (true);
+CREATE POLICY "anon_read_registrations" ON registrations FOR SELECT TO anon USING (true);
+CREATE POLICY "anon_read_bikes"         ON bikes         FOR SELECT TO anon USING (true);
+CREATE POLICY "anon_read_maintenance"   ON maintenance   FOR SELECT TO anon USING (true);
 
--- Grant execute on all functions to anon
+-- כתיבה ישירה חסומה לחלוטין — כל שינוי עובר דרך RPC עם בדיקת הרשאות
+-- (אין CREATE POLICY ל-INSERT/UPDATE/DELETE → ברירת מחדל: DENY)
+
+-- הרשאות
 GRANT USAGE ON SCHEMA public TO anon;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
 GRANT SELECT ON riders_view TO anon;
+-- הרשאת EXECUTE לפונקציות RPC (ניתנת בנפרד לכל פונקציה ב-rpc.sql)

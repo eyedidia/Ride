@@ -2039,14 +2039,21 @@ const STATE = { riders: [], events: [], bikes: [] };
 // ══════════════════════════════════════════════════
 
 async function loadRiders() {
-  const riders = await apiGet('getAllRiders');
-  STATE.riders = riders;
-  renderRidersTable(riders);
-  updateExamAlerts();
+  try {
+    const riders = await apiGet('getAllRiders');
+    STATE.riders = riders;
+    renderRidersTable(riders);
+    updateExamAlerts();
+  } catch(e) {
+    showToast('שגיאה בטעינת רוכבים: ' + e.message, 'error');
+    const tbody = document.getElementById('ridersBody');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--red)">שגיאה בטעינת נתונים</td></tr>`;
+  }
 }
 
 async function loadEvents() {
-  const all = await apiGet('getAllEvents');
+  try {
+    const all = await apiGet('getAllEvents');
   // Re-categorize: move events from "past" back to upcoming if meetTime hasn't passed
   const stillUpcoming = (all.past || []).filter(e => !eventIsPast(e.date, e.meetTime));
   const fixedAll = {
@@ -2060,13 +2067,22 @@ async function loadEvents() {
   renderDashboardEvents(STATE.events);
   renderAssignmentsEventSelect(STATE.events);
   renderAllEventsTables(fixedAll);
-  loadAllRegCounts(fixedAll); // async — מעדכן תאים בלי לחסום
+  loadAllRegCounts(fixedAll);
+  } catch(e) {
+    showToast('שגיאה בטעינת אירועים: ' + e.message, 'error');
+  }
 }
 
 async function loadBikes() {
-  const bikes = await apiGet('getBikes');
-  STATE.bikes = bikes;
-  renderBikesTable(bikes);
+  try {
+    const bikes = await apiGet('getBikes');
+    STATE.bikes = bikes;
+    renderBikesTable(bikes);
+  } catch(e) {
+    showToast('שגיאה בטעינת אופניים: ' + e.message, 'error');
+    const tbody = document.getElementById('bikesBody');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--red)">שגיאה בטעינת נתונים</td></tr>`;
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -2081,8 +2097,8 @@ function renderRidersTable(riders) {
     return;
   }
   tbody.innerHTML = riders.map(r => {
-    const examClass = r.examStatus.includes('✅') ? 'status-ok'
-                    : r.examStatus.includes('❌') ? 'status-err' : 'status-warn';
+    const examClass = (r.examStatus || '').includes('✅') ? 'status-ok'
+                    : (r.examStatus || '').includes('❌') ? 'status-err' : 'status-warn';
     const permClass = r.permission === 'מנהל' ? 'status-blue' : 'status-blue';
     return `
     <tr class="rider-row">
@@ -2272,7 +2288,7 @@ function updateExamAlerts() {
     return;
   }
   tbody.innerHTML = alerts.map(r => {
-    const cls = r.examStatus.includes('❌') || r.examStatus.includes('אין') ? 'status-err' : 'status-warn';
+    const cls = (r.examStatus || '').includes('❌') || (r.examStatus || '').includes('אין') ? 'status-err' : 'status-warn';
     return `
     <tr>
       <td class="td-name">${esc(r.name)}</td>
@@ -2345,8 +2361,8 @@ function renderExamsTable(riders) {
     return;
   }
   container.innerHTML = riders.map(r => {
-    const cls = r.examStatus.includes('✅') ? 'status-ok'
-              : r.examStatus.includes('❌') || r.examStatus.includes('אין') ? 'status-err' : 'status-warn';
+    const cls = (r.examStatus || '').includes('✅') ? 'status-ok'
+              : (r.examStatus || '').includes('❌') || (r.examStatus || '').includes('אין') ? 'status-err' : 'status-warn';
     const examVal = r.examDate ? r.examDate.split('/').reverse().join('-') : '';
     return `
     <div style="background:var(--surface);border:1px solid var(--border);
@@ -3765,9 +3781,9 @@ function applyRidersFilter() {
     )) return false;
     if (style && r.rideStyle !== style) return false;
     if (exam) {
-      if (exam === 'תקין'     && !r.examStatus.includes('✅')) return false;
-      if (exam === 'פג תוקף' && !r.examStatus.includes('❌')) return false;
-      if (exam === 'אין בדיקה' && !r.examStatus.includes('אין')) return false;
+      if (exam === 'תקין'     && !(r.examStatus || '').includes('✅')) return false;
+      if (exam === 'פג תוקף' && !(r.examStatus || '').includes('❌')) return false;
+      if (exam === 'אין בדיקה' && !(r.examStatus || '').includes('אין')) return false;
     }
     return true;
   });
