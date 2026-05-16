@@ -50,42 +50,40 @@ Deno.serve(async (req) => {
     const fromAddr = `${smtp.from_name} <${smtp.smtp_user}>`;
     const emails   = buildEmails(type, payload, fromAddr, smtp.from_name);
 
-    if (!emails.length) return json({ sent: 0, failed: 0 });
+    if (!emails.length) return json({ queued: 0 });
 
-    const client = new SMTPClient({
-      connection: {
-        hostname: smtp.host,
-        port:     smtp.port,
-        tls:      smtp.secure,   // false=STARTTLS (port 587), true=SSL (port 465)
-        auth:     { username: smtp.smtp_user, password: smtp.smtp_pass },
-      },
-    });
-
-    let sentCount = 0;
-    const errors: string[] = [];
-    for (const m of emails) {
-      try {
-        await client.send({
-          from:    fromAddr,
-          to:      m.to,
-          cc:      m.cc,
-          subject: m.subject,
-          content: m.text,
-          html:    m.html,
-        });
-        sentCount++;
-      } catch (e) {
-        console.error('[notify] send error:', String(e));
-        errors.push(String(e));
+    // שלח ברקע — החזר תשובה מיידית לפני שה-SMTP מתחבר
+    const sendTask = (async () => {
+      const client = new SMTPClient({
+        connection: {
+          hostname: smtp.host,
+          port:     smtp.port,
+          tls:      smtp.secure,
+          auth:     { username: smtp.smtp_user, password: smtp.smtp_pass },
+        },
+      });
+      for (const m of emails) {
+        try {
+          await client.send({
+            from:    fromAddr,
+            to:      m.to,
+            cc:      m.cc,
+            subject: m.subject,
+            content: m.text,
+            html:    m.html,
+          });
+          console.log('[notify] sent to:', Array.isArray(m.to) ? m.to.join(',') : m.to);
+        } catch (e) {
+          console.error('[notify] send error:', String(e));
+        }
       }
-    }
-    client.close().catch(() => {}); // fire-and-forget — לא לעכב את התשובה
+      client.close().catch(() => {});
+    })();
 
-    return json({
-      sent:   sentCount,
-      failed: errors.length,
-      ...(errors.length ? { errors } : {}),
-    }, errors.length === emails.length ? 500 : 200);
+    // שמור את ה-function חי עד שהמשימה הברקע מסתיימת
+    EdgeRuntime.waitUntil(sendTask);
+
+    return json({ queued: emails.length });
 
   } catch (err) {
     return json({ error: String(err) }, 500);
