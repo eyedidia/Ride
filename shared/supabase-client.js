@@ -247,6 +247,19 @@ async function _route(action, data) {
     return d || { success: true };
   }
 
+  if (action === 'updateEventActual') {
+    const { error } = await _sb.rpc('update_event_actual', {
+      p_caller_tid:         _getCallerTid(),
+      p_event_id:           data.eventId,
+      p_actual_km:          data.actualKm          ?? null,
+      p_actual_climb:       data.actualClimb        ?? null,
+      p_actual_description: data.actualDescription  || null,
+      p_attended_tids:      data.attendedTids,
+    });
+    if (error) throw error;
+    return { success: true };
+  }
+
   // ── RPC עם טרנזקציה ──────────────────────────────────────────
 
   if (action === 'login') {

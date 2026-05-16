@@ -3128,8 +3128,16 @@ function buildEventViewHTML(ev, regs) {
       <div><span style="color:var(--text-muted)">שעה:</span> ${esc(ev.meetTime||'—')}</div>
       <div><span style="color:var(--text-muted)">נקודת מפגש:</span> ${esc(ev.meetPoint||'—')}</div>
       <div><span style="color:var(--text-muted)">קפטן:</span> ${esc(ev.captain||'—')}</div>
-      <div><span style="color:var(--text-muted)">ק"מ:</span> ${esc(String(ev.km||0))}</div>
-      <div><span style="color:var(--text-muted)">עליות:</span> ${esc(String(ev.climb||0))} מ'</div>
+      <div>
+        <span style="color:var(--text-muted)">ק"מ:</span>
+        <strong>${esc(String(ev.actualKm ?? ev.km ?? 0))}</strong>
+        ${ev.actualKm != null && ev.actualKm != ev.km ? `<span style="color:var(--text-muted);font-size:0.8rem"> (תוכנן: ${esc(String(ev.km))})</span>` : ''}
+      </div>
+      <div>
+        <span style="color:var(--text-muted)">עליות:</span>
+        <strong>${esc(String(ev.actualClimb ?? ev.climb ?? 0))} מ'</strong>
+        ${ev.actualClimb != null && ev.actualClimb != ev.climb ? `<span style="color:var(--text-muted);font-size:0.8rem"> (תוכנן: ${esc(String(ev.climb))} מ')</span>` : ''}
+      </div>
       <div><span style="color:var(--text-muted)">סטטוס:</span> ${statusBadge}</div>
       <div><span style="color:var(--text-muted)">נרשמים:</span> <strong>${regs.length}</strong></div>
     </div>`;
@@ -3181,7 +3189,78 @@ function buildEventViewHTML(ev, regs) {
     </ul>`;
   }
 
+  if (!isCancelled) {
+    const hasActual = ev.actualKm != null;
+    html += `
+    <details style="margin-top:18px;border:1px solid var(--border);border-radius:8px" ${hasActual ? 'open' : ''}>
+      <summary style="padding:10px 14px;cursor:pointer;font-weight:600;font-size:0.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">
+        <span>✏️ עדכן נתוני אמת</span>
+        ${hasActual
+          ? '<span style="font-size:0.75rem;color:var(--green,#22c55e)">✅ מעודכן</span>'
+          : '<span style="font-size:0.75rem;color:var(--text-muted)">לא עודכן עדיין</span>'}
+      </summary>
+      <div style="padding:14px;border-top:1px solid var(--border)">
+        <div class="form-grid" style="margin-bottom:12px">
+          <label>מרחק בפועל (ק"מ)
+            <input type="number" id="actual-km-${esc(ev.id)}" class="input"
+                   value="${ev.actualKm ?? ''}" placeholder="${esc(String(ev.km))}">
+          </label>
+          <label>עלייה בפועל (מ')
+            <input type="number" id="actual-climb-${esc(ev.id)}" class="input"
+                   value="${ev.actualClimb ?? ''}" placeholder="${esc(String(ev.climb))}">
+          </label>
+          <label style="grid-column:1/-1">יעד / תיאור בפועל
+            <input type="text" id="actual-desc-${esc(ev.id)}" class="input"
+                   value="${esc(ev.actualDescription ?? '')}" placeholder="${esc(ev.description)}">
+          </label>
+        </div>
+        <p style="font-size:0.82rem;color:var(--text-muted);margin:0 0 8px">סמן מי השתתף בפועל:</p>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+          ${regs.map(r => `
+            <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer">
+              <input type="checkbox" data-tid="${esc(r.tid)}" class="att-cb-${esc(ev.id)}"
+                     ${r.attended !== false ? 'checked' : ''}>
+              ${esc(r.name)}
+              <span style="color:var(--text-muted);font-size:0.78rem">(${esc(r.role)})${r.partner && r.partner !== '—' ? ' + ' + esc(r.partner) : ''}</span>
+            </label>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-sm" onclick="saveActualEventData('${esc(ev.id)}')">💾 שמור</button>
+          <span id="actual-status-${esc(ev.id)}" style="font-size:0.82rem;color:var(--text-muted)"></span>
+        </div>
+      </div>
+    </details>`;
+  }
+
   return html;
+}
+
+async function saveActualEventData(eventId) {
+  const status   = document.getElementById(`actual-status-${eventId}`);
+  status.textContent = 'שומר...';
+  const kmVal    = document.getElementById(`actual-km-${eventId}`).value;
+  const climbVal = document.getElementById(`actual-climb-${eventId}`).value;
+  const descVal  = document.getElementById(`actual-desc-${eventId}`).value.trim();
+  const attendedTids = [...document.querySelectorAll(`.att-cb-${eventId}:checked`)]
+    .map(cb => cb.dataset.tid);
+  try {
+    await callAPI('updateEventActual', {
+      eventId,
+      actualKm:          kmVal    ? Number(kmVal)    : null,
+      actualClimb:       climbVal ? Number(climbVal) : null,
+      actualDescription: descVal  || null,
+      attendedTids,
+    });
+    const ev = (STATE.allEvents?.past || []).find(e => String(e.id) === String(eventId));
+    if (ev) {
+      ev.actualKm          = kmVal    ? Number(kmVal)    : null;
+      ev.actualClimb       = climbVal ? Number(climbVal) : null;
+      ev.actualDescription = descVal  || null;
+    }
+    status.textContent = '✅ נשמר';
+  } catch(e) {
+    status.textContent = '❌ ' + e.message;
+  }
 }
 
 function shareEventViewWhatsApp() {

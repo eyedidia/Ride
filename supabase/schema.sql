@@ -36,7 +36,10 @@ CREATE TABLE IF NOT EXISTS events (
   meet_point  TEXT    NOT NULL DEFAULT '',
   meet_time   TEXT    NOT NULL DEFAULT '06:00',
   captain     TEXT    NOT NULL DEFAULT '',
-  status      TEXT    NOT NULL DEFAULT 'פעיל'
+  status      TEXT    NOT NULL DEFAULT 'פעיל',
+  actual_km          NUMERIC,
+  actual_climb       NUMERIC,
+  actual_description TEXT
 );
 
 CREATE TABLE IF NOT EXISTS registrations (
@@ -47,7 +50,8 @@ CREATE TABLE IF NOT EXISTS registrations (
   bike_id      TEXT  NOT NULL DEFAULT '',
   partner_name TEXT  NOT NULL DEFAULT '—',
   partner_tid  TEXT  NOT NULL DEFAULT '',
-  created_at   DATE  NOT NULL DEFAULT CURRENT_DATE
+  created_at   DATE  NOT NULL DEFAULT CURRENT_DATE,
+  attended     BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE IF NOT EXISTS bikes (

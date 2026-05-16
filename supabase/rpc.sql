@@ -158,7 +158,10 @@ BEGIN
       'id', e.id, 'date', to_char(e.date,'DD/MM/YYYY'),
       'description', e.description, 'km', e.km, 'climb', e.climb,
       'meetPoint', e.meet_point, 'meetTime', e.meet_time,
-      'captain', e.captain, 'status', e.status
+      'captain', e.captain, 'status', e.status,
+      'actualKm',          e.actual_km,
+      'actualClimb',       e.actual_climb,
+      'actualDescription', e.actual_description
     ) ORDER BY e.date DESC
   ) INTO past      FROM events e WHERE e.status <> 'בוטל' AND e.date < CURRENT_DATE;
 
@@ -196,7 +199,8 @@ BEGIN
       'bike',           reg.bike_id,
       'partner',        reg.partner_name,
       'partnerTid',     reg.partner_tid,
-      'date',           to_char(reg.created_at, 'DD/MM/YYYY')
+      'date',           to_char(reg.created_at, 'DD/MM/YYYY'),
+      'attended',       reg.attended
     )
   )
   INTO result
@@ -239,9 +243,9 @@ BEGIN
   SELECT jsonb_agg(
     jsonb_build_object(
       'date',        to_char(e.date, 'DD/MM/YYYY'),
-      'description', e.description,
-      'km',          e.km,
-      'climb',       e.climb,
+      'description', COALESCE(e.actual_description, e.description),
+      'km',          COALESCE(e.actual_km,          e.km),
+      'climb',       COALESCE(e.actual_climb,        e.climb),
       'role',        reg.role,
       'bike',        reg.bike_id,
       'partner',     reg.partner_name
@@ -251,7 +255,8 @@ BEGIN
   FROM registrations reg
   JOIN events e ON e.id = reg.event_id
   WHERE reg.tid = p_tid
-    AND e.date < CURRENT_DATE;
+    AND e.date < CURRENT_DATE
+    AND reg.attended = TRUE;
 
   RETURN COALESCE(result, '[]'::JSONB);
 END;
@@ -535,7 +540,36 @@ END;
 $$;
 
 -- ─────────────────────────────────────────────
--- 16. UPDATE_RIDER (admin)
+-- 16. UPDATE_EVENT_ACTUAL (admin) — נתוני אמת לאחר רכיבה
+-- ─────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION update_event_actual(
+  p_caller_tid         TEXT,
+  p_event_id           TEXT,
+  p_actual_km          NUMERIC,
+  p_actual_climb       NUMERIC,
+  p_actual_description TEXT,
+  p_attended_tids      TEXT[]
+) RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  PERFORM _require_admin(p_caller_tid);
+
+  UPDATE events
+  SET actual_km          = p_actual_km,
+      actual_climb       = p_actual_climb,
+      actual_description = p_actual_description
+  WHERE id = p_event_id;
+
+  -- אפס השתתפות לכולם, ואז סמן את מי שהגיע
+  UPDATE registrations SET attended = FALSE WHERE event_id = p_event_id;
+  UPDATE registrations SET attended = TRUE
+  WHERE event_id = p_event_id AND tid = ANY(p_attended_tids);
+END;
+$$;
+GRANT EXECUTE ON FUNCTION update_event_actual(TEXT,TEXT,NUMERIC,NUMERIC,TEXT,TEXT[]) TO anon;
+
+-- ─────────────────────────────────────────────
+-- 17. UPDATE_RIDER (admin)
 -- ─────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION update_rider(
