@@ -2141,7 +2141,7 @@ function renderRidersTable(riders) {
                   : (r.examStatus || '').includes('❌') || (r.examStatus || '').includes('אין') ? 'status-err' : 'status-warn';
     const ariaDesc = `${r.name}, ${r.rideStyle}, ${r.city}, גיל ${r.age}, הרשאה: ${r.permission}, בדיקה: ${r.examStatus}`;
     return `
-    <div class="rider-card" role="listitem" aria-label="${esc(ariaDesc)}">
+    <div class="rider-card" role="listitem" tabindex="0" aria-label="${esc(ariaDesc)}">
       <div class="rc-info" aria-hidden="true">
         <div class="rc-name">${esc(r.name)}</div>
         <div class="rc-sub">${esc(r.phone)} · ${esc(r.city)} · גיל ${esc(r.age)}</div>
