@@ -21,13 +21,20 @@ const _sb = createClient(
 Deno.serve(async (req) => {
   try {
     const { type, payload } = await req.json();
+    console.log('[notify] type:', type);
 
     const { data: smtp, error: smtpErr } = await _sb
       .from('smtp_settings').select('*').single();
 
-    if (smtpErr || !smtp?.smtp_user) {
+    if (smtpErr) {
+      console.error('[notify] smtp_settings error:', JSON.stringify(smtpErr));
+      return json({ error: 'שגיאה בקריאת הגדרות SMTP', detail: smtpErr.message }, 500);
+    }
+    if (!smtp?.smtp_user) {
+      console.error('[notify] smtp_settings empty — run schema.sql and save settings in admin panel');
       return json({ error: 'SMTP לא מוגדר. הגדר הגדרות SMTP בדף הניהול.' }, 500);
     }
+    console.log('[notify] smtp host:', smtp.host, 'user:', smtp.smtp_user);
 
     const transporter = nodemailer.createTransport({
       host:   smtp.host,
