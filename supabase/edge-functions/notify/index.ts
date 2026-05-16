@@ -69,7 +69,6 @@ Deno.serve(async (req) => {
             to:      m.to,
             cc:      m.cc,
             subject: m.subject,
-            content: m.text,
             html:    m.html,
           });
           console.log('[notify] sent to:', Array.isArray(m.to) ? m.to.join(',') : m.to);
@@ -108,6 +107,7 @@ function wrap(content: string, clubName: string): string {
   return `<!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
