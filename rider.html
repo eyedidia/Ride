@@ -1546,14 +1546,12 @@ function renderEvents(events, counts = {}) {
         </div>
       </div>
 
-      <!-- פרטי אירוע — aria-label על כל ציפ כדי שקוראי מסך יקראו תווית וערך ביחד -->
-      <div class="event-meta" aria-hidden="true">
-        <p class="meta-chip">📍 ${esc(ev.meetPoint)}</p>
-        <p class="meta-chip">🚴 <strong>${esc(String(ev.km))}</strong> ק"מ</p>
-        <p class="meta-chip">⛰️ <strong>${esc(String(ev.climb))}</strong> מ'</p>
-        <p class="meta-chip">👑 ${esc(ev.captain)}</p>
+      <div class="event-meta">
+        <p class="meta-chip" aria-label="נקודת מפגש: ${esc(ev.meetPoint)}"><span aria-hidden="true">📍 ${esc(ev.meetPoint)}</span></p>
+        <p class="meta-chip" aria-label="מרחק: ${esc(String(ev.km))} קילומטרים"><span aria-hidden="true">🚴 <strong>${esc(String(ev.km))}</strong> ק"מ</span></p>
+        <p class="meta-chip" aria-label="עלייה: ${esc(String(ev.climb))} מטר"><span aria-hidden="true">⛰️ <strong>${esc(String(ev.climb))}</strong> מ'</span></p>
+        <p class="meta-chip" aria-label="קפטן: ${esc(ev.captain)}"><span aria-hidden="true">👑 ${esc(ev.captain)}</span></p>
       </div>
-      <p class="sr-only">נקודת מפגש: ${esc(ev.meetPoint)}. מרחק: ${esc(String(ev.km))} קילומטרים. עלייה: ${esc(String(ev.climb))} מטר. קפטן: ${esc(ev.captain)}.</p>
 
       <div class="event-footer">
         <button class="btn btn-ghost"
@@ -2293,8 +2291,8 @@ function renderContacts(contacts) {
     return;
   }
   container.innerHTML = contacts.map(c => `
-    <div class="contact-card" role="listitem">
-      <div class="contact-info">
+    <div class="contact-card" role="listitem" aria-label="${esc(c.name)}, ${esc(c.city)}">
+      <div class="contact-info" aria-hidden="true">
         <div class="contact-name">${esc(c.name)}</div>
         <div class="contact-city">${esc(c.city)}</div>
       </div>

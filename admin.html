@@ -3698,10 +3698,8 @@ function showSection(name, clickedBtn) {
     document.getElementById('pageTitle').textContent      = titles[name][0];
     document.getElementById('pageBreadcrumb').textContent = titles[name][1];
     const _sec = document.getElementById('section-' + name);
-    const _hId = _sec?.getAttribute('aria-labelledby');
-    const _h   = _hId ? document.getElementById(_hId) : null;
-    if (_h) { _h.setAttribute('tabindex', '-1'); _h.focus(); }
-    else     { document.getElementById('main-content').focus(); }
+    if (_sec) { _sec.setAttribute('tabindex', '-1'); _sec.focus(); }
+    else       { document.getElementById('main-content').focus(); }
     closeSidebar();
     if (name === 'maintenance') loadMaintenance();
     if (name === 'settings')    initSettingsSection();
