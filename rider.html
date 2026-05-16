@@ -2291,7 +2291,7 @@ function renderContacts(contacts) {
     return;
   }
   container.innerHTML = contacts.map(c => `
-    <div class="contact-card" role="listitem" aria-label="${esc(c.name)}, ${esc(c.city)}">
+    <div class="contact-card" role="listitem" tabindex="0" aria-label="${esc(c.name)}, ${esc(c.city)}">
       <div class="contact-info" aria-hidden="true">
         <div class="contact-name">${esc(c.name)}</div>
         <div class="contact-city">${esc(c.city)}</div>
