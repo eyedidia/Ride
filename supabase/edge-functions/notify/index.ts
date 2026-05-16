@@ -11,7 +11,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import nodemailer from 'npm:nodemailer';
+import { SMTPClient } from 'https://deno.land/x/denomailer/mod.ts';
 
 const _sb = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -36,26 +36,45 @@ Deno.serve(async (req) => {
     }
     console.log('[notify] smtp host:', smtp.host, 'user:', smtp.smtp_user);
 
-    const transporter = nodemailer.createTransport({
-      host:   smtp.host,
-      port:   smtp.port,
-      secure: smtp.secure,
-      auth:   { user: smtp.smtp_user, pass: smtp.smtp_pass },
-    });
-
     const fromAddr = `${smtp.from_name} <${smtp.smtp_user}>`;
     const emails   = buildEmails(type, payload, fromAddr, smtp.from_name);
 
     if (!emails.length) return json({ sent: 0, failed: 0 });
 
-    const results  = await Promise.allSettled(emails.map(m => transporter.sendMail(m)));
-    const failed   = results.filter(r => r.status === 'rejected') as PromiseRejectedResult[];
+    const client = new SMTPClient({
+      connection: {
+        hostname: smtp.host,
+        port:     smtp.port,
+        tls:      smtp.secure,   // false=STARTTLS (port 587), true=SSL (port 465)
+        auth:     { username: smtp.smtp_user, password: smtp.smtp_pass },
+      },
+    });
+
+    let sentCount = 0;
+    const errors: string[] = [];
+    for (const m of emails) {
+      try {
+        await client.send({
+          from:    fromAddr,
+          to:      m.to,
+          cc:      m.cc,
+          subject: m.subject,
+          content: m.text,
+          html:    m.html,
+        });
+        sentCount++;
+      } catch (e) {
+        console.error('[notify] send error:', String(e));
+        errors.push(String(e));
+      }
+    }
+    await client.close().catch(() => {});
 
     return json({
-      sent:   results.length - failed.length,
-      failed: failed.length,
-      errors: failed.length ? failed.map(r => String(r.reason)) : undefined,
-    }, failed.length === results.length ? 500 : 200);
+      sent:   sentCount,
+      failed: errors.length,
+      ...(errors.length ? { errors } : {}),
+    }, errors.length === emails.length ? 500 : 200);
 
   } catch (err) {
     return json({ error: String(err) }, 500);
