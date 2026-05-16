@@ -110,6 +110,23 @@ CREATE POLICY "anon_read_maintenance"   ON maintenance   FOR SELECT TO anon USIN
 -- כתיבה ישירה חסומה לחלוטין — כל שינוי עובר דרך RPC עם בדיקת הרשאות
 -- (אין CREATE POLICY ל-INSERT/UPDATE/DELETE → ברירת מחדל: DENY)
 
+-- ─────────────────────────────────────────────
+-- TABLE: smtp_settings — הגדרות שרת מייל (singleton)
+-- ניגשת רק דרך service role (Edge Function) — אין פוליסת קריאה לanon
+-- ─────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS smtp_settings (
+  id        INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  host      TEXT    NOT NULL DEFAULT 'smtp.gmail.com',
+  port      INTEGER NOT NULL DEFAULT 587,
+  secure    BOOLEAN NOT NULL DEFAULT false,
+  smtp_user TEXT    NOT NULL DEFAULT '',
+  smtp_pass TEXT    NOT NULL DEFAULT '',
+  from_name TEXT    NOT NULL DEFAULT 'קבוצת האופניים'
+);
+ALTER TABLE smtp_settings ENABLE ROW LEVEL SECURITY;
+-- אין CREATE POLICY → ברירת מחדל DENY לanon; Edge Function קוראת דרך service role
+
 -- הרשאות
 GRANT USAGE ON SCHEMA public TO anon;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;

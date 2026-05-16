@@ -734,3 +734,33 @@ GRANT EXECUTE ON FUNCTION assign_bike(TEXT,TEXT,TEXT,TEXT)               TO anon
 GRANT EXECUTE ON FUNCTION update_exam_date(TEXT,TEXT,DATE)               TO anon;
 GRANT EXECUTE ON FUNCTION update_my_profile(TEXT,TEXT,TEXT,TEXT,TEXT,DATE) TO anon;
 GRANT EXECUTE ON FUNCTION cancel_registration(TEXT,TEXT)                 TO anon;
+
+-- ─────────────────────────────────────────────
+-- SMTP SETTINGS — שמירת הגדרות שרת מייל
+-- ─────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION save_smtp_settings(
+  p_code      TEXT,
+  p_host      TEXT,
+  p_port      INTEGER,
+  p_secure    BOOLEAN,
+  p_user      TEXT,
+  p_pass      TEXT,
+  p_from_name TEXT
+) RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  IF p_code <> '1981' THEN
+    RAISE EXCEPTION 'קוד טכנאי שגוי';
+  END IF;
+  INSERT INTO smtp_settings (id, host, port, secure, smtp_user, smtp_pass, from_name)
+  VALUES (1, p_host, p_port, p_secure, p_user, p_pass, p_from_name)
+  ON CONFLICT (id) DO UPDATE SET
+    host      = EXCLUDED.host,
+    port      = EXCLUDED.port,
+    secure    = EXCLUDED.secure,
+    smtp_user = EXCLUDED.smtp_user,
+    smtp_pass = EXCLUDED.smtp_pass,
+    from_name = EXCLUDED.from_name;
+END;
+$$;
+GRANT EXECUTE ON FUNCTION save_smtp_settings(TEXT,TEXT,INTEGER,BOOLEAN,TEXT,TEXT,TEXT) TO anon;

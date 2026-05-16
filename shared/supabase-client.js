@@ -355,10 +355,45 @@ async function _route(action, data) {
     return d || { success: true };
   }
 
-  // ── stubs ────────────────────────────────────────────────────
+  // ── מיילים — Edge Function notify ───────────────────────────
 
-  if (action === 'sendExamReminders' || action === 'notifyAdminNoEmail') {
-    // מופעל ע"י Edge Function — אין פעולה בצד הלקוח
+  if (action === 'sendExamReminders') {
+    const { error } = await _sb.functions.invoke('notify', {
+      body: { type: 'exam_reminder', payload: data },
+    });
+    if (error) throw error;
+    return { success: true };
+  }
+
+  if (action === 'notifyAdminNoEmail') {
+    const { error } = await _sb.functions.invoke('notify', {
+      body: { type: 'exam_no_email', payload: data },
+    });
+    if (error) throw error;
+    return { success: true };
+  }
+
+  if (action === 'sendEmail') {
+    const { error } = await _sb.functions.invoke('notify', {
+      body: { type: data.type, payload: data.payload },
+    });
+    if (error) throw error;
+    return { success: true };
+  }
+
+  // ── הגדרות SMTP ──────────────────────────────────────────────
+
+  if (action === 'saveSmtpSettings') {
+    const { error } = await _sb.rpc('save_smtp_settings', {
+      p_code:      data.code,
+      p_host:      data.host,
+      p_port:      data.port,
+      p_secure:    data.secure,
+      p_user:      data.user,
+      p_pass:      data.pass,
+      p_from_name: data.fromName,
+    });
+    if (error) throw error;
     return { success: true };
   }
 

@@ -1,66 +1,99 @@
 // ═══════════════════════════════════════════════════════════════
 // Supabase Edge Function: exam-reminders
-// תפקיד: שולח מייל למנהל 30 יום לפני פקיעת בדיקה ארגומטרית
+// תפקיד: cron יומי — שולח תזכורות לרוכבים עם בדיקה פוגת תוקף
 //
-// הפעלה: הגדר cron trigger בדשבורד:
-//   Schedule → New Schedule → "0 8 * * *" → exec exam-reminders
+// הפעלה (Supabase Dashboard → Edge Functions → Schedules):
+//   Cron: "0 8 * * *"  (מדי יום בשעה 08:00)
 //
-// משתני סביבה נדרשים (Supabase Dashboard → Edge Functions → Secrets):
-//   SUPABASE_URL        - URL הפרויקט
-//   SUPABASE_SERVICE_ROLE_KEY - service role key (לקריאה ישירה)
-//   ADMIN_EMAIL         - כתובת מייל של המנהל
-//   RESEND_API_KEY      - מפתח Resend (https://resend.com) לשליחת מייל
+// משתני סביבה:
+//   SUPABASE_URL              (אוטומטי)
+//   SUPABASE_SERVICE_ROLE_KEY (אוטומטי)
+//   ADMIN_DAYS  (אופציונלי, ברירת מחדל: "30,14,7")
 // ═══════════════════════════════════════════════════════════════
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const SUPABASE_URL            = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const ADMIN_EMAIL             = Deno.env.get('ADMIN_EMAIL') ?? 'eyedidia@gmail.com';
-const RESEND_API_KEY          = Deno.env.get('RESEND_API_KEY')!;
+const _sb = createClient(
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+);
+
+const DAYS = (Deno.env.get('ADMIN_DAYS') ?? '30,14,7')
+  .split(',').map(d => parseInt(d.trim())).filter(d => d > 0);
 
 Deno.serve(async (_req) => {
   try {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    const target = new Date();
-    target.setDate(target.getDate() + 30);
-    const targetStr = target.toISOString().slice(0, 10); // YYYY-MM-DD
-
-    const { data: expiring, error } = await supabase
-      .from('riders_view')
-      .select('name, exam_expiry')
-      .eq('exam_expiry', targetStr);
-
-    if (error) throw error;
-    if (!expiring || expiring.length === 0) {
-      return new Response(JSON.stringify({ sent: false, reason: 'no expiring exams' }), { status: 200 });
-    }
-
-    const lines = expiring.map((r: { name: string; exam_expiry: string }) =>
-      `• ${r.name} — תוקף פג בתאריך ${r.exam_expiry}`
-    ).join('\n');
-
-    const body = `שלום,\n\nהבדיקה הארגומטרית של הרוכבים הבאים פוגת תוקף בעוד 30 יום:\n\n${lines}\n\nאנא עדכן את המועדים בהקדם.\n\nמערכת ניהול קבוצת האופניים`;
-
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'ride@yourdomain.com',
-        to: ADMIN_EMAIL,
-        subject: `⚠️ ${expiring.length} רוכב/ים עם בדיקה שפוגת תוקף בעוד 30 יום`,
-        text: body,
-      }),
+    // חשב את התאריכים הרלוונטיים
+    const targets = DAYS.map(d => {
+      const t = new Date(today);
+      t.setDate(t.getDate() + d);
+      return t.toISOString().slice(0, 10);
     });
 
-    if (!res.ok) throw new Error(`Resend error: ${await res.text()}`);
+    // שלוף רוכבים שהבדיקה שלהם פוגת בתאריכים הנ"ל
+    const { data: expiring, error } = await _sb
+      .from('riders_view')
+      .select('name, email, exam_expiry')
+      .in('exam_expiry', targets);
 
-    return new Response(JSON.stringify({ sent: true, count: expiring.length }), { status: 200 });
+    if (error) throw error;
+    if (!expiring?.length) {
+      return ok({ sent: false, reason: 'אין בדיקות פוגות' });
+    }
+
+    // שלוף מנהלים עם מייל
+    const { data: admins } = await _sb
+      .from('riders')
+      .select('email')
+      .eq('permission', 'מנהל')
+      .neq('email', '');
+    const adminEmails = (admins || []).map((a: { email: string }) => a.email).filter(Boolean);
+
+    // חלק לרוכבים עם/בלי מייל
+    const withEmail = expiring.filter((r: { email: string }) => r.email?.trim());
+    const noEmail   = expiring.filter((r: { email: string }) => !r.email?.trim());
+
+    let sentCount = 0;
+
+    // שלח תזכורות אישיות לרוכבים עם מייל
+    if (withEmail.length) {
+      const recipients = withEmail.map((r: { name: string; email: string; exam_expiry: string }) => {
+        const expiry   = new Date(r.exam_expiry);
+        const daysLeft = Math.round((expiry.getTime() - today.getTime()) / 86_400_000);
+        return { name: r.name, email: r.email, daysLeft };
+      });
+
+      const { data, error: fnErr } = await _sb.functions.invoke('notify', {
+        body: { type: 'exam_reminder', payload: { recipients, adminEmails } },
+      });
+      if (fnErr) throw fnErr;
+      sentCount = (data as { sent?: number })?.sent ?? withEmail.length;
+    }
+
+    // הודע למנהלים על רוכבים ללא מייל
+    if (noEmail.length && adminEmails.length) {
+      const riders = noEmail.map((r: { name: string; exam_expiry: string }) => {
+        const expiry   = new Date(r.exam_expiry);
+        const daysLeft = Math.round((expiry.getTime() - today.getTime()) / 86_400_000);
+        return { name: r.name, daysLeft };
+      });
+
+      const { error: fnErr } = await _sb.functions.invoke('notify', {
+        body: { type: 'exam_no_email', payload: { adminEmails, riders } },
+      });
+      if (fnErr) throw fnErr;
+    }
+
+    return ok({ processed: expiring.length, withEmail: withEmail.length, noEmail: noEmail.length, sent: sentCount });
+
   } catch (err) {
     return new Response(JSON.stringify({ error: String(err) }), { status: 500 });
   }
 });
+
+function ok(body: unknown) {
+  return new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
+}

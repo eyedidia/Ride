@@ -1609,6 +1609,15 @@ async function register(eventId, eventName, btn) {
     cachedCounts[eventId] = (cachedCounts[eventId] || 0) + 1;
     announce(`נרשמת בהצלחה לרכיבה ${eventName}`);
     showToast(`נרשמת לרכיבה: ${eventName}`, 'success');
+    if (user.email) {
+      const _ev = cachedEvents?.find(e => e.id === eventId);
+      if (_ev) {
+        callAPI('sendEmail', {
+          type: 'event_registered',
+          payload: { name: user.name, email: user.email, event: _ev },
+        }).catch(() => {});
+      }
+    }
     renderEvents(cachedEvents, cachedCounts);
   } catch(e) {
     if (e.message && e.message.includes('כבר רשום')) {

@@ -1543,6 +1543,75 @@ tbody td {
           <div id="reminderStatus" role="status" aria-live="polite" style="margin-top:16px;font-size:0.85rem"></div>
         </div>
       </div>
+
+      <!-- ─── הגדרות SMTP ─── -->
+      <div class="panel" style="margin-top:20px">
+        <div class="panel-header">
+          <h2 class="panel-title"><span aria-hidden="true">📧</span> הגדרות שליחת מייל (SMTP)</h2>
+          <span id="smtpLockBadge" style="font-size:0.75rem;color:var(--text-muted)">🔒 נדרש קוד טכנאי</span>
+        </div>
+        <div class="panel-body" style="padding:20px">
+
+          <!-- שלב 1: קוד טכנאי -->
+          <div id="smtpLockScreen">
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px">
+              הגדרות אלו מוגנות. הזן קוד טכנאי לגישה.
+            </p>
+            <div style="display:flex;gap:8px;align-items:center">
+              <label for="smtpTechCode" class="sr-only">קוד טכנאי</label>
+              <input type="password" id="smtpTechCode" class="input" placeholder="קוד טכנאי"
+                     style="width:150px" aria-label="קוד טכנאי"
+                     onkeydown="if(event.key==='Enter')unlockSmtp()">
+              <button class="btn btn-sm" onclick="unlockSmtp()">אשר</button>
+            </div>
+            <div id="smtpCodeError" role="alert"
+                 style="color:var(--red);font-size:0.82rem;margin-top:6px;display:none">קוד שגוי</div>
+          </div>
+
+          <!-- שלב 2: טופס SMTP -->
+          <div id="smtpForm" hidden>
+            <div style="display:grid;gap:14px;margin-bottom:16px">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="smtpHost">שרת SMTP</label>
+                  <input type="text" id="smtpHost" class="input" value="smtp.gmail.com" placeholder="smtp.gmail.com">
+                </div>
+                <div class="form-group" style="max-width:110px">
+                  <label class="form-label" for="smtpPort">פורט</label>
+                  <input type="number" id="smtpPort" class="input" value="587" min="1" max="65535">
+                </div>
+              </div>
+              <label style="display:flex;align-items:center;gap:10px;font-size:0.87rem">
+                <input type="checkbox" id="smtpSecure">
+                <span>SSL/TLS (השתמש עם פורט 465)</span>
+              </label>
+              <div class="form-group">
+                <label class="form-label" for="smtpUser">כתובת מייל שולח</label>
+                <input type="email" id="smtpUser" class="input" placeholder="yourname@gmail.com">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="smtpPass">סיסמת אפליקציה</label>
+                <input type="password" id="smtpPass" class="input" placeholder="16 תווים (App Password)">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="smtpFromName">שם שולח</label>
+                <input type="text" id="smtpFromName" class="input" value="קבוצת האופניים">
+              </div>
+            </div>
+            <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:16px;line-height:1.5">
+              ℹ️ <strong>Gmail:</strong> יש להשתמש ב<strong>סיסמת אפליקציה</strong> (לא הסיסמה הרגילה).<br>
+              חשבון Google ← אבטחה ← אימות דו-שלבי ← סיסמאות אפליקציות ← צור חדשה.
+            </p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="saveSmtpSettings()">💾 שמור הגדרות</button>
+              <button class="btn btn-ghost" onclick="testSmtpSettings()">🔌 בדוק חיבור</button>
+            </div>
+            <div id="smtpStatus" role="status" aria-live="polite"
+                 style="font-size:0.82rem;margin-top:10px;color:var(--text-muted)"></div>
+          </div>
+
+        </div>
+      </div>
     </section>
 
   </main>
@@ -1593,6 +1662,10 @@ tbody td {
           <option value="">— בחר —</option>
         </select>
       </div>
+      <label style="display:flex;align-items:center;gap:10px;font-size:0.85rem;margin-top:4px">
+        <input type="checkbox" id="ev-notify-all" checked>
+        <span>📧 הודע לכל הרוכבים על האירוע החדש</span>
+      </label>
       <div id="add-event-error" role="alert" aria-live="assertive"
            style="display:none;background:rgba(255,90,90,0.1);border:1px solid var(--red);
                   border-radius:8px;padding:10px 14px;font-size:0.85rem;color:var(--red);margin-top:8px"></div>
@@ -3169,8 +3242,19 @@ async function cancelEvent(eventId, name) {
       ? `לבטל את האירוע "${name}"?\n\n⚠️ ${regCount} רוכבים רשומים — ביטול יסיר את כולם.`
       : `לבטל את האירוע "${name}"?`;
     if (!confirm(confirmMsg)) return;
+    // שלוף מיילים לפני הביטול
+    const _cancelledRiders = (Array.isArray(regs) ? regs : [])
+      .map(r => STATE.riders?.find(x => x.tid === r.tid))
+      .filter(r => r?.email)
+      .map(r => ({ name: r.name, email: r.email }));
     await callAPI('cancelEvent', { eventId });
     showToast(`האירוע "${name}" בוטל`, 'success');
+    if (_cancelledRiders.length) {
+      callAPI('sendEmail', {
+        type: 'event_cancelled',
+        payload: { riders: _cancelledRiders, event: { description: name, date: '' } },
+      }).catch(() => {});
+    }
     await loadEvents();
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
@@ -3203,8 +3287,18 @@ async function submitAddEvent() {
       captain, status: 'פעיל'
     });
     unlockBtn(document.querySelector('#modalAddEvent .btn-primary'));
+    const _notifyAll = document.getElementById('ev-notify-all')?.checked;
     closeModal('modalAddEvent');
     showToast(`אירוע "${desc}" נוצר (${result.id || ''}) ✅`, 'success');
+    if (_notifyAll) {
+      const _evRiders = (STATE.riders || []).filter(r => r.email).map(r => ({ name: r.name, email: r.email }));
+      if (_evRiders.length) {
+        callAPI('sendEmail', {
+          type: 'new_event',
+          payload: { riders: _evRiders, event: { description: desc, date, meetPoint: meet, meetTime: time, km: Number(km)||0, climb: Number(climb)||0, captain } },
+        }).catch(() => {});
+      }
+    }
     await loadEvents();
     // loadEvents() קורא ל-renderAllEventsTables + renderAssignmentsEventSelect פנימית
   } catch(e) {
@@ -3523,6 +3617,14 @@ async function submitRegisterRider() {
     await callAPI('register', { tid, eventId, role: _regRiderStyle || 'סינגל' });
     closeModal('modalRegisterRider');
     showToast(`${name} נרשם לאירוע ✅`, 'success');
+    const _regRider = STATE.riders?.find(r => r.tid === tid);
+    const _regEvent = STATE.events?.find(e => e.id === eventId);
+    if (_regRider?.email && _regEvent) {
+      callAPI('sendEmail', {
+        type: 'event_registration_by_admin',
+        payload: { name: _regRider.name, email: _regRider.email, event: _regEvent, registeredBy: adminUser?.name || 'מנהל' },
+      }).catch(() => {});
+    }
   } catch(e) {
     if (e.message && e.message.includes('כבר רשום')) {
       errEl.innerHTML = `
@@ -4206,6 +4308,57 @@ async function sendExamRemindersNow() {
 }
 
 // אתחול הגדרות כשנכנסים לסקשן
+
+// ─── SMTP Settings ───────────────────────────────────────────
+
+function unlockSmtp() {
+  const code = document.getElementById('smtpTechCode').value;
+  const errEl = document.getElementById('smtpCodeError');
+  if (code === '1981') {
+    document.getElementById('smtpLockScreen').hidden = true;
+    document.getElementById('smtpForm').hidden = false;
+    document.getElementById('smtpLockBadge').textContent = '🔓 מוגדר';
+    errEl.style.display = 'none';
+  } else {
+    errEl.style.display = 'block';
+    document.getElementById('smtpTechCode').value = '';
+  }
+}
+
+async function saveSmtpSettings() {
+  const statusEl = document.getElementById('smtpStatus');
+  statusEl.textContent = 'שומר...';
+  try {
+    await callAPI('saveSmtpSettings', {
+      code:     '1981',
+      host:     document.getElementById('smtpHost').value.trim(),
+      port:     parseInt(document.getElementById('smtpPort').value) || 587,
+      secure:   document.getElementById('smtpSecure').checked,
+      user:     document.getElementById('smtpUser').value.trim(),
+      pass:     document.getElementById('smtpPass').value,
+      fromName: document.getElementById('smtpFromName').value.trim() || 'קבוצת האופניים',
+    });
+    statusEl.textContent = '✅ הגדרות נשמרו בהצלחה';
+  } catch(e) {
+    statusEl.textContent = '❌ שגיאה: ' + e.message;
+  }
+}
+
+async function testSmtpSettings() {
+  const statusEl = document.getElementById('smtpStatus');
+  const toEmail  = document.getElementById('smtpUser').value.trim();
+  if (!toEmail) { statusEl.textContent = 'הזן כתובת מייל לבדיקה'; return; }
+  statusEl.textContent = 'שולח מייל בדיקה...';
+  try {
+    await callAPI('sendEmail', {
+      type: 'smtp_test',
+      payload: { to: toEmail, name: adminUser?.name || 'מנהל' },
+    });
+    statusEl.textContent = `✅ מייל בדיקה נשלח אל ${toEmail}`;
+  } catch(e) {
+    statusEl.textContent = '❌ שגיאת חיבור: ' + e.message;
+  }
+}
 </script>
 </body>
 </html>
