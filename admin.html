@@ -1578,11 +1578,11 @@ tbody td {
                 </div>
                 <div class="form-group" style="max-width:110px">
                   <label class="form-label" for="smtpPort">פורט</label>
-                  <input type="number" id="smtpPort" class="input" value="587" min="1" max="65535">
+                  <input type="number" id="smtpPort" class="input" value="465" min="1" max="65535">
                 </div>
               </div>
               <label style="display:flex;align-items:center;gap:10px;font-size:0.87rem">
-                <input type="checkbox" id="smtpSecure">
+                <input type="checkbox" id="smtpSecure" checked>
                 <span>SSL/TLS (השתמש עם פורט 465)</span>
               </label>
               <div class="form-group">
@@ -4328,8 +4328,8 @@ async function unlockSmtp() {
     const s = await callAPI('getSmtpSettings', { code: '1981' });
     if (s) {
       document.getElementById('smtpHost').value     = s.host      ?? 'smtp.gmail.com';
-      document.getElementById('smtpPort').value     = s.port      ?? 587;
-      document.getElementById('smtpSecure').checked = s.secure    ?? false;
+      document.getElementById('smtpPort').value     = s.port      ?? 465;
+      document.getElementById('smtpSecure').checked = s.secure    ?? true;
       document.getElementById('smtpUser').value     = s.smtp_user ?? '';
       document.getElementById('smtpFromName').value = s.from_name ?? 'קבוצת האופניים';
       document.getElementById('smtpPass').placeholder = s.smtp_user ? '(סיסמה שמורה — השאר ריק לשמירה)' : '16 תווים';
@@ -4345,7 +4345,7 @@ async function saveSmtpSettings() {
     await callAPI('saveSmtpSettings', {
       code:     '1981',
       host:     document.getElementById('smtpHost').value.trim(),
-      port:     parseInt(document.getElementById('smtpPort').value) || 587,
+      port:     parseInt(document.getElementById('smtpPort').value) || 465,
       secure:   document.getElementById('smtpSecure').checked,
       user:     document.getElementById('smtpUser').value.trim(),
       pass:     passVal,   // ריק = RPC ישמור את הסיסמה הקיימת
