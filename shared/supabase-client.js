@@ -383,6 +383,12 @@ async function _route(action, data) {
 
   // ── הגדרות SMTP ──────────────────────────────────────────────
 
+  if (action === 'getSmtpSettings') {
+    const { data: rows, error } = await _sb.rpc('get_smtp_settings', { p_code: data.code });
+    if (error) throw error;
+    return rows?.[0] ?? null;
+  }
+
   if (action === 'saveSmtpSettings') {
     const { error } = await _sb.rpc('save_smtp_settings', {
       p_code:      data.code,

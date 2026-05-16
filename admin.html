@@ -4311,22 +4311,35 @@ async function sendExamRemindersNow() {
 
 // ─── SMTP Settings ───────────────────────────────────────────
 
-function unlockSmtp() {
-  const code = document.getElementById('smtpTechCode').value;
+async function unlockSmtp() {
+  const code  = document.getElementById('smtpTechCode').value;
   const errEl = document.getElementById('smtpCodeError');
-  if (code === '1981') {
-    document.getElementById('smtpLockScreen').hidden = true;
-    document.getElementById('smtpForm').hidden = false;
-    document.getElementById('smtpLockBadge').textContent = '🔓 מוגדר';
-    errEl.style.display = 'none';
-  } else {
+  if (code !== '1981') {
     errEl.style.display = 'block';
     document.getElementById('smtpTechCode').value = '';
+    return;
   }
+  document.getElementById('smtpLockScreen').hidden = true;
+  document.getElementById('smtpForm').hidden = false;
+  document.getElementById('smtpLockBadge').textContent = '🔓 מוגדר';
+  errEl.style.display = 'none';
+  // טען הגדרות שמורות מה-DB
+  try {
+    const s = await callAPI('getSmtpSettings', { code: '1981' });
+    if (s) {
+      document.getElementById('smtpHost').value     = s.host      ?? 'smtp.gmail.com';
+      document.getElementById('smtpPort').value     = s.port      ?? 587;
+      document.getElementById('smtpSecure').checked = s.secure    ?? false;
+      document.getElementById('smtpUser').value     = s.smtp_user ?? '';
+      document.getElementById('smtpFromName').value = s.from_name ?? 'קבוצת האופניים';
+      document.getElementById('smtpPass').placeholder = s.smtp_user ? '(סיסמה שמורה — השאר ריק לשמירה)' : '16 תווים';
+    }
+  } catch (_) { /* אין הגדרות — הטופס נשאר עם ברירות מחדל */ }
 }
 
 async function saveSmtpSettings() {
   const statusEl = document.getElementById('smtpStatus');
+  const passVal  = document.getElementById('smtpPass').value;
   statusEl.textContent = 'שומר...';
   try {
     await callAPI('saveSmtpSettings', {
@@ -4335,10 +4348,11 @@ async function saveSmtpSettings() {
       port:     parseInt(document.getElementById('smtpPort').value) || 587,
       secure:   document.getElementById('smtpSecure').checked,
       user:     document.getElementById('smtpUser').value.trim(),
-      pass:     document.getElementById('smtpPass').value,
+      pass:     passVal,   // ריק = RPC ישמור את הסיסמה הקיימת
       fromName: document.getElementById('smtpFromName').value.trim() || 'קבוצת האופניים',
     });
     statusEl.textContent = '✅ הגדרות נשמרו בהצלחה';
+    if (!passVal) document.getElementById('smtpPass').placeholder = '(סיסמה שמורה — השאר ריק לשמירה)';
   } catch(e) {
     statusEl.textContent = '❌ שגיאה: ' + e.message;
   }

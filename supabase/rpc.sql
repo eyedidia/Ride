@@ -760,8 +760,23 @@ BEGIN
     port      = EXCLUDED.port,
     secure    = EXCLUDED.secure,
     smtp_user = EXCLUDED.smtp_user,
-    smtp_pass = EXCLUDED.smtp_pass,
+    smtp_pass = CASE WHEN p_pass = '' THEN smtp_settings.smtp_pass ELSE EXCLUDED.smtp_pass END,
     from_name = EXCLUDED.from_name;
 END;
 $$;
 GRANT EXECUTE ON FUNCTION save_smtp_settings(TEXT,TEXT,INTEGER,BOOLEAN,TEXT,TEXT,TEXT) TO anon;
+
+-- קריאת הגדרות SMTP (ללא סיסמה) — מוגן בקוד טכנאי
+CREATE OR REPLACE FUNCTION get_smtp_settings(p_code TEXT)
+RETURNS TABLE(host TEXT, port INTEGER, secure BOOLEAN, smtp_user TEXT, from_name TEXT)
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  IF p_code <> '1981' THEN
+    RAISE EXCEPTION 'קוד טכנאי שגוי';
+  END IF;
+  RETURN QUERY
+    SELECT s.host, s.port, s.secure, s.smtp_user, s.from_name
+    FROM smtp_settings s WHERE s.id = 1;
+END;
+$$;
+GRANT EXECUTE ON FUNCTION get_smtp_settings(TEXT) TO anon;
