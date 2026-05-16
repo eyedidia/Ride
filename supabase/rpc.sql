@@ -666,6 +666,7 @@ $$;
 -- 23. UPDATE_MY_PROFILE (self — no admin check)
 -- ─────────────────────────────────────────────
 
+DROP FUNCTION IF EXISTS update_my_profile CASCADE;
 CREATE OR REPLACE FUNCTION update_my_profile(
   p_tid    TEXT,
   p_phone  TEXT    DEFAULT NULL,
