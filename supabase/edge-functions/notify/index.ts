@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
         errors.push(String(e));
       }
     }
-    await client.close().catch(() => {});
+    client.close().catch(() => {}); // fire-and-forget — לא לעכב את התשובה
 
     return json({
       sent:   sentCount,
