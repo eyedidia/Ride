@@ -11,7 +11,6 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { SMTPClient } from 'https://deno.land/x/denomailer/mod.ts';
 
 const _sb = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -52,31 +51,23 @@ Deno.serve(async (req) => {
 
     if (!emails.length) return json({ queued: 0 });
 
+    const cfg: SmtpCfg = {
+      host: smtp.host,
+      port: smtp.port,
+      user: smtp.smtp_user,
+      pass: smtp.smtp_pass,
+    };
+
     // שלח ברקע — החזר תשובה מיידית לפני שה-SMTP מתחבר
     const sendTask = (async () => {
-      const client = new SMTPClient({
-        connection: {
-          hostname: smtp.host,
-          port:     smtp.port,
-          tls:      smtp.secure,
-          auth:     { username: smtp.smtp_user, password: smtp.smtp_pass },
-        },
-      });
       for (const m of emails) {
         try {
-          await client.send({
-            from:    fromAddr,
-            to:      m.to,
-            cc:      m.cc,
-            subject: m.subject,
-            html:    m.html,
-          });
+          await sendSmtpMail(cfg, m);
           console.log('[notify] sent to:', Array.isArray(m.to) ? m.to.join(',') : m.to);
         } catch (e) {
           console.error('[notify] send error:', String(e));
         }
       }
-      try { await client.close(); } catch (_) {}
     })();
 
     // שמור את ה-function חי עד שהמשימה הברקע מסתיימת
@@ -88,6 +79,106 @@ Deno.serve(async (req) => {
     return json({ error: String(err) }, 500);
   }
 });
+
+// ─── smtp client ──────────────────────────────────────────────
+
+interface SmtpCfg { host: string; port: number; user: string; pass: string; }
+
+async function sendSmtpMail(cfg: SmtpCfg, mail: Mail): Promise<void> {
+  const enc = new TextEncoder();
+  const dec = new TextDecoder();
+
+  function toB64(s: string): string {
+    const bytes = enc.encode(s);
+    let bin = '';
+    for (const b of bytes) bin += String.fromCharCode(b);
+    return btoa(bin);
+  }
+
+  // RFC 2045 — שורות base64 מקסימום 76 תווים
+  function toB64Wrapped(s: string): string {
+    const b = toB64(s);
+    return b.match(/.{1,76}/g)?.join('\r\n') ?? b;
+  }
+
+  // RFC 2047 — קידוד נושא בעברית
+  function encodeSubject(s: string): string {
+    return `=?UTF-8?B?${toB64(s)}?=`;
+  }
+
+  const conn = await Deno.connectTls({ hostname: cfg.host, port: cfg.port });
+  let readBuf = '';
+  const readRaw = new Uint8Array(65536);
+
+  // קרא תגובת SMTP מלאה (תמיכה בתגובות רב-שורה 250-...)
+  async function readResp(): Promise<string> {
+    while (true) {
+      const lines = readBuf.split('\r\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        // שורה סופית: NNN<space>text (לא NNN-text)
+        if (line.length >= 4 && line[3] === ' ') {
+          const resp = lines.slice(0, i + 1).join('\r\n');
+          readBuf = lines.slice(i + 1).join('\r\n');
+          return resp;
+        }
+      }
+      const n = await conn.read(readRaw);
+      if (!n) throw new Error('SMTP connection closed unexpectedly');
+      readBuf += dec.decode(readRaw.subarray(0, n));
+    }
+  }
+
+  async function cmd(line: string): Promise<string> {
+    await conn.write(enc.encode(line + '\r\n'));
+    return readResp();
+  }
+
+  try {
+    await readResp(); // greeting
+
+    const ehlo = await cmd('EHLO localhost');
+    if (!ehlo.startsWith('2')) throw new Error('EHLO failed: ' + ehlo.slice(0, 80));
+
+    await cmd('AUTH LOGIN');
+    await cmd(toB64(cfg.user));
+    const auth = await cmd(toB64(cfg.pass));
+    if (!auth.startsWith('2')) throw new Error('AUTH failed: ' + auth.slice(0, 80));
+
+    const fromRaw = mail.from.match(/<([^>]+)>/)?.[1] ?? cfg.user;
+    await cmd(`MAIL FROM:<${fromRaw}>`);
+
+    const toList = Array.isArray(mail.to) ? mail.to : [mail.to];
+    for (const addr of [...toList, ...(mail.cc ?? [])]) {
+      const a = addr.match(/<([^>]+)>/)?.[1] ?? addr;
+      await cmd(`RCPT TO:<${a}>`);
+    }
+
+    const dataResp = await cmd('DATA');
+    if (!dataResp.startsWith('3')) throw new Error('DATA failed: ' + dataResp.slice(0, 80));
+
+    const headers = [
+      'MIME-Version: 1.0',
+      `Date: ${new Date().toUTCString()}`,
+      `From: ${mail.from}`,
+      `To: ${toList.join(', ')}`,
+      ...(mail.cc?.length ? [`Cc: ${mail.cc.join(', ')}`] : []),
+      `Subject: ${encodeSubject(mail.subject)}`,
+      'Content-Type: text/html; charset="UTF-8"',
+      'Content-Transfer-Encoding: base64',
+      '',
+    ].join('\r\n');
+
+    await conn.write(enc.encode(headers + '\r\n' + toB64Wrapped(mail.html) + '\r\n.\r\n'));
+
+    const sent = await readResp();
+    if (!sent.startsWith('2')) throw new Error('Message rejected: ' + sent.slice(0, 80));
+
+    await cmd('QUIT');
+  } finally {
+    try { conn.close(); } catch (_) {}
+  }
+}
 
 // ─── helpers ──────────────────────────────────────────────────
 
