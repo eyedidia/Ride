@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
           console.error('[notify] send error:', String(e));
         }
       }
-      client.close().catch(() => {});
+      try { await client.close(); } catch (_) {}
     })();
 
     // שמור את ה-function חי עד שהמשימה הברקע מסתיימת
