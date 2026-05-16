@@ -483,6 +483,24 @@ tbody td {
   align-items: center;
 }
 
+/* ─── Rider Card List ─── */
+.rider-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+.rc-info   { min-width: 0; flex: 1; }
+.rc-name   { font-weight: 700; font-size: 0.93rem; }
+.rc-sub    { font-size: 0.77rem; color: var(--text-muted); margin-top: 2px; }
+.rc-tags   { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.rc-actions{ display: flex; gap: 4px; flex-shrink: 0; }
+
 .icon-btn {
   width: 32px; height: 32px;
   border-radius: var(--radius-sm);
@@ -1227,24 +1245,10 @@ tbody td {
             </select>
           </div>
         </div>
-        <div class="panel-body table-wrap">
-          <table id="ridersTable" aria-label="טבלת רוכבים" aria-live="polite">
-            <thead>
-              <tr>
-                <th scope="col">שם</th>
-                <th scope="col">טלפון</th>
-                <th scope="col">עיר</th>
-                <th scope="col">גיל</th>
-                <th scope="col">סגנון</th>
-                <th scope="col">הרשאה</th>
-                <th scope="col">בדיקה ארגומטרית</th>
-                <th scope="col"><span class="sr-only">פעולות</span></th>
-              </tr>
-            </thead>
-            <tbody id="ridersBody" aria-live="polite" aria-label="רשימת רוכבים">
-              <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</td></tr>
-            </tbody>
-          </table>
+        <div class="panel-body">
+          <div id="ridersBody" role="list" aria-label="רשימת רוכבים">
+            <div style="text-align:center;padding:24px;color:var(--text-muted)">טוען...</div>
+          </div>
         </div>
       </div>
     </section>
@@ -2127,36 +2131,32 @@ async function loadBikes() {
 
 // ─── טבלת רוכבים ─────────────────────────────────
 function renderRidersTable(riders) {
-  const tbody = document.getElementById('ridersBody');
+  const container = document.getElementById('ridersBody');
   if (!riders.length) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted)">אין רוכבים רשומים</td></tr>`;
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted)">אין רוכבים רשומים</div>`;
     return;
   }
-  tbody.innerHTML = riders.map(r => {
-    const examClass = (r.examStatus || '').includes('✅') ? 'status-ok'
-                    : (r.examStatus || '').includes('❌') ? 'status-err' : 'status-warn';
-    const permClass = r.permission === 'מנהל' ? 'status-blue' : 'status-blue';
+  container.innerHTML = riders.map(r => {
+    const examCls = (r.examStatus || '').includes('✅') ? 'status-ok'
+                  : (r.examStatus || '').includes('❌') || (r.examStatus || '').includes('אין') ? 'status-err' : 'status-warn';
+    const ariaDesc = `${r.name}, ${r.rideStyle}, ${r.city}, גיל ${r.age}, הרשאה: ${r.permission}, בדיקה: ${r.examStatus}`;
     return `
-    <tr class="rider-row" style="font-size:0.87rem">
-      <td data-label="שם" aria-label="שם: ${esc(r.name)}, טלפון: ${esc(r.phone)}, עיר: ${esc(r.city)}, גיל: ${esc(r.age)}">
-        <div class="td-name">${esc(r.name)}</div>
-        <div class="td-sub" style="margin-top:1px">${esc(r.phone)}</div>
-        <div class="td-sub" style="margin-top:1px">${esc(r.city)} · גיל ${esc(r.age)}</div>
-      </td>
-      <td data-label="טלפון" class="hide-mobile" aria-label="טלפון: ${esc(r.phone)}">${esc(r.phone)}</td>
-      <td data-label="עיר" class="hide-mobile" aria-label="עיר: ${esc(r.city)}">${esc(r.city)}</td>
-      <td data-label="גיל" class="hide-mobile" aria-label="גיל: ${esc(r.age)}">${esc(r.age)}</td>
-      <td data-label="סגנון" aria-label="סגנון רכיבה: ${esc(r.rideStyle)}"><span class="role-tag">${esc(r.rideStyle)}</span></td>
-      <td data-label="הרשאה" aria-label="הרשאה: ${esc(r.permission)}"><span class="status ${permClass}">${esc(r.permission)}</span></td>
-      <td data-label="בדיקה" aria-label="מצב בדיקה: ${esc(r.examStatus)}"><span class="status ${examClass}" role="status">${esc(r.examStatus)}</span></td>
-      <td data-label="פעולות">
-        <div class="row-actions">
-          <button class="icon-btn" aria-label="ערוך פרטי רוכב ${esc(r.name)}" title="עריכה" onclick="editRider('${esc(r.tid)}')">✏️</button>
-          <button class="icon-btn" aria-label="רשום ${esc(r.name)} לאירוע" title="רישום לאירוע" onclick="openRegisterModal('${esc(r.tid)}','${esc(r.name)}','${esc(r.rideStyle)}')">📋</button>
-          <button class="icon-btn danger" aria-label="מחק רוכב ${esc(r.name)}" title="מחיקה" onclick="deleteRider('${esc(r.tid)}','${esc(r.name)}')">🗑️</button>
+    <div class="rider-card" role="listitem" aria-label="${esc(ariaDesc)}">
+      <div class="rc-info" aria-hidden="true">
+        <div class="rc-name">${esc(r.name)}</div>
+        <div class="rc-sub">${esc(r.phone)} · ${esc(r.city)} · גיל ${esc(r.age)}</div>
+        <div class="rc-tags">
+          <span class="role-tag">${esc(r.rideStyle)}</span>
+          <span class="status status-blue">${esc(r.permission)}</span>
+          <span class="status ${examCls}" role="status">${esc(r.examStatus)}</span>
         </div>
-      </td>
-    </tr>`;
+      </div>
+      <div class="rc-actions">
+        <button class="icon-btn" aria-label="ערוך פרטי רוכב ${esc(r.name)}" title="עריכה" onclick="editRider('${esc(r.tid)}')">✏️</button>
+        <button class="icon-btn" aria-label="רשום ${esc(r.name)} לאירוע" title="רישום" onclick="openRegisterModal('${esc(r.tid)}','${esc(r.name)}','${esc(r.rideStyle)}')">📋</button>
+        <button class="icon-btn danger" aria-label="מחק רוכב ${esc(r.name)}" title="מחיקה" onclick="deleteRider('${esc(r.tid)}','${esc(r.name)}')">🗑️</button>
+      </div>
+    </div>`;
   }).join('');
 }
 
@@ -3524,10 +3524,34 @@ async function submitRegisterRider() {
     closeModal('modalRegisterRider');
     showToast(`${name} נרשם לאירוע ✅`, 'success');
   } catch(e) {
-    errEl.textContent = 'שגיאה: ' + e.message;
-    errEl.style.display = 'block';
+    if (e.message && e.message.includes('כבר רשום')) {
+      errEl.innerHTML = `
+        <div style="margin-bottom:8px"><strong>${esc(name)}</strong> כבר רשום לאירוע זה.</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm"
+                  style="background:rgba(255,90,90,0.15);color:var(--red);border:1px solid rgba(255,90,90,0.3)"
+                  aria-label="בטל רישום של ${esc(name)} לאירוע זה"
+                  onclick="cancelRiderReg('${esc(tid)}','${esc(eventId)}','${esc(name)}')">🗑️ בטל רישום</button>
+          <button class="btn btn-ghost btn-sm"
+                  onclick="document.getElementById('register-rider-error').style.display='none'">השאר רשום</button>
+        </div>`;
+      errEl.style.display = 'block';
+    } else {
+      errEl.textContent = 'שגיאה: ' + e.message;
+      errEl.style.display = 'block';
+    }
   } finally {
     unlockBtn(btn);
+  }
+}
+
+async function cancelRiderReg(tid, eventId, name) {
+  try {
+    await callAPI('cancelRegistration', { tid, eventId });
+    closeModal('modalRegisterRider');
+    showToast(`הרישום של ${name} בוטל`, 'success');
+  } catch(e) {
+    showToast('שגיאה בביטול: ' + e.message, 'error');
   }
 }
 
