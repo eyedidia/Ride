@@ -3571,29 +3571,36 @@ const titles   = {
   settings:    ['הגדרות מערכת',  'ניהול קבוצת אופניים / הגדרות'],
 };
 
+let _inShowSection = false;
 function showSection(name, clickedBtn) {
-  // role guard — silently redirect to dashboard if section not permitted
-  const allowed = getUserAllowedSections(adminUser);
-  if (!allowed.includes(name)) { name = 'dashboard'; }
+  if (_inShowSection) return;
+  _inShowSection = true;
+  try {
+    // role guard — silently redirect to dashboard if section not permitted
+    const allowed = getUserAllowedSections(adminUser);
+    if (!allowed.includes(name)) { name = 'dashboard'; }
 
-  sections.forEach(s => {
-    const el = document.getElementById('section-' + s);
-    if (el) el.hidden = (s !== name);
-  });
-  document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.classList.remove('active');
-    btn.removeAttribute('aria-current');
-  });
-  if (clickedBtn) {
-    clickedBtn.classList.add('active');
-    clickedBtn.setAttribute('aria-current','page');
+    sections.forEach(s => {
+      const el = document.getElementById('section-' + s);
+      if (el) el.hidden = (s !== name);
+    });
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.classList.remove('active');
+      btn.removeAttribute('aria-current');
+    });
+    if (clickedBtn) {
+      clickedBtn.classList.add('active');
+      clickedBtn.setAttribute('aria-current','page');
+    }
+    document.getElementById('pageTitle').textContent      = titles[name][0];
+    document.getElementById('pageBreadcrumb').textContent = titles[name][1];
+    document.getElementById('main-content').focus();
+    closeSidebar();
+    if (name === 'maintenance') loadMaintenance();
+    if (name === 'settings')    initSettingsSection();
+  } finally {
+    _inShowSection = false;
   }
-  document.getElementById('pageTitle').textContent      = titles[name][0];
-  document.getElementById('pageBreadcrumb').textContent = titles[name][1];
-  document.getElementById('main-content').focus();
-  closeSidebar();
-  if (name === 'maintenance') loadMaintenance();
-  if (name === 'settings')    initSettingsSection();
 }
 
 // ─── MOBILE SIDEBAR ────────────────────────────────
