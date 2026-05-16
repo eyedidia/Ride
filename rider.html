@@ -1171,6 +1171,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   renderHeader();
   showPersonalNotifications();
+  showClubBirthdays();   // התראות יום הולדת לחברים אחרים
 
   // בנרים לפי סטטוס בדיקה
   const examStatus = user.examStatus || '';
@@ -1335,6 +1336,42 @@ function showPersonalNotifications() {
 }
 
 // ══════════════════════════════════════════
+// CLUB BIRTHDAY NOTIFICATIONS
+// ══════════════════════════════════════════
+async function showClubBirthdays() {
+  try {
+    const birthdays = await apiGet('getTodayBirthdays');
+    if (!birthdays.length) return;
+    const area = document.getElementById('notificationsArea');
+    if (!area) return;
+    const myName = user?.name || '';
+    const others = birthdays.filter(r => r.name !== myName);
+    if (!others.length) return;
+    const greeting = encodeURIComponent(
+      'יום הולדת שמח! 🎂🎉\nמאחלים לך בריאות, שמחה, ורכיבות נהדרות! 🚲\nמאת כל חברי מועדון האופניים'
+    );
+    const banners = others.map(r => {
+      let p = (r.phone || '').replace(/[\s\-\(\)]/g, '');
+      if (p.startsWith('0')) p = '972' + p.slice(1);
+      const waLink = p ? `https://wa.me/${p}?text=${greeting}` : '';
+      return `
+        <div class="banner banner-birthday" role="status" aria-label="יום הולדת של ${esc(r.name)} היום">
+          <span class="banner-icon" aria-hidden="true">🎂</span>
+          <div class="banner-body">
+            <div class="banner-title">יום הולדת ל${esc(r.name)} היום! 🎉</div>
+            <div class="banner-sub">הצטרף לאיחולים${waLink
+              ? ` — <a href="${waLink}" target="_blank" rel="noopener noreferrer"
+                       style="color:var(--accent);text-decoration:none;font-weight:700"
+                       aria-label="שלח ברכת יום הולדת ל${esc(r.name)} בוואצאפ">שלח ברכה בוואצאפ 💬</a>`
+              : ''}</div>
+          </div>
+        </div>`;
+    }).join('');
+    area.insertAdjacentHTML('afterbegin', banners);
+  } catch { /* birthday check is non-critical */ }
+}
+
+// ══════════════════════════════════════════
 // RENDER HEADER
 // ══════════════════════════════════════════
 function renderHeader() {
@@ -1378,9 +1415,12 @@ async function switchTab(name) {
   // הודעה לקורא מסך על מעבר לאגף
   announce(`עברת ל${TAB_LABELS[name]}`);
 
-  // העברת focus לתוכן הראשי
-  const main = document.getElementById('main-content');
-  main.focus();
+  // העברת focus לכותרת הסעיף — VoiceOver/TalkBack יקראו מהמיקום הנכון
+  const _sec = document.getElementById('section-' + name);
+  const _hId = _sec?.getAttribute('aria-labelledby');
+  const _h   = _hId ? document.getElementById(_hId) : null;
+  if (_h) { _h.setAttribute('tabindex', '-1'); _h.focus(); }
+  else { document.getElementById('main-content')?.focus(); }
 
   // טעינה עצלה
   if (name === 'history' && document.getElementById('historyList').children[0]?.classList.contains('skeleton')) {

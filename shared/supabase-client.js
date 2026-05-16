@@ -82,6 +82,19 @@ async function _route(action, data) {
     return d || [];
   }
 
+  if (action === 'getTodayBirthdays') {
+    const { data: d, error } = await _sb.from('riders').select('name,phone,dob');
+    if (error) throw error;
+    const now = new Date();
+    const mm = now.getMonth() + 1;
+    const dd = now.getDate();
+    return (d || []).filter(r => {
+      if (!r.dob) return false;
+      const parts = r.dob.split('-');   // YYYY-MM-DD
+      return parseInt(parts[1]) === mm && parseInt(parts[2]) === dd;
+    }).map(r => ({ name: r.name, phone: r.phone }));
+  }
+
   if (action === 'updateRider') {
     const { tid, name, phone, email, city, rideStyle, permission } = data;
     const { data: d, error } = await _sb.rpc('update_rider', {
