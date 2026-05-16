@@ -2093,6 +2093,7 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
   modal.addEventListener('keydown', trapFocus);
+  document.getElementById('modalCloseBtn').focus();
 
   try {
     const regs = await getRegistrationsCached(eventId);
