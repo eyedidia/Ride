@@ -2546,17 +2546,26 @@ function renderAllEventsTables(all) {
   : `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted)">אין אירועים קרובים</td></tr>`;
 
   const pastTbody = document.getElementById('eventsPastBody');
-  pastTbody.innerHTML = past.length ? past.map(e => `
+  pastTbody.innerHTML = past.length ? past.map(e => {
+    const displayKm    = e.actualKm    ?? e.km;
+    const displayClimb = e.actualClimb ?? e.climb ?? 0;
+    const displayDesc  = e.actualDescription ?? e.description;
+    const hasActual    = e.actualKm != null;
+    return `
     <tr style="cursor:pointer" title="לחץ לצפייה בפרטים" onclick="openEventView('${esc(e.id)}')">
       <td><strong>${esc(e.date)}</strong><div class="td-sub">${esc(e.meetTime||'')}</div></td>
-      <td><div class="td-name">${esc(e.description)}</div><div class="td-sub">${esc(e.meetPoint||'')}</div></td>
-      <td>${esc(String(e.km))} ק"מ</td>
-      <td>${esc(String(e.climb||0))} מ'</td>
+      <td>
+        <div class="td-name">${esc(displayDesc)}</div>
+        <div class="td-sub">${esc(e.meetPoint||'')}</div>
+      </td>
+      <td>${esc(String(displayKm))} ק"מ${hasActual ? ' <span title="נתון אמת" style="font-size:0.7rem;color:var(--text-muted)">✓</span>' : ''}</td>
+      <td>${esc(String(displayClimb))} מ'${hasActual ? ' <span title="נתון אמת" style="font-size:0.7rem;color:var(--text-muted)">✓</span>' : ''}</td>
       <td>${esc(e.captain||'')}</td>
       ${regCell(e.id)}
       <td><button class="icon-btn" title="פרטי אירוע" aria-label="פרטי אירוע ${esc(e.description)}"
                   onclick="openEventView('${esc(e.id)}')">🔍</button></td>
-    </tr>`).join('')
+    </tr>`;
+  }).join('')
   : `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted)">אין אירועים שעברו</td></tr>`;
 
   const cancelTbody = document.getElementById('tabp-cancelled');
