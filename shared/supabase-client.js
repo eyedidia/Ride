@@ -42,7 +42,7 @@ async function _route(action, data) {
   // ── REST ישיר (קריאה בלבד) ───────────────────────────────────
 
   if (action === 'getAllRiders') {
-    const { data: d, error } = await _sb.from('riders_view').select('*').order('name');
+    const { data: d, error } = await _sb.from('riders_view').select('*');
     if (error) throw error;
     // המרת עמודות snake_case לcamelCase שהפרונטאנד מצפה לו
     return (d || []).map(r => ({
@@ -53,7 +53,7 @@ async function _route(action, data) {
       examDate: r.exam_date ? _fmtDate(r.exam_date) : '',
       examExpiry: r.exam_expiry ? _fmtDate(r.exam_expiry) : '',
       examStatus: r.exam_status ?? 'אין בדיקה',
-    }));
+    })).sort((a, b) => a.name.localeCompare(b.name, 'he'));
   }
 
   if (action === 'getBikes') {
