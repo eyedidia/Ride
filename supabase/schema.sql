@@ -76,7 +76,8 @@ CREATE TABLE IF NOT EXISTS maintenance (
 -- VIEW: riders_view — מוסיף exam_status ו-age
 -- ─────────────────────────────────────────────
 
-CREATE OR REPLACE VIEW riders_view AS
+CREATE OR REPLACE VIEW riders_view
+  WITH (security_invoker = on) AS
 SELECT
   r.*,
   CASE
