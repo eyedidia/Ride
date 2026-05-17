@@ -87,7 +87,31 @@ Deno.serve(async (_req) => {
       if (fnErr) throw fnErr;
     }
 
-    return ok({ processed: expiring.length, withEmail: withEmail.length, noEmail: noEmail.length, sent: sentCount });
+    // ─── יום הולדת ───────────────────────────────────────────────
+    const todayMM = String(today.getMonth() + 1).padStart(2, '0');
+    const todayDD = String(today.getDate()).padStart(2, '0');
+
+    const { data: allRiders } = await _sb
+      .from('riders')
+      .select('name, email, dob')
+      .neq('email', '');
+
+    const birthdayRiders = (allRiders || []).filter((r: { dob: string }) => {
+      if (!r.dob) return false;
+      const parts = r.dob.split('-'); // YYYY-MM-DD
+      return parts[1] === todayMM && parts[2] === todayDD;
+    });
+
+    if (birthdayRiders.length) {
+      await _sb.functions.invoke('notify', {
+        body: {
+          type: 'birthday',
+          payload: { riders: birthdayRiders.map((r: { name: string; email: string }) => ({ name: r.name, email: r.email })) },
+        },
+      });
+    }
+
+    return ok({ processed: expiring.length, withEmail: withEmail.length, noEmail: noEmail.length, sent: sentCount, birthdaysSent: birthdayRiders.length });
 
   } catch (err) {
     return new Response(JSON.stringify({ error: String(err) }), { status: 500 });

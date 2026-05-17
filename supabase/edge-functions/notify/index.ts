@@ -235,6 +235,7 @@ function buildEmails(type: string, p: any, from: string, clubName: string): Mail
     case 'event_cancelled':             return buildEventCancelled(p, from, clubName);
     case 'new_event':                   return buildNewEvent(p, from, clubName);
     case 'smtp_test':                   return [buildSmtpTest(p, from, clubName)];
+    case 'birthday':                    return buildBirthday(p, from, clubName);
     default: throw new Error('סוג הודעה לא מוכר: ' + type);
   }
 }
@@ -350,6 +351,22 @@ function buildSmtpTest(p: any, from: string, clubName: string): Mail {
     <p>מייל הבדיקה התקבל בהצלחה.<br>הגדרות שליחת המיילים פועלות כראוי.</p>
   `, clubName);
   return { from, to: p.to, subject, text, html };
+}
+
+// deno-lint-ignore no-explicit-any
+function buildBirthday(p: any, from: string, clubName: string): Mail[] {
+  // deno-lint-ignore no-explicit-any
+  return (p.riders as any[]).map(r => {
+    const subject = `🎂 יום הולדת שמח, ${r.name}!`;
+    const text    = `שלום ${r.name},\n\nכל חברי קבוצת האופניים מאחלים לך יום הולדת שמח! 🚴🎉\nשנה טובה, בריאות, וכמה שיותר רכיבות מדהימות!\n\n${clubName}`;
+    const html    = wrap(`
+      <h1>🎂 יום הולדת שמח!</h1>
+      <p>שלום <strong>${r.name}</strong>,</p>
+      <p>כל חברי קבוצת האופניים מאחלים לך <strong>יום הולדת שמח</strong>! 🎉</p>
+      <p>שנה טובה, בריאות, וכמה שיותר רכיבות מדהימות! 🚴</p>
+    `, clubName);
+    return { from, to: r.email, subject, text, html };
+  });
 }
 
 // deno-lint-ignore no-explicit-any

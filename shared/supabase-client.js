@@ -42,7 +42,7 @@ async function _route(action, data) {
   // ── REST ישיר (קריאה בלבד) ───────────────────────────────────
 
   if (action === 'getAllRiders') {
-    const { data: d, error } = await _sb.from('riders_view').select('*');
+    const { data: d, error } = await _sb.from('riders_view').select('*').order('name');
     if (error) throw error;
     // המרת עמודות snake_case לcamelCase שהפרונטאנד מצפה לו
     return (d || []).map(r => ({
