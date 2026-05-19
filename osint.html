@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>בדיקת טביעת רגל דיגיטלית — Instagram</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0b0e18;
+  --surface: #13172a;
+  --border:  #252a45;
+  --accent:  #4f7cff;
+  --accent2: #7c5cff;
+  --green:   #2dd4a0;
+  --red:     #ff5a5a;
+  --yellow:  #f5c842;
+  --text:    #e8eaf6;
+  --muted:   #6b728f;
+  --radius:  16px;
+  --font:    'Heebo', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 24px 16px 60px;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(79,124,255,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(124,92,255,0.08) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.page-wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* ─── HEADER ─────────────────────────────── */
+.page-header {
+  text-align: center;
+  margin-bottom: 36px;
+  padding-top: 12px;
+}
+
+.page-header .icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.page-header h1 {
+  font-size: 1.9rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.page-header p {
+  color: var(--muted);
+  font-size: 0.95rem;
+  max-width: 560px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ─── CARD ───────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.phase-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+/* ─── FORM ───────────────────────────────── */
+.input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 580px) {
+  .input-grid { grid-template-columns: 1fr; }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.field input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: var(--font);
+  font-size: 0.95rem;
+  color: var(--text);
+  transition: border-color 0.2s;
+  direction: ltr;
+  text-align: left;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.field input::placeholder { color: var(--muted); }
+
+.session-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.session-hint a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+
+/* ─── TOOL BLOCK ─────────────────────────── */
+.tool-block {
+  margin-bottom: 20px;
+}
+
+.tool-block:last-child { margin-bottom: 0; }
+
+.tool-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.code-wrap {
+  position: relative;
+}
+
+.code-block {
+  background: #070a14;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 48px 14px 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.82rem;
+  color: #a8d8a8;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  direction: ltr;
+  text-align: left;
+  min-height: 48px;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 5px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+.copy-btn.copied { color: var(--green); border-color: var(--green); }
+
+/* ─── LINKS ROW ───────────────────────────── */
+.links-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.link-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(79,124,255,0.08);
+}
+
+.link-btn.green { border-color: var(--green); color: var(--green); }
+.link-btn.green:hover { background: rgba(45,212,160,0.08); }
+
+/* ─── ACCORDION ───────────────────────────── */
+details summary {
+  font-size: 0.82rem;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  user-select: none;
+}
+
+details summary::before {
+  content: '▶';
+  font-size: 0.65rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before { transform: rotate(90deg); }
+
+details .install-box {
+  background: #070a14;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.7;
+  direction: ltr;
+  text-align: left;
+}
+
+/* ─── RESULT BOX ─────────────────────────── */
+.result-box {
+  background: #070a14;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 14px;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  direction: ltr;
+  text-align: left;
+  display: none;
+}
+
+.result-box.visible { display: block; }
+.result-box.ok { border-color: var(--green); color: var(--green); }
+.result-box.err { border-color: var(--red); color: #ff8a8a; }
+.result-box.warn { border-color: var(--yellow); color: var(--yellow); }
+
+/* ─── EMAIL CHECK ─────────────────────────── */
+.email-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.email-row .field { flex: 1; }
+
+.btn-small {
+  padding: 10px 18px;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-small:hover { background: rgba(79,124,255,0.12); }
+
+/* ─── INFO BOX ────────────────────────────── */
+.info-box {
+  background: rgba(79,124,255,0.08);
+  border: 1px solid rgba(79,124,255,0.3);
+  border-radius: 12px;
+  padding: 18px 20px;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.info-box h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.info-box ol, .info-box ul {
+  padding-right: 20px;
+}
+
+.info-box li { margin-bottom: 4px; }
+
+.warn-box {
+  background: rgba(245,200,66,0.07);
+  border-color: rgba(245,200,66,0.3);
+}
+
+.warn-box h3 { color: var(--yellow); }
+
+/* ─── DIVIDER ─────────────────────────────── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 18px 0;
+}
+
+/* ─── TOAST ───────────────────────────────── */
+#toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface);
+  border: 1px solid var(--green);
+  color: var(--green);
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s;
+  z-index: 100;
+  white-space: nowrap;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ─── STATUS ROW ──────────────────────────── */
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+}
+
+.dot.green { background: var(--green); }
+.dot.red   { background: var(--red); }
+.dot.yellow { background: var(--yellow); }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- HEADER -->
+  <header class="page-header">
+    <span class="icon">🔍</span>
+    <h1>בדיקת טביעת רגל דיגיטלית</h1>
+    <p>כלי לבדיקה עצמאית של מה ניתן לאסוף על החשבון שלך באינסטגרם — לשימוש על החשבון שלך בלבד.</p>
+  </header>
+
+  <!-- INPUT CARD -->
+  <div class="card">
+    <div class="card-title">
+      <span>⚙️</span> הגדרת יעד
+    </div>
+
+    <div class="input-grid">
+      <div class="field">
+        <label>UID של החשבון</label>
+        <input type="text" id="inp-uid" placeholder="53693488780" dir="ltr">
+      </div>
+      <div class="field">
+        <label>שם משתמש (Username)</label>
+        <input type="text" id="inp-username" placeholder="can_not_anymore" dir="ltr">
+      </div>
+      <div class="field" style="grid-column: 1 / -1;">
+        <label>Session ID (אופציונלי — לכלים שדורשים אימות)</label>
+        <input type="password" id="inp-session" placeholder="הדבק כאן את ה-sessionid מה-cookies" dir="ltr" autocomplete="off">
+        <span class="session-hint">לא נשמר לשום מקום — נשאר רק בזיכרון הדפדפן</span>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="generate()">
+      <span>▶</span> הפעל בדיקה
+    </button>
+  </div>
+
+  <!-- HOW TO GET SESSION ID -->
+  <div class="info-box">
+    <h3>📋 איך להשיג Session ID</h3>
+    <ol>
+      <li>היכנס לאינסטגרם בדפדפן (Chrome / Firefox)</li>
+      <li>לחץ <strong>F12</strong> לפתיחת DevTools</li>
+      <li>עבור ל-<strong>Application</strong> (Chrome) או <strong>Storage</strong> (Firefox)</li>
+      <li>בצד שמאל: <strong>Cookies → https://www.instagram.com</strong></li>
+      <li>מצא את הערך של <strong>sessionid</strong> והעתק אותו</li>
+    </ol>
+  </div>
+
+  <!-- PHASE 1 -->
+  <div class="card" id="phase1">
+    <div class="card-title">
+      <span class="phase-badge">1</span>
+      שליפת פרטי יוזר מ-UID
+    </div>
+
+    <div class="tool-block">
+      <div class="tool-label">🌐 בדיקה ישירה מהדפדפן (דורש כניסה לאינסטגרם)</div>
+      <div class="links-row">
+        <button class="link-btn green" onclick="tryBrowserFetch()">⚡ נסה שליפה מהדפדפן</button>
+        <a id="link-profile" class="link-btn" href="#" target="_blank" rel="noopener">👤 פתח פרופיל</a>
+      </div>
+      <div id="browser-result" class="result-box"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="tool-block">
+      <div class="tool-label">💻 Instaloader — שליפה בסיסית</div>
+      <div class="code-wrap">
+        <pre class="code-block" id="cmd-instaloader">pip install instaloader
+instaloader --no-pictures --no-videos --no-captions --no-metadata-json --user-id {UID}</pre>
+        <button class="copy-btn" onclick="copyCode('cmd-instaloader', this)">העתק</button>
+      </div>
+    </div>
+
+    <div class="tool-block">
+      <div class="tool-label">💻 curl ישיר ל-Instagram Internal API</div>
+      <div class="code-wrap">
+        <pre class="code-block" id="cmd-curl-uid">curl -s \
+  -H "User-Agent: Mozilla/5.0 (Linux; Android 10; SM-G960F)" \
+  -H "Cookie: sessionid={SESSION}" \
+  "https://i.instagram.com/api/v1/users/{UID}/info/" | python3 -m json.tool</pre>
+        <button class="copy-btn" onclick="copyCode('cmd-curl-uid', this)">העתק</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div class="card" id="phase2">
+    <div class="card-title">
+      <span class="phase-badge">2</span>
+      שליפת מייל ומספר טלפון
+    </div>
+
+    <div class="info-box warn-box" style="margin-bottom:16px;">
+      <h3>⚠️ מגבלות</h3>
+      מייל ציבורי מוחזר רק אם הגדרת <strong>Contact Email</strong> בפרופיל (בעיקר חשבונות עסקיים). Toutatis יכול להציג מייל אובסקורטי כמו <code>a***@gmail.com</code>.
+    </div>
+
+    <div class="tool-block">
+      <div class="tool-label">🔧 Toutatis — מייל + טלפון (אובסקורטי)</div>
+      <div class="code-wrap">
+        <pre class="code-block" id="cmd-toutatis">python3 toutatis.py -u {USERNAME} -s {SESSION}</pre>
+        <button class="copy-btn" onclick="copyCode('cmd-toutatis', this)">העתק</button>
+      </div>
+      <details>
+        <summary>הוראות התקנה</summary>
+        <div class="install-box">git clone https://github.com/iamunixtz/Toutatis.git
+cd Toutatis
+pip install -r requirements.txt</div>
+      </details>
+    </div>
+
+    <div class="tool-block">
+      <div class="tool-label">🔧 osi.ig — מידע כללי על פרופיל</div>
+      <div class="code-wrap">
+        <pre class="code-block" id="cmd-osig">python3 main.py -u {USERNAME}</pre>
+        <button class="copy-btn" onclick="copyCode('cmd-osig', this)">העתק</button>
+      </div>
+      <details>
+        <summary>הוראות התקנה</summary>
+        <div class="install-box">git clone https://github.com/th3unkn0n/osi.ig.git
+cd osi.ig
+pip install -r requirements.txt</div>
+      </details>
+    </div>
+
+    <div class="tool-block">
+      <div class="tool-label">🔧 InstaRecon — מיילים ציבוריים</div>
+      <div class="code-wrap">
+        <pre class="code-block" id="cmd-instarecon">python instarecon.py -u {USERNAME} -s {SESSION}</pre>
+        <button class="copy-btn" onclick="copyCode('cmd-instarecon', this)">העתק</button>
+      </div>
+      <details>
+        <summary>הוראות התקנה</summary>
+        <div class="install-box">git clone https://github.com/Faizee-Asad/InstaRecon.git
+cd InstaRecon
+pip install -r requirements.txt</div>
+      </details>
+    </div>
+  </div>
+
+  <!-- PHASE 3 -->
+  <div class="card" id="phase3">
+    <div class="card-title">
+      <span class="phase-badge">3</span>
+      היסטוריית שמות משתמש ועקבות ברשת
+    </div>
+
+    <div class="tool-block">
+      <div class="tool-label">🌐 WayBack Machine — ארכיון ישן של הפרופיל</div>
+      <div class="links-row">
+        <a id="link-wayback" class="link-btn green" href="#" target="_blank" rel="noopener">📦 פתח WayBack Machine</a>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="tool-block">
+      <div class="tool-label">💻 Sherlock — חיפוש Username על פני פלטפורמות</div>
+      <div class="code-wrap">
+        <pre class="code-block" id="cmd-sherlock">python3 sherlock {USERNAME}</pre>
+        <button class="copy-btn" onclick="copyCode('cmd-sherlock', this)">העתק</button>
+      </div>
+      <details>
+        <summary>הוראות התקנה</summary>
+        <div class="install-box">git clone https://github.com/sherlock-project/sherlock.git
+cd sherlock
+pip install -r requirements.txt</div>
+      </details>
+    </div>
+
+    <div class="tool-block">
+      <div class="tool-label">💻 Social-Analyzer — חיפוש על 1000+ פלטפורמות</div>
+      <div class="code-wrap">
+        <pre class="code-block" id="cmd-social">node app.js --username "{USERNAME}" --mode fast</pre>
+        <button class="copy-btn" onclick="copyCode('cmd-social', this)">העתק</button>
+      </div>
+      <details>
+        <summary>הוראות התקנה</summary>
+        <div class="install-box">git clone https://github.com/qeeqbox/social-analyzer.git
+cd social-analyzer
+npm install</div>
+      </details>
+    </div>
+
+    <div class="tool-block">
+      <div class="tool-label">💻 Instaloader — היסטוריית פרופיל (אם קיים)</div>
+      <div class="code-wrap">
+        <pre class="code-block" id="cmd-insta-history">instaloader --no-pictures {USERNAME}</pre>
+        <button class="copy-btn" onclick="copyCode('cmd-insta-history', this)">העתק</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 4 -->
+  <div class="card" id="phase4">
+    <div class="card-title">
+      <span class="phase-badge">4</span>
+      שליפת פרטים ישירה דרך Instagram API
+    </div>
+
+    <div class="tool-block">
+      <div class="tool-label">🐍 Python Script — שליפת כל השדות הזמינים</div>
+      <div class="code-wrap">
+        <pre class="code-block" id="cmd-python">#!/usr/bin/env python3
+# instagram_osint.py
+# Usage: python3 instagram_osint.py -u {UID} -s YOUR_SESSION_ID
+import requests, json, argparse
+
+def get_user_info(uid, session_id):
+    url = f"https://i.instagram.com/api/v1/users/{uid}/info/"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 11; SM-G991B) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/90.0.4430.210 Mobile Safari/537.36",
+        "Cookie": f"sessionid={session_id}",
+        "Accept": "*/*",
+        "Accept-Language": "en-US",
+        "X-Requested-With": "XMLHttpRequest",
+    }
+    r = requests.get(url, headers=headers)
+    if r.status_code == 200:
+        data = r.json().get("user", {})
+        fields = [
+            ("Username",       data.get("username")),
+            ("Full Name",      data.get("full_name")),
+            ("Bio",            data.get("biography")),
+            ("Public Email",   data.get("public_email")),
+            ("Public Phone",   data.get("public_phone_number")),
+            ("External URL",   data.get("external_url")),
+            ("Business Email", data.get("business_email")),
+            ("Followers",      data.get("follower_count")),
+            ("Following",      data.get("following_count")),
+            ("Posts",          data.get("media_count")),
+            ("Is Private",     data.get("is_private")),
+            ("Is Verified",    data.get("is_verified")),
+        ]
+        for label, val in fields:
+            if val not in (None, "", False):
+                print(f"[+] {label}: {val}")
+        return data
+    else:
+        print(f"[-] Error {r.status_code}: {r.text[:200]}")
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    p.add_argument("-u", "--uid", required=True)
+    p.add_argument("-s", "--session", required=True)
+    args = p.parse_args()
+    get_user_info(args.uid, args.session)</pre>
+        <button class="copy-btn" onclick="copyCode('cmd-python', this)">העתק</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 5 -->
+  <div class="card" id="phase5">
+    <div class="card-title">
+      <span class="phase-badge">5</span>
+      Google Dorks — חיפוש עקבות ב-Google
+    </div>
+
+    <p style="font-size:0.88rem; color:var(--muted); margin-bottom:16px;">
+      לחץ על כל כפתור לפתיחת חיפוש Google מוכן. ייפתח בלשונית חדשה.
+    </p>
+
+    <div id="dorks-grid" class="links-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- PHASE 6 -->
+  <div class="card" id="phase6">
+    <div class="card-title">
+      <span class="phase-badge">6</span>
+      Holehe — אימות מייל מועמד
+    </div>
+
+    <p style="font-size:0.88rem; color:var(--muted); margin-bottom:16px;">
+      אם יש לך כתובת מייל שחשדת בה — בדוק אם היא מחוברת לחשבון.
+    </p>
+
+    <div class="email-row">
+      <div class="field">
+        <label>כתובת מייל לבדיקה</label>
+        <input type="email" id="inp-email" placeholder="example@gmail.com" dir="ltr">
+      </div>
+      <button class="btn-small" onclick="generateHolehe()">עדכן פקודה</button>
+    </div>
+
+    <div style="margin-top:16px;">
+      <div class="tool-label">💻 Holehe</div>
+      <div class="code-wrap">
+        <pre class="code-block" id="cmd-holehe">pip install holehe
+holehe example@gmail.com</pre>
+        <button class="copy-btn" onclick="copyCode('cmd-holehe', this)">העתק</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIMITATIONS -->
+  <div class="info-box warn-box">
+    <h3>⚠️ מגבלות שחשוב להכיר</h3>
+    <ul>
+      <li><strong>חשבון מחוק / בונן</strong> — API לא יחזיר מידע, UID עדיין קיים במאגרים</li>
+      <li><strong>מייל ציבורי</strong> — מוחזר רק אם הוגדר Contact Email בפרופיל (עסקי בעיקר)</li>
+      <li><strong>מייל אובסקורטי</strong> — Toutatis מציג <code>a***@gmail.com</code> (אות ראשונה + דומיין)</li>
+      <li><strong>היסטוריית שמות</strong> — אינסטגרם לא חושפת שינויי username דרך API ציבורי</li>
+      <li><strong>CORS</strong> — קריאות ישירות מהדפדפן ל-Instagram API נחסמות; curl / Python יעבדו טוב יותר</li>
+    </ul>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<!-- TOAST -->
+<div id="toast">✓ הועתק ללוח</div>
+
+<script>
+// ─── State ─────────────────────────────────────────────────────────────────
+
+const $ = id => document.getElementById(id);
+
+function getInputs() {
+  return {
+    uid:      ($('inp-uid').value.trim()      || '53693488780'),
+    username: ($('inp-username').value.trim() || 'can_not_anymore'),
+    session:  ($('inp-session').value.trim()  || 'YOUR_SESSION_ID'),
+  };
+}
+
+// ─── Persist UID / Username ────────────────────────────────────────────────
+
+(function restoreInputs() {
+  const savedUid  = localStorage.getItem('osint_uid');
+  const savedUser = localStorage.getItem('osint_username');
+  if (savedUid)  $('inp-uid').value      = savedUid;
+  if (savedUser) $('inp-username').value = savedUser;
+})();
+
+function saveInputs() {
+  const { uid, username } = getInputs();
+  if (uid !== 'YOUR_UID')           localStorage.setItem('osint_uid', uid);
+  if (username !== 'YOUR_USERNAME') localStorage.setItem('osint_username', username);
+}
+
+// ─── Generate ──────────────────────────────────────────────────────────────
+
+function generate() {
+  saveInputs();
+  const { uid, username, session } = getInputs();
+
+  // Phase 1
+  $('cmd-instaloader').textContent =
+    `pip install instaloader\ninstaloader --no-pictures --no-videos --no-captions --no-metadata-json --user-id ${uid}`;
+
+  $('cmd-curl-uid').textContent =
+    `curl -s \\\n  -H "User-Agent: Mozilla/5.0 (Linux; Android 10; SM-G960F)" \\\n  -H "Cookie: sessionid=${session}" \\\n  "https://i.instagram.com/api/v1/users/${uid}/info/" | python3 -m json.tool`;
+
+  $('link-profile').href = `https://www.instagram.com/${username}/`;
+
+  // Phase 2
+  $('cmd-toutatis').textContent    = `python3 toutatis.py -u ${username} -s ${session}`;
+  $('cmd-osig').textContent        = `python3 main.py -u ${username}`;
+  $('cmd-instarecon').textContent  = `python instarecon.py -u ${username} -s ${session}`;
+
+  // Phase 3
+  const waybackUrl = `https://web.archive.org/web/*/instagram.com/${username}`;
+  $('link-wayback').href = waybackUrl;
+  $('cmd-sherlock').textContent      = `python3 sherlock ${username}`;
+  $('cmd-social').textContent        = `node app.js --username "${username}" --mode fast`;
+  $('cmd-insta-history').textContent = `instaloader --no-pictures ${username}`;
+
+  // Phase 4
+  $('cmd-python').textContent = buildPythonScript(uid);
+
+  // Phase 5
+  buildDorks(uid, username);
+
+  showToast('✓ כל הפקודות עודכנו');
+}
+
+// ─── Python script ─────────────────────────────────────────────────────────
+
+function buildPythonScript(uid) {
+  return `#!/usr/bin/env python3
+# instagram_osint.py
+# Usage: python3 instagram_osint.py -u ${uid} -s YOUR_SESSION_ID
+import requests, json, argparse
+
+def get_user_info(uid, session_id):
+    url = f"https://i.instagram.com/api/v1/users/{uid}/info/"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 11; SM-G991B) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/90.0.4430.210 Mobile Safari/537.36",
+        "Cookie": f"sessionid={session_id}",
+        "Accept": "*/*",
+        "Accept-Language": "en-US",
+        "X-Requested-With": "XMLHttpRequest",
+    }
+    r = requests.get(url, headers=headers)
+    if r.status_code == 200:
+        data = r.json().get("user", {})
+        fields = [
+            ("Username",       data.get("username")),
+            ("Full Name",      data.get("full_name")),
+            ("Bio",            data.get("biography")),
+            ("Public Email",   data.get("public_email")),
+            ("Public Phone",   data.get("public_phone_number")),
+            ("External URL",   data.get("external_url")),
+            ("Business Email", data.get("business_email")),
+            ("Followers",      data.get("follower_count")),
+            ("Following",      data.get("following_count")),
+            ("Posts",          data.get("media_count")),
+            ("Is Private",     data.get("is_private")),
+            ("Is Verified",    data.get("is_verified")),
+        ]
+        for label, val in fields:
+            if val not in (None, "", False):
+                print(f"[+] {label}: {val}")
+        return data
+    else:
+        print(f"[-] Error {r.status_code}: {r.text[:200]}")
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    p.add_argument("-u", "--uid", required=True)
+    p.add_argument("-s", "--session", required=True)
+    args = p.parse_args()
+    get_user_info(args.uid, args.session)`;
+}
+
+// ─── Google Dorks ──────────────────────────────────────────────────────────
+
+function buildDorks(uid, username) {
+  const dorks = [
+    { label: `site:instagram.com "${uid}"`,                    q: `site:instagram.com "${uid}"` },
+    { label: `site:instagram.com ${username}`,                 q: `site:instagram.com ${username}` },
+    { label: `"${username}" gmail OR hotmail OR yahoo`,        q: `"${username}" gmail OR hotmail OR yahoo` },
+    { label: `intitle:"${username}" email`,                    q: `intitle:"${username}" email` },
+  ];
+
+  const grid = $('dorks-grid');
+  grid.innerHTML = '';
+
+  dorks.forEach(d => {
+    const url = `https://www.google.com/search?q=${encodeURIComponent(d.q)}`;
+    const btn = document.createElement('a');
+    btn.className = 'link-btn';
+    btn.href = url;
+    btn.target = '_blank';
+    btn.rel = 'noopener';
+    btn.style.fontFamily = "'Courier New', monospace";
+    btn.style.fontSize = '0.82rem';
+    btn.style.direction = 'ltr';
+    btn.style.textAlign = 'left';
+    btn.textContent = d.label;
+    grid.appendChild(btn);
+  });
+}
+
+// ─── Browser Fetch Attempt ─────────────────────────────────────────────────
+
+async function tryBrowserFetch() {
+  const { uid } = getInputs();
+  const resultBox = $('browser-result');
+  resultBox.className = 'result-box visible warn';
+  resultBox.textContent = '⏳ מנסה לשלוף מידע מהדפדפן...';
+
+  try {
+    const res = await fetch(`https://i.instagram.com/api/v1/users/${uid}/info/`, {
+      credentials: 'include',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 10; SM-G960F)',
+        'Accept': 'application/json',
+      },
+      mode: 'cors',
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const u = data.user || {};
+      const lines = [];
+      if (u.username)       lines.push(`Username:  ${u.username}`);
+      if (u.full_name)      lines.push(`Full Name: ${u.full_name}`);
+      if (u.biography)      lines.push(`Bio:       ${u.biography}`);
+      if (u.public_email)   lines.push(`Email:     ${u.public_email}`);
+      if (u.public_phone_number) lines.push(`Phone:     ${u.public_phone_number}`);
+      if (u.external_url)   lines.push(`URL:       ${u.external_url}`);
+      if (u.follower_count !== undefined) lines.push(`Followers: ${u.follower_count}`);
+
+      resultBox.className = 'result-box visible ok';
+      resultBox.textContent = lines.length ? lines.join('\n') : JSON.stringify(data, null, 2);
+    } else {
+      resultBox.className = 'result-box visible err';
+      resultBox.textContent = `HTTP ${res.status} — ${res.statusText}\n\nהשתמש ב-curl / Python עם Session ID.`;
+    }
+  } catch (e) {
+    resultBox.className = 'result-box visible err';
+    resultBox.textContent =
+      `CORS חסם את הבקשה (צפוי).\n\nהשתמש בכלי curl / Python מהטרמינל עם Session ID.\n\nשגיאה: ${e.message}`;
+  }
+}
+
+// ─── Holehe ────────────────────────────────────────────────────────────────
+
+function generateHolehe() {
+  const email = $('inp-email').value.trim() || 'example@gmail.com';
+  $('cmd-holehe').textContent = `pip install holehe\nholehe ${email}`;
+  showToast('✓ פקודת Holehe עודכנה');
+}
+
+// ─── Copy ──────────────────────────────────────────────────────────────────
+
+async function copyCode(id, btn) {
+  const text = $(id).textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = '✓ הועתק';
+    btn.classList.add('copied');
+    showToast('✓ הועתק ללוח');
+    setTimeout(() => {
+      btn.textContent = 'העתק';
+      btn.classList.remove('copied');
+    }, 2000);
+  } catch {
+    showToast('⚠️ העתקה ידנית: סמן את הטקסט');
+  }
+}
+
+// ─── Toast ─────────────────────────────────────────────────────────────────
+
+let toastTimer;
+function showToast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ─── Auto-generate on load if values exist ─────────────────────────────────
+
+window.addEventListener('DOMContentLoaded', () => {
+  const uid  = $('inp-uid').value.trim();
+  const user = $('inp-username').value.trim();
+  if (uid || user) generate();
+  else {
+    // Seed defaults so the page is immediately usable
+    $('inp-uid').value      = '53693488780';
+    $('inp-username').value = 'can_not_anymore';
+    generate();
+  }
+});
+</script>
+</body>
+</html>
