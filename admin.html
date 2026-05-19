@@ -2973,7 +2973,8 @@ async function unassignCaptain(captainTid, captainName) {
   try {
     // מצא את ה-partnerTid הנוכחי לפני הפירוק
     const captain = assignRegs.find(r => r.tid === captainTid);
-    const partnerTid  = captain?.partnerTid  || '';
+    const rawTid     = captain?.partnerTid || '';
+    const partnerTid = (rawTid && rawTid !== 'solo') ? rawTid : '';
     const partnerName = captain?.partner || '';
 
     // פרק שיבוץ — מנקה עמודות G+I ומחזיר סטוקר לטבלה
