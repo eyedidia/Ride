@@ -1457,24 +1457,16 @@ async function loadEvents() {
 
 async function loadMyRegistrations(events) {
   myRegs.clear();
-  const counts = {};
   try {
-    const checks = await Promise.all(
-      events.map(ev => getRegistrationsCached(ev.id)
-        .then(regs => ({
-          eventId:    ev.id,
-          count:      regs.length,
-          registered: regs.some(r => normTid(r.tid) === normTid(user.tid))
-        }))
-        .catch(() => ({ eventId: ev.id, count: 0, registered: false }))
-      )
-    );
-    checks.forEach(c => {
-      if (c.registered) myRegs.add(c.eventId);
-      counts[c.eventId] = c.count;
-    });
-  } catch(_) {}
-  return counts;
+    const [myEventIds, allCounts] = await Promise.all([
+      apiGet('getMyRegistrations', { tid: user.tid }),
+      apiGet('getEventCounts'),
+    ]);
+    new Set(myEventIds).forEach(id => myRegs.add(id));
+    return Object.fromEntries(events.map(ev => [ev.id, allCounts[ev.id] ?? 0]));
+  } catch(_) {
+    return {};
+  }
 }
 
 function normTid(val) {

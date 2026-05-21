@@ -216,6 +216,13 @@ async function _route(action, data) {
     return d || [];
   }
 
+  if (action === 'getMyRegistrations') {
+    // Returns event_ids where tid is registered — single query instead of N per-event calls
+    const { data: d, error } = await _sb.from('registrations').select('event_id').eq('tid', data.tid);
+    if (error) throw error;
+    return (d || []).map(r => r.event_id);
+  }
+
   if (action === 'getEventCounts') {
     const { data: d, error } = await _sb.rpc('get_event_counts');
     if (error) throw error;
