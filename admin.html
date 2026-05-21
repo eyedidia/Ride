@@ -2166,7 +2166,10 @@ async function loadRiders() {
 
 async function loadEvents() {
   try {
-    const all = await apiGet('getAllEvents');
+    const [all, counts] = await Promise.all([
+      apiGet('getAllEvents'),
+      apiGet('getEventCounts'),
+    ]);
   // Re-categorize: move events from "past" back to upcoming if meetTime hasn't passed
   const stillUpcoming = (all.past || []).filter(e => !eventIsPast(e.date, e.meetTime));
   const fixedAll = {
@@ -2176,11 +2179,10 @@ async function loadEvents() {
   };
   STATE.events    = fixedAll.upcoming;
   STATE.allEvents = fixedAll;
-  STATE.regCounts = STATE.regCounts || {};
+  STATE.regCounts = counts || {};
   renderDashboardEvents(STATE.events);
   renderAssignmentsEventSelect(STATE.events);
   renderAllEventsTables(fixedAll);
-  loadAllRegCounts(fixedAll);
   } catch(e) {
     showToast('שגיאה בטעינת אירועים: ' + e.message, 'error');
   }
@@ -3059,30 +3061,6 @@ function shareAssignmentsWhatsApp() {
   window.open(url, '_blank', 'noopener');
 }
 
-// ─── REG COUNTS (batched — 6 parallel requests) ──
-async function loadAllRegCounts(allEvents) {
-  STATE.regCounts = STATE.regCounts || {};
-  const allEvs = [
-    ...(allEvents.upcoming  || []),
-    ...(allEvents.past      || []),
-    ...(allEvents.cancelled || [])
-  ];
-  const BATCH = 6;
-  for (let i = 0; i < allEvs.length; i += BATCH) {
-    await Promise.all(
-      allEvs.slice(i, i + BATCH).map(e =>
-        getRegistrationsCached(e.id)
-          .then(regs => {
-            const count = Array.isArray(regs) ? regs.length : 0;
-            STATE.regCounts[e.id] = count;
-            const cell = document.getElementById('reg-count-' + e.id);
-            if (cell) cell.textContent = count;
-          })
-          .catch(() => { STATE.regCounts[e.id] = 0; })
-      )
-    );
-  }
-}
 
 // ─── OPEN ASSIGNMENTS FROM EVENTS TABLE ────────────
 function openAssignments(eventId) {
