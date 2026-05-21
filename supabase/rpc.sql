@@ -82,8 +82,11 @@ BEGIN
   stored_name := lower(trim(r.name));
   input_name  := lower(trim(p_name));
 
-  IF NOT (stored_name LIKE '%' || input_name || '%'
-       OR input_name  LIKE '%' || split_part(stored_name, ' ', 1) || '%') THEN
+  -- Escape LIKE metacharacters in user-supplied input so '%' / '_' can't bypass auth
+  input_name := replace(replace(input_name, '%', '\%'), '_', '\_');
+
+  IF NOT (stored_name LIKE '%' || input_name || '%' ESCAPE '\'
+       OR input_name  LIKE '%' || split_part(stored_name, ' ', 1) || '%' ESCAPE '\') THEN
     RAISE EXCEPTION 'הפרטים שהוזנו אינם תואמים';
   END IF;
 
