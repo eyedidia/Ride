@@ -33,6 +33,31 @@ Deno.serve(async (req) => {
     const { type, payload } = await req.json();
     console.log('[notify] type:', type);
 
+    // ─── WhatsApp group message (Green API) — handled before SMTP ───
+    if (type === 'whatsapp_group') {
+      const { data: wa } = await _sb
+        .from('whatsapp_settings').select('*').eq('id', 1).single();
+      if (!wa?.instance_id || !wa?.token || !wa?.group_chat_id || !wa?.enabled) {
+        console.warn('[notify] WhatsApp not configured or disabled');
+        return json({ skipped: 'WhatsApp לא מוגדר או מושבת' });
+      }
+      const res = await fetch(
+        `https://api.green-api.com/waInstance${wa.instance_id}/sendMessage/${wa.token}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chatId: wa.group_chat_id, message: payload.message }),
+        }
+      );
+      const body = await res.text();
+      if (!res.ok) {
+        console.error('[notify] Green API error:', res.status, body);
+        return json({ error: `Green API: ${res.status} ${body}` }, 500);
+      }
+      console.log('[notify] WhatsApp sent:', body);
+      return json({ sent: 1 });
+    }
+
     const { data: smtp, error: smtpErr } = await _sb
       .from('smtp_settings').select('*').single();
 

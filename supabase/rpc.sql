@@ -817,3 +817,39 @@ BEGIN
 END;
 $$;
 GRANT EXECUTE ON FUNCTION get_smtp_settings(TEXT) TO anon;
+
+-- ─────────────────────────────────────────────
+-- WhatsApp / Green API Settings
+-- ─────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION save_whatsapp_settings(
+  p_caller_tid   TEXT,
+  p_instance_id  TEXT,
+  p_token        TEXT,
+  p_group_chat_id TEXT,
+  p_enabled      BOOLEAN
+) RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  PERFORM _require_admin(p_caller_tid);
+  INSERT INTO whatsapp_settings (id, instance_id, token, group_chat_id, enabled)
+  VALUES (1, p_instance_id, p_token, p_group_chat_id, p_enabled)
+  ON CONFLICT (id) DO UPDATE SET
+    instance_id   = EXCLUDED.instance_id,
+    token         = EXCLUDED.token,
+    group_chat_id = EXCLUDED.group_chat_id,
+    enabled       = EXCLUDED.enabled;
+END;
+$$;
+GRANT EXECUTE ON FUNCTION save_whatsapp_settings(TEXT,TEXT,TEXT,TEXT,BOOLEAN) TO anon;
+
+CREATE OR REPLACE FUNCTION get_whatsapp_settings(p_caller_tid TEXT)
+RETURNS TABLE(instance_id TEXT, token TEXT, group_chat_id TEXT, enabled BOOLEAN)
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  PERFORM _require_admin(p_caller_tid);
+  RETURN QUERY
+    SELECT s.instance_id, s.token, s.group_chat_id, s.enabled
+    FROM whatsapp_settings s WHERE s.id = 1;
+END;
+$$;
+GRANT EXECUTE ON FUNCTION get_whatsapp_settings(TEXT) TO anon;

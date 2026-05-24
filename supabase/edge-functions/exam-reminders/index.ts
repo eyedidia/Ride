@@ -111,7 +111,35 @@ Deno.serve(async (_req) => {
       });
     }
 
-    return ok({ processed: expiring.length, withEmail: withEmail.length, noEmail: noEmail.length, sent: sentCount, birthdaysSent: birthdayRiders.length });
+    // ─── WhatsApp תזכורת יום לפני אירוע ─────────────────────────
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+
+    const { data: tomorrowEvs } = await _sb
+      .from('events')
+      .select('description, meet_time, meet_point, km, climb')
+      .eq('date', tomorrowStr)
+      .eq('status', 'פעיל');
+
+    let waSent = 0;
+    if (tomorrowEvs?.length) {
+      const { data: wa } = await _sb
+        .from('whatsapp_settings').select('*').eq('id', 1).single();
+      if (wa?.instance_id && wa?.token && wa?.group_chat_id && wa?.enabled) {
+        for (const ev of tomorrowEvs as { description: string; meet_time: string; meet_point: string; km: number; climb: number }[]) {
+          const msg = `⏰ תזכורת רכיבה מחר!\n🚴 ${ev.description}\n⏰ ${ev.meet_time || '06:00'}\n📍 ${ev.meet_point || ''}\n🛣️ ${ev.km} ק"מ | ⛰️ ${ev.climb} מ'`;
+          const res = await fetch(
+            `https://api.green-api.com/waInstance${wa.instance_id}/sendMessage/${wa.token}`,
+            { method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ chatId: wa.group_chat_id, message: msg }) }
+          ).catch(() => null);
+          if (res?.ok) waSent++;
+        }
+      }
+    }
+
+    return ok({ processed: expiring.length, withEmail: withEmail.length, noEmail: noEmail.length, sent: sentCount, birthdaysSent: birthdayRiders.length, waTomorrowReminders: waSent });
 
   } catch (err) {
     return new Response(JSON.stringify({ error: String(err) }), { status: 500 });

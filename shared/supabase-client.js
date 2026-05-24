@@ -423,6 +423,34 @@ async function _route(action, data) {
     return { success: true };
   }
 
+  if (action === 'getWhatsappSettings') {
+    const { data: d, error } = await _sb.rpc('get_whatsapp_settings', {
+      p_caller_tid: _getCallerTid(),
+    });
+    if (error) throw error;
+    return d?.[0] ?? null;
+  }
+
+  if (action === 'saveWhatsappSettings') {
+    const { error } = await _sb.rpc('save_whatsapp_settings', {
+      p_caller_tid:    _getCallerTid(),
+      p_instance_id:   data.instanceId,
+      p_token:         data.token,
+      p_group_chat_id: data.groupChatId,
+      p_enabled:       data.enabled,
+    });
+    if (error) throw error;
+    return { success: true };
+  }
+
+  if (action === 'sendWhatsapp') {
+    const { error } = await _sb.functions.invoke('notify', {
+      body: { type: 'whatsapp_group', payload: { message: data.message } },
+    });
+    if (error) throw error;
+    return { success: true };
+  }
+
   throw new Error('פעולה לא מוכרת: ' + action);
 }
 

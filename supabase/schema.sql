@@ -132,6 +132,20 @@ CREATE TABLE IF NOT EXISTS smtp_settings (
 ALTER TABLE smtp_settings ENABLE ROW LEVEL SECURITY;
 -- אין CREATE POLICY → ברירת מחדל DENY לanon; Edge Function קוראת דרך service role
 
+-- ─────────────────────────────────────────────
+-- TABLE: whatsapp_settings — Green API (singleton)
+-- ─────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS whatsapp_settings (
+  id            INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  instance_id   TEXT    NOT NULL DEFAULT '',
+  token         TEXT    NOT NULL DEFAULT '',
+  group_chat_id TEXT    NOT NULL DEFAULT '',   -- e.g. "120363XXXXXXXXXX@g.us"
+  enabled       BOOLEAN NOT NULL DEFAULT true
+);
+ALTER TABLE whatsapp_settings ENABLE ROW LEVEL SECURITY;
+-- ללא פוליסה → DENY לanon; Edge Function וRPC קוראים דרך service role / SECURITY DEFINER
+
 -- הרשאות
 GRANT USAGE ON SCHEMA public TO anon;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;

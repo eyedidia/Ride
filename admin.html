@@ -1612,6 +1612,48 @@ tbody td {
 
         </div>
       </div>
+
+      <!-- ─── הגדרות WhatsApp ─── -->
+      <div class="panel" style="margin-top:20px">
+        <div class="panel-header">
+          <h2 class="panel-title"><span aria-hidden="true">💬</span> הגדרות WhatsApp (Green API)</h2>
+          <span id="waStatusBadge" style="font-size:0.75rem;color:var(--text-muted)">לא מוגדר</span>
+        </div>
+        <div class="panel-body" style="padding:20px">
+          <div class="form-grid" style="margin-bottom:14px">
+            <label>Instance ID
+              <input type="text" id="waInstanceId" class="input" placeholder="1101XXXXXXXXXX"
+                     autocomplete="off">
+            </label>
+            <label>API Token
+              <input type="password" id="waToken" class="input" placeholder="הטוקן מ-Green API"
+                     autocomplete="off">
+            </label>
+            <label style="grid-column:1/-1">Group Chat ID
+              <input type="text" id="waGroupChatId" class="input" placeholder="120363XXXXXXXXXX@g.us"
+                     autocomplete="off">
+              <span style="font-size:0.76rem;color:var(--text-muted);display:block;margin-top:3px">
+                מזהה הקבוצה — מסתיים ב-@g.us. ניתן לאתר ב-Green API Dashboard → Incoming Messages
+              </span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" id="waEnabled" checked> שלח הודעות לקבוצה באופן אוטומטי
+            </label>
+          </div>
+          <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px">
+            ℹ️ <a href="https://green-api.com" target="_blank" rel="noopener"
+                  style="color:var(--accent)">green-api.com</a> — 500 הודעות/חודש חינם.
+            יש להירשם, לחבר WhatsApp דרך QR, ולהעתיק את ה-instanceId וה-token.
+          </p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-sm" onclick="saveWhatsappSettings()">💾 שמור הגדרות</button>
+            <button class="btn btn-ghost btn-sm" onclick="testWhatsapp()">🔌 שלח הודעת בדיקה</button>
+          </div>
+          <div id="waStatus" role="status" aria-live="polite"
+               style="font-size:0.82rem;margin-top:10px;color:var(--text-muted)"></div>
+        </div>
+      </div>
+
     </section>
 
   </main>
@@ -3322,6 +3364,7 @@ async function cancelEvent(eventId, name) {
         payload: { riders: _cancelledRiders, event: { description: name, date: '' } },
       }).catch(() => {});
     }
+    notifyWhatsappGroup(`❌ הרכיבה "${name}" בוטלה.`);
     await loadEvents();
   } catch(e) {
     showToast('שגיאה: ' + e.message, 'error');
@@ -3366,6 +3409,9 @@ async function submitAddEvent() {
         }).catch(() => {});
       }
     }
+    notifyWhatsappGroup(
+      `🚴 רכיבה חדשה: ${desc}\n📅 ${date} ⏰ ${time || '06:00'}\n📍 ${meet || ''}\n🛣️ ${Number(km)||0} ק"מ | ⛰️ ${Number(climb)||0} מ'\n\nלרישום: ${location.origin}/rider.html`
+    );
     await loadEvents();
     // loadEvents() קורא ל-renderAllEventsTables + renderAssignmentsEventSelect פנימית
   } catch(e) {
@@ -4265,6 +4311,8 @@ function initSettingsSection() {
 
   // הוסף כתובות ידניות שמורות
   (cfg.adminEmails || []).forEach(email => _buildEmailRow(emailContainer, email, null, false));
+
+  initWhatsappSettings();
 }
 
 function addAdminEmailRow(email) {
@@ -4439,6 +4487,48 @@ async function testSmtpSettings() {
   } catch(e) {
     statusEl.textContent = '❌ שגיאת חיבור: ' + e.message;
   }
+}
+
+// ─── WhatsApp ────────────────────────────────────────
+async function initWhatsappSettings() {
+  try {
+    const s = await callAPI('getWhatsappSettings', {});
+    if (s) {
+      document.getElementById('waInstanceId').value  = s.instance_id   || '';
+      document.getElementById('waToken').value       = s.token         || '';
+      document.getElementById('waGroupChatId').value = s.group_chat_id || '';
+      document.getElementById('waEnabled').checked   = s.enabled !== false;
+      document.getElementById('waStatusBadge').textContent = s.instance_id ? '✅ מוגדר' : 'לא מוגדר';
+    }
+  } catch (_) {}
+}
+
+async function saveWhatsappSettings() {
+  const st = document.getElementById('waStatus');
+  st.textContent = 'שומר...';
+  try {
+    await callAPI('saveWhatsappSettings', {
+      instanceId:  document.getElementById('waInstanceId').value.trim(),
+      token:       document.getElementById('waToken').value.trim(),
+      groupChatId: document.getElementById('waGroupChatId').value.trim(),
+      enabled:     document.getElementById('waEnabled').checked,
+    });
+    st.textContent = '✅ נשמר';
+    document.getElementById('waStatusBadge').textContent = '✅ מוגדר';
+  } catch(e) { st.textContent = '❌ ' + e.message; }
+}
+
+async function testWhatsapp() {
+  const st = document.getElementById('waStatus');
+  st.textContent = 'שולח...';
+  try {
+    await callAPI('sendWhatsapp', { message: '✅ בדיקת חיבור WhatsApp — קבוצת האופניים מחוברת!' });
+    st.textContent = '✅ הודעת בדיקה נשלחה לקבוצה';
+  } catch(e) { st.textContent = '❌ ' + e.message; }
+}
+
+function notifyWhatsappGroup(message) {
+  callAPI('sendWhatsapp', { message }).catch(() => {});
 }
 </script>
 </body>
