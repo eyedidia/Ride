@@ -157,10 +157,20 @@ async function sendSmtpMail(cfg: SmtpCfg, mail: Mail): Promise<void> {
     const dataResp = await cmd('DATA');
     if (!dataResp.startsWith('3')) throw new Error('DATA failed: ' + dataResp.slice(0, 80));
 
+    // RFC 2047 — קודד שם תצוגה non-ASCII ב-From header (נדרש ע"י Yahoo/Gmail)
+    function encodeFromHeader(from: string): string {
+      const m = from.match(/^(.+?)\s*<([^>]+)>$/);
+      if (!m) return from;
+      const [, name, addr] = m;
+      return /[^\x00-\x7F]/.test(name)
+        ? `${encodeSubject(name.trim())} <${addr}>`
+        : from;
+    }
+
     const headers = [
       'MIME-Version: 1.0',
       `Date: ${new Date().toUTCString()}`,
-      `From: ${mail.from}`,
+      `From: ${encodeFromHeader(mail.from)}`,
       `To: ${toList.join(', ')}`,
       ...(mail.cc?.length ? [`Cc: ${mail.cc.join(', ')}`] : []),
       `Subject: ${encodeSubject(mail.subject)}`,
