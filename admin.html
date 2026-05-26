@@ -3251,6 +3251,11 @@ async function submitEditRider() {
     errEl.textContent = 'מספר טלפון לא תקין — יש להזין 10 ספרות (לדוגמה: 050-1234567)';
     errEl.style.display = 'block'; errEl.focus(); unlockBtn(btn); return;
   }
+  const emailEdit = document.getElementById('edit-email').value.trim();
+  if (emailEdit && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEdit)) {
+    errEl.textContent = 'כתובת דוא"ל לא תקינה';
+    errEl.style.display = 'block'; errEl.focus(); unlockBtn(btn); return;
+  }
   const examDate = document.getElementById('edit-exam').value;
   try {
     await callAPI('updateRider', {
@@ -3705,6 +3710,15 @@ async function submitAddRider() {
   const phoneNorm = phone.replace(/[-\s]/g, '');
   if (!/^0\d{9}$/.test(phoneNorm)) {
     errEl.textContent = 'מספר טלפון לא תקין — יש להזין 10 ספרות (לדוגמה: 050-1234567)';
+    errEl.style.display = 'block';
+    errEl.focus();
+    unlockBtn(btn);
+    return;
+  }
+
+  const emailNew = document.getElementById('new-email').value.trim();
+  if (emailNew && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNew)) {
+    errEl.textContent = 'כתובת דוא"ל לא תקינה';
     errEl.style.display = 'block';
     errEl.focus();
     unlockBtn(btn);
