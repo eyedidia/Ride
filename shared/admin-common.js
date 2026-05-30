@@ -2,6 +2,10 @@
 // admin-common.js — shared utilities for all admin pages
 // ═══════════════════════════════════════════════════
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+}
+
 const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec";
 
 // Sections each role may access (dashboard always included)
