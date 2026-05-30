@@ -401,8 +401,8 @@ async function handleLogin(e) {
   try {
     const user = await _loginRequest(phone, name);
     saveRememberMe(phone, name);
-    sessionStorage.clear();
-    sessionStorage.setItem('user', JSON.stringify(user));
+    localStorage.clear();
+    localStorage.setItem('user', JSON.stringify(user));
     window.location.href = 'rider.html';
   } catch (err) {
     showError(err.message || 'שגיאת חיבור — בדוק חיבור לאינטרנט ונסה שוב');
@@ -455,7 +455,7 @@ function hideAlerts() {
 
 // אם כבר מחובר — הפנה ישירות ל-rider.html (כולם)
 window.addEventListener('DOMContentLoaded', () => {
-  const stored = sessionStorage.getItem('user');
+  const stored = localStorage.getItem('user');
   if (stored) { window.location.replace('rider.html'); return; }
 
   // "זכור אותי" — מלא שדות מ-localStorage אם נשמרו
@@ -498,7 +498,7 @@ function saveRememberMe(phone, name) {
     const installBtn = document.getElementById('pwa-install-btn');
     const dismissBtn = document.getElementById('pwa-dismiss-btn');
     window.addEventListener('beforeinstallprompt', e => {
-      if (sessionStorage.getItem('pwa-dismissed')) return;
+      if (localStorage.getItem('pwa-dismissed')) return;
       e.preventDefault();
       _deferredPrompt = e;
       banner.style.display = 'flex';
@@ -512,7 +512,7 @@ function saveRememberMe(phone, name) {
     });
     dismissBtn.addEventListener('click', () => {
       banner.style.display = 'none';
-      sessionStorage.setItem('pwa-dismissed', '1');
+      localStorage.setItem('pwa-dismissed', '1');
     });
   </script>
 </body>
