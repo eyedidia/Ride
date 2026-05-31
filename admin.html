@@ -2607,14 +2607,15 @@ function renderAssignments() {
     ).join('');
   };
 
-  const stokerOpts = (currentPartnerTid, currentPartnerName) => {
+  const stokerOpts = (currentPartnerTid, currentPartnerName, selfTid) => {
     // בנה רשימה: סטוקרים זמינים + הסטוקר הנוכחי המשובץ (אם קיים)
     const allOptions = [...stokers];
     // אם יש שותף משובץ שכבר לא בטבלה — הוסף אותו ידנית
-    if (currentPartnerTid && !stokers.find(s => s.tid === currentPartnerTid)) {
+    if (currentPartnerTid && !stokers.find(s => s.tid === currentPartnerTid) &&
+        !captains.find(c => String(c.tid) === String(currentPartnerTid))) {
       allOptions.unshift({ tid: currentPartnerTid, name: currentPartnerName || currentPartnerTid, role: 'סטוקר' });
     }
-    return `<option value="">— ללא שותף —</option>` +
+    let html = `<option value="">— ללא שותף —</option>` +
       allOptions.map(s => {
         const alreadyAssigned = assignedStokerTids.has(s.tid) && s.tid !== currentPartnerTid;
         return `<option value="${esc(s.tid)}"
@@ -2623,6 +2624,28 @@ function renderAssignments() {
                   ${esc(s.name)}${alreadyAssigned ? ' (משובץ)' : ''}
                 </option>`;
       }).join('');
+
+    // קפטנים פנויים — לשיבוץ שני קפטנים על אופניים אחד
+    const freeCaptains = captains.filter(c =>
+      String(c.tid) !== String(selfTid) &&
+      !c.partnerTid &&
+      !_soloMode.has(String(c.tid)) &&
+      c.role === 'קפטן'
+    );
+    const currentIsCaptain = captains.some(c => String(c.tid) === String(currentPartnerTid));
+    if (freeCaptains.length || currentIsCaptain) {
+      html += `<optgroup label="👑 קפטנים פנויים (שני קפטנים על אופניים)">`;
+      if (currentIsCaptain) {
+        const cur = captains.find(c => String(c.tid) === String(currentPartnerTid));
+        html += `<option value="${esc(currentPartnerTid)}" selected>👑 ${esc(cur?.name || currentPartnerName)}</option>`;
+      }
+      html += freeCaptains
+        .filter(c => String(c.tid) !== String(currentPartnerTid))
+        .map(c => `<option value="${esc(c.tid)}">👑 ${esc(c.name)}</option>`)
+        .join('');
+      html += `</optgroup>`;
+    }
+    return html;
   };
 
   const captainsBody = document.getElementById('captainsBody');
@@ -2635,18 +2658,62 @@ function renderAssignments() {
     const hasBike      = bikeVal !== '' && bikeVal !== '—';
     const hasClubBike  = hasBike && bikeVal !== 'PRIVATE';
     const hasPartner   = r.role === 'קפטן' && !!r.partnerTid && !isSoloData;
-    // isSoloData = שובץ → תמיד נעול; isSoloNow+hasBike = בחר אופניים → נעול
-    const isAssigned   = !_editMode.has(stid) && (hasClubBike || hasPartner || isSoloData || (isSoloNow && hasBike));
+
+    // האם קפטן אחר רשם אותי כשותפו? (קפטן שני — יושב מאחור)
+    const leadCaptain  = captains.find(c =>
+      String(c.tid) !== stid && String(c.partnerTid) === stid
+    );
+    const isRearCaptain = !!leadCaptain;
+
+    // isSoloData = שובץ → תמיד נעול; isSoloNow+hasBike = בחר אופניים → נעול; isRearCaptain = שובץ כשני
+    const isAssigned   = !_editMode.has(stid) && (hasClubBike || hasPartner || isSoloData || (isSoloNow && hasBike) || isRearCaptain);
 
     if (isAssigned) {
       // ── כרטיס נעול — שיבוץ קיים ──
-      const isSoloCard  = isSolo && !hasPartner; // isSolo כולל isSoloData ו-isSoloNow
-      const bikeFull    = bikeLabel(r.bike);
-      const partnerName = r.partner || r.partnerTid || '';
-      const borderColor = isSoloCard ? 'var(--orange,#f59e0b)' : 'var(--green)';
-      const badgeBg     = isSoloCard ? 'rgba(245,158,11,0.15)' : 'rgba(45,212,160,0.15)';
-      const badgeColor  = isSoloCard ? 'var(--orange,#f59e0b)'  : 'var(--green)';
-      const badgeLabel  = isSoloCard ? '🚴 סינגל ✅' : '✅ משובץ';
+
+      // קפטן שני (יושב מאחור) — כרטיס מיוחד
+      if (isRearCaptain) {
+        const bikeFull  = bikeLabel(r.bike || leadCaptain.bike);
+        const ariaDesc  = `${r.name}, קפטן שני, רוכב עם ${leadCaptain.name}. אופניים: ${bikeFull}`;
+        return `
+        <div style="background:var(--surface2);border:2px solid #7c5cfc;
+                    border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;
+                    width:100%;box-sizing:border-box;min-width:0"
+             role="listitem" aria-label="${esc(ariaDesc)}">
+          <div style="display:flex;align-items:center;justify-content:space-between;
+                      margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)"
+               aria-hidden="true">
+            <div>
+              <div style="font-weight:700;font-size:0.95rem">${esc(r.name)}</div>
+              <div style="margin-top:3px"><span class="role-tag">${esc(r.role)}</span></div>
+            </div>
+            <span style="font-size:0.75rem;background:rgba(124,92,252,0.15);color:#7c5cfc;
+                         padding:3px 9px;border-radius:20px;font-weight:700">👑 קפטן שני ✅</span>
+          </div>
+          <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:6px" aria-hidden="true">
+            <span>🚲 ${esc(bikeFull)}</span>
+            <span> &nbsp;·&nbsp; 👑 רוכב עם ${esc(leadCaptain.name)}</span>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn btn-sm" style="flex:1;background:rgba(255,90,90,0.15);color:var(--red);border:1px solid rgba(255,90,90,0.3)"
+                    aria-label="פרק שיבוץ של ${esc(r.name)}"
+                    onclick="unassignCaptain('${esc(leadCaptain.tid)}','${esc(leadCaptain.name)}')">
+              🔓 פרק שיבוץ
+            </button>
+          </div>
+        </div>`;
+      }
+
+      const isSoloCard     = isSolo && !hasPartner;
+      const bikeFull       = bikeLabel(r.bike);
+      const partnerName    = r.partner || r.partnerTid || '';
+      const partnerIsCaptain = hasPartner &&
+        captains.some(c => String(c.tid) === String(r.partnerTid));
+      const borderColor = isSoloCard ? 'var(--orange,#f59e0b)' : partnerIsCaptain ? '#7c5cfc' : 'var(--green)';
+      const badgeBg     = isSoloCard ? 'rgba(245,158,11,0.15)' : partnerIsCaptain ? 'rgba(124,92,252,0.15)' : 'rgba(45,212,160,0.15)';
+      const badgeColor  = isSoloCard ? 'var(--orange,#f59e0b)' : partnerIsCaptain ? '#7c5cfc' : 'var(--green)';
+      const badgeLabel  = isSoloCard ? '🚴 סינגל ✅' : partnerIsCaptain ? '👑 שני קפטנים ✅' : '✅ משובץ';
+      const partnerIcon  = partnerIsCaptain ? '👑' : '🤝';
       const ariaDesc    = `${r.name}, ${r.role}${isSoloCard ? ', סינגל' : ''}, משובץ. אופניים: ${bikeFull}${hasPartner ? `. שותף: ${partnerName}` : ''}`;
       return `
       <div style="background:var(--surface2);border:2px solid ${borderColor};
@@ -2668,7 +2735,7 @@ function renderAssignments() {
         </div>
         <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:6px" aria-hidden="true">
           <span>${isSoloCard ? '🚴' : '🚲'} ${esc(bikeFull)}</span>
-          ${hasPartner ? `<span> &nbsp;·&nbsp; 🤝 ${esc(partnerName)}</span>` : ''}
+          ${hasPartner ? `<span> &nbsp;·&nbsp; ${partnerIcon} ${esc(partnerName)}</span>` : ''}
         </div>
         <div style="display:flex;gap:8px;margin-top:10px">
           <button class="btn btn-ghost btn-sm" style="flex:1"
@@ -2730,7 +2797,7 @@ function renderAssignments() {
         <select class="select" id="stoker-${esc(r.tid)}" style="width:100%"
                 aria-label="סטוקר שותף ל${esc(r.name)}"
                 onchange="onStokerChange('${esc(r.tid)}')">
-          ${stokerOpts(r.partnerTid || '', r.partner || '')}
+          ${stokerOpts(r.partnerTid || '', r.partner || '', r.tid)}
         </select>
       </div>` : ''}
 
@@ -2821,13 +2888,22 @@ async function saveAssignment(captainTid, captainName) {
       if (bikeId) await callAPI('assignBike', { eventId, tid: captainTid, bikeId });
       await callAPI('assignPartner', { eventId, captainTid, stokerTid: 'solo', stokerName: 'solo' });
     } else {
-      // שמור אופניים + שבץ סטוקר (אם נבחר)
+      // שמור אופניים + שבץ שותף (סטוקר או קפטן שני)
       if (bikeId) await callAPI('assignBike', { eventId, tid: captainTid, bikeId });
       const stokerHasOwnRow = stokerTid &&
         assignRegs.some(r => String(r.tid) === String(stokerTid) && r.role === 'סטוקר');
+      const isPartnerCaptain = stokerTid &&
+        assignRegs.some(r => String(r.tid) === String(stokerTid) && r.role === 'קפטן');
       if (stokerHasOwnRow) {
         await callAPI('assignBike',    { eventId, tid: stokerTid, bikeId: bikeId || '' });
         await callAPI('assignPartner', { eventId, captainTid, stokerTid });
+      } else if (isPartnerCaptain) {
+        // שני קפטנים על אופניים אחד — שתף אופניים ושמור שותפות
+        await callAPI('assignBike',    { eventId, tid: stokerTid, bikeId: bikeId || '' });
+        await callAPI('assignPartner', { eventId, captainTid, stokerTid });
+        // עדכון אופטימיסטי לקפטן B
+        const partnerCap = assignRegs.find(r => String(r.tid) === String(stokerTid));
+        if (partnerCap && bikeId) partnerCap.bike = bikeId;
       }
     }
 
@@ -2870,6 +2946,12 @@ async function unassignCaptain(captainTid, captainName) {
     await callAPI('unassignPartner', { eventId, captainTid, stokerTid: partnerTid, stokerName: partnerName });
     // אפס אופניים לקפטן
     await callAPI('assignBike', { eventId, tid: captainTid, bikeId: 'PRIVATE' });
+    // אם השותף הוא קפטן — אפס גם את האופניים שלו
+    const partnerIsCapt = partnerTid &&
+      assignRegs.some(r => String(r.tid) === String(partnerTid) && r.role === 'קפטן');
+    if (partnerIsCapt) {
+      await callAPI('assignBike', { eventId, tid: partnerTid, bikeId: 'PRIVATE' });
+    }
     _clearSoloEntry(eventId, captainTid); // הסר solo state גם מ-localStorage
 
     showToast(`שיבוץ ${captainName} פורק`, 'success');
@@ -2907,9 +2989,17 @@ function shareAssignmentsWhatsApp() {
     const bv = (c.bike || '').toString().trim();
     return _soloMode.has(c.tid) && bv !== '' && bv !== '—' && !c.partnerTid;
   };
-  const assignedCaptains   = allCaptains.filter(c => c.partnerTid && String(c.partnerTid).trim());
+  const rearCaptainTids    = new Set(
+    allCaptains.map(c => c.partnerTid)
+      .filter(tid => tid && allCaptains.some(c => String(c.tid) === String(tid)))
+  );
+  const assignedCaptains   = allCaptains.filter(c =>
+    c.partnerTid && String(c.partnerTid).trim() && !rearCaptainTids.has(String(c.tid))
+  );
   const soloCaptains       = allCaptains.filter(isCaptainSolo);
-  const unassignedCaptains = allCaptains.filter(c => !c.partnerTid && !isCaptainSolo(c));
+  const unassignedCaptains = allCaptains.filter(c =>
+    !c.partnerTid && !isCaptainSolo(c) && !rearCaptainTids.has(String(c.tid))
+  );
   const unassignedStokers  = stokers.filter(s => !assignedStokerTids.has(String(s.tid)));
 
   const lines = [];
@@ -2920,9 +3010,11 @@ function shareAssignmentsWhatsApp() {
 
   if (assignedCaptains.length) {
     assignedCaptains.forEach(c => {
-      const partnerName = c.partner || c.partnerTid;
-      const bikeFull    = bikeLabel(c.bike);
-      lines.push(`👑 ${c.name} + 🤝 ${partnerName}  |  ${bikeFull}`);
+      const partnerName    = c.partner || c.partnerTid;
+      const bikeFull       = bikeLabel(c.bike);
+      const partnerIsCapt  = allCaptains.some(x => String(x.tid) === String(c.partnerTid));
+      const partnerIcon    = partnerIsCapt ? '👑' : '🤝';
+      lines.push(`👑 ${c.name} + ${partnerIcon} ${partnerName}  |  ${bikeFull}`);
     });
     lines.push('');
   }

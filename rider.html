@@ -2086,9 +2086,16 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
     }
 
     const soloCaptains    = regs.filter(r => r.role === 'קפטן' && r.partnerTid === 'solo');
-    const captains        = regs.filter(r => r.role === 'קפטן' && r.partnerTid !== 'solo');
+    const allCaptains     = regs.filter(r => r.role === 'קפטן' && r.partnerTid !== 'solo');
     const singles         = regs.filter(r => r.role === 'סינגל');
     const unpairedStokers = regs.filter(r => r.role === 'סטוקר');
+
+    // קפטנים שרשומים כ-partnerTid של קפטן אחר — הם "קפטן שני", לא יוצגו בנפרד
+    const rearCaptainTids = new Set(
+      allCaptains.map(c => c.partnerTid)
+        .filter(tid => tid && allCaptains.some(c => String(c.tid) === String(tid)))
+    );
+    const captains = allCaptains.filter(c => !rearCaptainTids.has(String(c.tid)));
 
     let html = `<p aria-hidden="true" style="margin-bottom:14px;font-size:0.85rem;color:var(--muted)">
       סה"כ ${regs.length} נרשמים
@@ -2102,10 +2109,15 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
 
       html += captains.map(c => {
         const partnerName = c.partner && c.partner !== '—' && c.partner !== '' && c.partner !== 'solo' ? c.partner : null;
+        const partnerIsCapt = partnerName && allCaptains.some(x => String(x.tid) === String(c.partnerTid));
         const isMe = normTid(c.tid) === normTid(user.tid);
+        const partnerRoleLabel = partnerIsCapt ? 'קפטן שני' : 'סטוקר';
         const teamLabel = partnerName
-          ? `צוות טנדם: קפטן ${c.name}${isMe ? ' (אתה)' : ''}, סטוקר ${partnerName}`
+          ? `צוות טנדם: קפטן ${c.name}${isMe ? ' (אתה)' : ''}, ${partnerRoleLabel} ${partnerName}`
           : `קפטן ${c.name}${isMe ? ' (אתה)' : ''}, ממתין לסטוקר`;
+        const partnerBg     = partnerIsCapt ? 'rgba(124,92,252,0.06)' : 'rgba(45,212,160,0.04)';
+        const partnerAvatar = partnerIsCapt ? 'rgba(124,92,252,0.25)' : 'rgba(45,212,160,0.2)';
+        const partnerColor  = partnerIsCapt ? '#7c5cfc' : 'var(--green)';
 
         return `
         <div style="background:var(--surface2);border-radius:12px;margin-bottom:10px;
@@ -2130,16 +2142,16 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
             </div>
           </div>
           ${partnerName ? `
-          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(45,212,160,0.04)">
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:${partnerBg}">
             <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;
-                        background:rgba(45,212,160,0.2);
+                        background:${partnerAvatar};
                         display:flex;align-items:center;justify-content:center;
-                        font-weight:800;font-size:0.78rem;color:var(--green)" aria-hidden="true">
+                        font-weight:800;font-size:0.78rem;color:${partnerColor}" aria-hidden="true">
               ${esc(partnerName.trim().split(' ').map(w=>w[0]).slice(0,2).join(''))}
             </div>
             <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:0.9rem">${esc(partnerName)}</div>
-              <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">סטוקר</div>
+              <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">${partnerRoleLabel}</div>
             </div>
           </div>` : `
           <div style="padding:10px 14px;font-size:0.8rem;color:var(--muted);font-style:italic" aria-label="ממתין לשיבוץ סטוקר">
