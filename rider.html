@@ -1592,9 +1592,7 @@ async function register(eventId, eventName, btn) {
   btn.textContent = '...';
 
   try {
-    console.log('[register] Starting registration:', { eventId, tid: user.tid, rideStyle: user.rideStyle });
     await callAPI('register', { tid: user.tid, eventId, role: user.rideStyle });
-    console.log('[register] Registration successful for event:', eventId);
     // סינגל → שיבוץ אוטומטי לאופניים פרטיים
     if (user.rideStyle === 'סינגל') {
       await callAPI('assignBike', { eventId, tid: user.tid, bikeId: 'PRIVATE' }).catch(() => {});
@@ -1614,7 +1612,6 @@ async function register(eventId, eventName, btn) {
     }
     renderEvents(cachedEvents, cachedCounts);
   } catch(e) {
-    console.error('[register] Error:', e);
     if (e.message && e.message.includes('כבר רשום')) {
       myRegs.add(eventId);
       renderEvents(cachedEvents, cachedCounts);

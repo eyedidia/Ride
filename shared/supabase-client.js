@@ -279,18 +279,13 @@ async function _route(action, data) {
   }
 
   if (action === 'register') {
-    console.log('[register_to_event] Calling RPC with:', { p_tid: data.tid, p_event_id: data.eventId, p_role: data.role });
     const { data: d, error } = await _sb.rpc('register_to_event', {
       p_tid:      data.tid,
       p_event_id: data.eventId,
       p_role:     data.role     || '',
       p_bike_id:  data.bikeId   || '',
     });
-    if (error) {
-      console.error('[register_to_event] RPC error:', error);
-      throw new Error(error.message || JSON.stringify(error));
-    }
-    console.log('[register_to_event] RPC success:', d);
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
