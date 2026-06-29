@@ -373,10 +373,9 @@ input[type="date"] { color-scheme: dark; }
 
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="shared/supabase-client.js"></script>
-
 <script>
+const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec";
+
 // ── STATE ────────────────────────────────
 let USER = null;
 let RIDER_DATA = null;
@@ -586,7 +585,40 @@ async function saveProfile() {
   }
 }
 
-// API functions are now loaded from shared/supabase-client.js
+// ── HELPERS ──────────────────────────────
+async function apiGet(action, params = {}) {
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 20000);
+  try {
+    const qs  = new URLSearchParams({ action, ...params }).toString();
+    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
+    const d   = await res.json();
+    if (!d.success) throw new Error(d.error || 'שגיאת שרת לא ידועה');
+    return d.data;
+  } catch(err) {
+    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function callAPI(action, body = {}) {
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 20000);
+  try {
+    const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
+    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
+    const d   = await res.json();
+    if (!d.success) throw new Error(d.error || 'שגיאת שרת לא ידועה');
+    return d.data;
+  } catch(err) {
+    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 function esc(str) {
   return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
