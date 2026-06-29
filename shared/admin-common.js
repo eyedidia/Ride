@@ -2,16 +2,30 @@
 // admin-common.js — shared utilities for all admin pages
 // ═══════════════════════════════════════════════════
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+}
+
 const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec";
 
 // Sections each role may access (dashboard always included)
 const ADMIN_ROLES = {
   'מנהל':          ['dashboard','riders','events','assignments','bikes','maintenance','exams','settings'],
   'מנהל_רוכבים':  ['dashboard','riders','exams'],
-  'מנהל_אירועים': ['dashboard','events'],
+  'מנהל_אירועים': ['dashboard','events','assignments'],
   'מנהל_שיבוצים': ['dashboard','assignments'],
   'מנהל_אופניים': ['dashboard','bikes','maintenance'],
+  'מנהל_בדיקות':  ['dashboard','exams'],
+  'מנהל_צי':      ['dashboard','bikes','maintenance'],
 };
+
+// Returns true if an event date+time is in the past
+function eventIsPast(dateStr, timeStr) {
+  const [d,m,y] = (dateStr||'').split('/');
+  if (!d||!m||!y) return false;
+  const time = timeStr ? timeStr.trim() : '23:59';
+  return new Date(`${y}-${m}-${d}T${time}:00`) <= new Date();
+}
 
 // ─── AUTH GUARD ───────────────────────────────────────
 // Call at top of each admin page.
@@ -22,24 +36,31 @@ function checkAdminAccess(allowedSections) {
   if (!stored) { window.location.replace('index.html'); return null; }
   const u = JSON.parse(stored);
   const perm = u.permission || '';
-  if (!ADMIN_ROLES[perm]) { window.location.replace('rider.html'); return null; }
+  const roles = perm.split(',').map(r => r.trim()).filter(Boolean);
+  const hasValidRole = roles.some(r => ADMIN_ROLES[r]);
+  if (!hasValidRole) { window.location.replace('rider.html'); return null; }
   if (allowedSections) {
-    const allowed = ADMIN_ROLES[perm];
-    const ok = allowedSections.some(s => allowed.includes(s));
-    if (!ok) { window.location.replace('admin.html'); return null; }
+    const allowed = getUserAllowedSections(u);
+    if (!allowedSections.some(s => allowed.includes(s))) {
+      window.location.replace('admin.html'); return null;
+    }
   }
   return u;
 }
 
-// Returns the set of sections the current user can access.
+// Returns the set of sections the current user can access (union of all roles).
 function getUserAllowedSections(u) {
-  return ADMIN_ROLES[u?.permission] || [];
+  const perm = u?.permission || '';
+  const roles = perm.split(',').map(r => r.trim()).filter(Boolean);
+  const sections = new Set();
+  roles.forEach(role => { (ADMIN_ROLES[role] || []).forEach(s => sections.add(s)); });
+  return [...sections];
 }
 
 // ─── API ──────────────────────────────────────────────
-async function apiGet(action, params = {}) {
+async function apiGet(action, params = {}, _retry = true) {
   const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  const timeoutId  = setTimeout(() => controller.abort(), 20000);
   try {
     const qs  = new URLSearchParams({ action, ...params }).toString();
     const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
@@ -47,16 +68,19 @@ async function apiGet(action, params = {}) {
     if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
     return data.data;
   } catch(err) {
-    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    if (err.name === 'AbortError') {
+      if (_retry) return apiGet(action, params, false);
+      throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    }
     throw err;
   } finally {
     clearTimeout(timeoutId);
   }
 }
 
-async function callAPI(action, body = {}) {
+async function callAPI(action, body = {}, _retry = true) {
   const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 8000);
+  const timeoutId  = setTimeout(() => controller.abort(), 20000);
   try {
     const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
     const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
@@ -64,11 +88,25 @@ async function callAPI(action, body = {}) {
     if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
     return data.data;
   } catch(err) {
-    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    if (err.name === 'AbortError') {
+      if (_retry) return callAPI(action, body, false);
+      throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
+    }
     throw err;
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+const _regCache = {};
+async function getRegistrationsCached(eventId, bustCache) {
+  const now = Date.now();
+  if (!bustCache && _regCache[eventId] && (now - _regCache[eventId].ts) < 60000) {
+    return _regCache[eventId].data;
+  }
+  const regs = await apiGet('getRegistrations', { eventId });
+  _regCache[eventId] = { data: regs, ts: now };
+  return regs;
 }
 
 // ─── UI UTILITIES ─────────────────────────────────────
@@ -177,9 +215,11 @@ function populateUserCard(u) {
   const avatarEl = document.querySelector('.user-avatar');
   const userCard = document.querySelector('.user-card');
   if (!u) return;
-  const roleLabel = ADMIN_ROLES[u.permission]
-    ? (u.permission === 'מנהל' ? 'מנהל מערכת' : u.permission.replace('מנהל_','מנהל '))
-    : u.permission;
+  const perm = u.permission || '';
+  const roles = perm.split(',').map(r => r.trim()).filter(Boolean);
+  const roleLabel = roles.length > 1
+    ? roles.map(r => r === 'מנהל' ? 'מנהל מערכת' : r.replace('מנהל_','מנהל ')).join(' + ')
+    : (ADMIN_ROLES[perm] ? (perm === 'מנהל' ? 'מנהל מערכת' : perm.replace('מנהל_','מנהל ')) : perm);
   if (nameEl)   nameEl.textContent   = u.name;
   if (roleEl)   roleEl.textContent   = roleLabel;
   if (avatarEl) avatarEl.textContent = u.name.trim().split(' ').map(w=>w[0]).slice(0,2).join('');
