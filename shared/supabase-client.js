@@ -43,23 +43,23 @@ async function apiGet(action, params = {}) {
   try {
     if (action === 'getEvents') {
       const { data, error } = await _sb.rpc('get_events');
-      if (error) throw error;
+      if (error) throw new Error(error.message || JSON.stringify(error));
       return data;
     }
     if (action === 'getAllEvents') {
       const { data, error } = await _sb.rpc('get_all_events');
-      if (error) throw error;
+      if (error) throw new Error(error.message || JSON.stringify(error));
       return data;
     }
     if (action === 'getRegistrations') {
       const { eventId } = params;
       const { data, error } = await _sb.rpc('get_registrations', { p_event_id: eventId });
-      if (error) throw error;
+      if (error) throw new Error(error.message || JSON.stringify(error));
       return data;
     }
     if (action === 'getEventCounts') {
       const { data, error } = await _sb.rpc('get_event_counts');
-      if (error) throw error;
+      if (error) throw new Error(error.message || JSON.stringify(error));
       return data;
     }
     if (action === 'getBikes') {
@@ -67,14 +67,14 @@ async function apiGet(action, params = {}) {
         .from('bikes')
         .select('id,name,frame,drive,status')
         .order('name');
-      if (error) throw error;
+      if (error) throw new Error(error.message || JSON.stringify(error));
       return data;
     }
     if (action === 'getRideHistory') {
       const p_tid = params.tid || params.stokerTid;
       if (!p_tid) return [];
       const { data, error } = await _sb.rpc('get_ride_history', { p_tid });
-      if (error) throw error;
+      if (error) throw new Error(error.message || JSON.stringify(error));
       return data;
     }
     throw new Error(`Unknown action: ${action}`);
@@ -111,7 +111,7 @@ async function callAPI(action, body = {}) {
         p_event_id: eventId,
         p_role: role || ''
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(error.message || JSON.stringify(error));
       return data;
     }
 
@@ -122,7 +122,7 @@ async function callAPI(action, body = {}) {
         p_tid: tid,
         p_event_id: eventId
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(error.message || JSON.stringify(error));
       return data;
     }
 
@@ -138,7 +138,7 @@ async function callAPI(action, body = {}) {
         p_gender: gender || null,
         p_dob: dob ? dob.split('/').reverse().join('-') : null
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(error.message || JSON.stringify(error));
       return data;
     }
 
@@ -151,7 +151,7 @@ async function callAPI(action, body = {}) {
         p_tid: tid,
         p_bike_id: bikeId
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(error.message || JSON.stringify(error));
       return data;
     }
 
@@ -163,7 +163,7 @@ async function callAPI(action, body = {}) {
         p_captain_tid: captainTid,
         p_stoker_tid: stokerTid
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(error.message || JSON.stringify(error));
       return data;
     }
 
@@ -175,7 +175,7 @@ async function callAPI(action, body = {}) {
         p_captain_tid: captainTid,
         p_stoker_tid: stokerTid
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(error.message || JSON.stringify(error));
       return data;
     }
 
@@ -184,7 +184,7 @@ async function callAPI(action, body = {}) {
       const { data, error } = await _sb.functions.invoke('notify', {
         body: { type, payload }
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(error.message || JSON.stringify(error));
       return data;
     }
 
