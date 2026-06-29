@@ -1206,6 +1206,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ══════════════════════════════════════════
+// EVENT DELEGATION — data-action handlers
+// ══════════════════════════════════════════
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+
+  const action = btn.dataset.action;
+  const eventId = btn.dataset.eventId;
+  const eventName = btn.dataset.eventName;
+
+  if (action === 'show-details') showEventDetails(eventId, eventName, btn);
+  else if (action === 'cancel-reg') cancelReg(eventId, eventName, btn);
+  else if (action === 'register') register(eventId, eventName, btn);
+});
+
+// ══════════════════════════════════════════
 // 1-HOUR EVENT NOTIFICATION
 // ══════════════════════════════════════════
 async function checkUpcomingEventNotifications() {
@@ -1547,9 +1563,11 @@ function renderEvents(events, counts = {}) {
 
       <div class="event-footer">
         <button class="btn btn-ghost"
+                data-action="show-details"
+                data-event-id="${ev.id}"
+                data-event-name="${ev.description}"
                 aria-label="הצג נרשמים לרכיבה ${esc(ev.description)}${count > 0 ? ' — ' + count + ' נרשמו' : ''}"
-                aria-haspopup="dialog"
-                onclick="showEventDetails('${esc(ev.id)}','${esc(ev.description)}',this)">
+                aria-haspopup="dialog">
           <span aria-hidden="true">👥 </span>נרשמים${count > 0 ? ` (${count})` : ''}
         </button>
 
@@ -1557,16 +1575,20 @@ function renderEvents(events, counts = {}) {
           ? `<span style="font-size:0.8rem;color:var(--muted);font-style:italic" aria-label="האירוע הסתיים">האירוע הסתיים</span>`
           : isReg
           ? `<button class="btn btn-cancel"
-                     aria-label="בטל הרשמה לרכיבה ${esc(ev.description)}"
-                     onclick="cancelReg('${esc(ev.id)}','${esc(ev.description)}',this)">
+                     data-action="cancel-reg"
+                     data-event-id="${ev.id}"
+                     data-event-name="${ev.description}"
+                     aria-label="בטל הרשמה לרכיבה ${esc(ev.description)}">
                בטל הרשמה
              </button>`
           : `<button class="btn btn-primary"
                      ${!canReg ? 'disabled aria-disabled="true"' : ''}
+                     data-action="register"
+                     data-event-id="${ev.id}"
+                     data-event-name="${ev.description}"
                      aria-label="${canReg
                        ? `הירשם לרכיבה ${esc(ev.description)}`
-                       : `לא ניתן להירשם לרכיבה ${esc(ev.description)} — נדרשת בדיקה ארגומטרית בתוקף`}"
-                     onclick="register('${esc(ev.id)}','${esc(ev.description)}',this)">
+                       : `לא ניתן להירשם לרכיבה ${esc(ev.description)} — נדרשת בדיקה ארגומטרית בתוקף`}">
                ${canReg ? '+ הירשם' : 'דרושה בדיקה ארגומטרית'}
              </button>`
         }
