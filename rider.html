@@ -3,13 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#4f7cff">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="קבוצת אופניים">
-<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <title>האזור האישי שלי — קבוצת אופניים</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -766,24 +759,6 @@ body::before {
 </head>
 <body>
 
-<!-- PWA install banner -->
-<div id="pwa-banner" role="region" aria-label="התקנת אפליקציה" style="
-  display:none;position:fixed;bottom:0;right:0;left:0;z-index:9999;
-  background:#13172a;border-top:1px solid #252a45;
-  padding:14px 20px;align-items:center;gap:12px;
-  font-family:'Heebo',sans-serif;direction:rtl;">
-  <span style="font-size:1.4rem">📲</span>
-  <span style="flex:1;font-size:0.9rem;color:#e8eaf6">התקן כאפליקציה על מסך הבית שלך</span>
-  <button id="pwa-install-btn" style="
-    background:#4f7cff;color:#fff;border:none;border-radius:10px;
-    padding:8px 18px;font-size:0.85rem;font-family:inherit;cursor:pointer;white-space:nowrap">
-    התקן
-  </button>
-  <button id="pwa-dismiss-btn" style="
-    background:none;border:none;color:#6b728f;font-size:1.2rem;cursor:pointer;padding:4px 6px"
-    aria-label="סגור">✕</button>
-</div>
-
 <!-- ─── SKIP LINK ──────────────────────── -->
 <a href="#main-content" class="skip-link">דלג לתוכן הראשי</a>
 
@@ -791,7 +766,7 @@ body::before {
 <!-- אזור זה מודיע לקוראי מסך על שינויים דינמיים -->
 <div id="sr-announcer"
      class="sr-only"
-     aria-live="polite"
+     aria-live="assertive"
      aria-atomic="true"
      role="status"></div>
 
@@ -862,6 +837,7 @@ body::before {
     <div id="eventsList"
          class="events-list"
          role="list"
+         aria-live="polite"
          aria-busy="true"
          aria-label="רשימת רכיבות קרובות">
       <!-- skeletons מוסתרות מקוראי מסך -->
@@ -887,15 +863,15 @@ body::before {
          aria-label="סטטיסטיקות רכיבה">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
         <div class="stat-mini blue" aria-label="סך הרכיבות">
-          <div class="stat-mini-val" id="stat-total">—</div>
+          <div class="stat-mini-val" id="stat-total" aria-live="polite">—</div>
           <div class="stat-mini-lbl">רכיבות סה"כ</div>
         </div>
         <div class="stat-mini green" aria-label="קילומטרים מצטברים">
-          <div class="stat-mini-val" id="stat-km">—</div>
+          <div class="stat-mini-val" id="stat-km" aria-live="polite">—</div>
           <div class="stat-mini-lbl">ק"מ מצטבר</div>
         </div>
         <div class="stat-mini" style="background:var(--surface);border:1px solid var(--border)" aria-label="מטרי עלייה מצטברים">
-          <div class="stat-mini-val" id="stat-climb" style="color:var(--orange)">—</div>
+          <div class="stat-mini-val" id="stat-climb" style="color:var(--orange)" aria-live="polite">—</div>
           <div class="stat-mini-lbl">מטרי עלייה מצטברים</div>
         </div>
       </div>
@@ -972,6 +948,7 @@ body::before {
     <div id="historyList"
          class="history-list"
          role="list"
+         aria-live="polite"
          aria-busy="true"
          aria-label="היסטוריית רכיבות">
       <div class="skeleton" aria-hidden="true"></div>
@@ -1020,6 +997,7 @@ body::before {
     <div id="contactList"
          class="contact-list"
          role="list"
+         aria-live="polite"
          aria-busy="true"
          aria-label="רשימת אנשי קשר">
       <div class="skeleton" style="height:60px" aria-hidden="true"></div>
@@ -1102,9 +1080,10 @@ body::before {
      aria-atomic="false"
      aria-label="הודעות מערכת"></div>
 
-<script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec";
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="shared/supabase-client.js"></script>
 
+<script>
 // ══════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════
@@ -1178,10 +1157,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!stored) { window.location.replace('index.html'); return; }
   user = JSON.parse(stored);
 
-  const perm = user.permission || '';
-  const hasAdminRole = user.isAdmin || perm === 'מנהל' ||
-    perm.split(',').some(r => r.trim().startsWith('מנהל_'));
-  if (hasAdminRole) {
+  if (user.isAdmin) {
     document.getElementById('btnAdmin').classList.add('visible');
   }
 
@@ -1190,7 +1166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // בנרים לפי סטטוס בדיקה
   const examStatus = user.examStatus || '';
-  if (!user.canRegister && !hasAdminRole) {
+  if (!user.canRegister && !user.isAdmin) {
     const blocked    = document.getElementById('regBlockedBanner');
     const blockedTxt = document.getElementById('regBlockedText');
     if (examStatus.includes('אין בדיקה')) {
@@ -1236,7 +1212,7 @@ async function checkUpcomingEventNotifications() {
   let assignmentHtml = '<p>רשום כ-סינגל</p>';
 
   try {
-    const regs = await getRegistrationsCached(ev.id);
+    const regs = await apiGet('getRegistrations', { eventId: ev.id });
     const myReg = regs.find(r => normTid(r.tid) === normTid(user.tid));
     if (myReg) {
       const minsLeft = Math.round((new Date(
@@ -1249,8 +1225,7 @@ async function checkUpcomingEventNotifications() {
 
       const parts = [];
       if (myReg.role)    parts.push(`תפקיד: ${myReg.role}`);
-      if (myReg.partner && myReg.partner !== '—' && myReg.partner !== 'solo') parts.push(`שותף: ${myReg.partner}`);
-      if (myReg.partnerTid === 'solo') parts.push('רכיבה כסינגל');
+      if (myReg.partner && myReg.partner !== '—') parts.push(`שותף: ${myReg.partner}`);
       if (myReg.bike    && myReg.bike    !== '—') parts.push(`אופניים: ${myReg.bike}`);
       if (ev.meetPoint)  parts.push(`נקודת מפגש: ${ev.meetPoint}`);
       assignmentHtml = parts.map(p => `<p>${esc(p)}</p>`).join('');
@@ -1384,14 +1359,9 @@ async function switchTab(name) {
   // הודעה לקורא מסך על מעבר לאגף
   announce(`עברת ל${TAB_LABELS[name]}`);
 
-  // העברת focus לכותרת הסעיף כדי ש-VoiceOver יתחיל לקרוא מהמקום הנכון
-  const section = document.querySelector(`[id="section-${name}"]`);
-  const headingId = section?.getAttribute('aria-labelledby');
-  const heading = headingId ? document.getElementById(headingId) : null;
-  if (heading) {
-    heading.setAttribute('tabindex', '-1');
-    heading.focus();
-  }
+  // העברת focus לתוכן הראשי
+  const main = document.getElementById('main-content');
+  main.focus();
 
   // טעינה עצלה
   if (name === 'history' && document.getElementById('historyList').children[0]?.classList.contains('skeleton')) {
@@ -1408,16 +1378,13 @@ async function switchTab(name) {
 async function loadEvents() {
   const container = document.getElementById('eventsList');
   try {
-    const allRaw = await apiGet('getAllEvents');
-    // Backend categorises by date only — filter both lists by actual meetTime
-    const stillUpcoming = (allRaw.past || []).filter(e => !eventIsPast(e.date, e.meetTime));
-    const upcoming      = (allRaw.upcoming || []).filter(e => !eventIsPast(e.date, e.meetTime));
-    const merged = [...upcoming, ...stillUpcoming];
-    const seen = new Set();
-    const events = merged.filter(e => !seen.has(e.id) && seen.add(e.id));
+    const [events, counts] = await Promise.all([
+      apiGet('getEvents'),
+      apiGet('getEventCounts').catch(() => ({}))
+    ]);
     cachedEvents = events;
-    const counts = await loadMyRegistrations(events);
     cachedCounts = counts;
+    await loadMyRegistrations(events);
     renderEvents(events, counts);
   } catch(e) {
     container.setAttribute('aria-busy','false');
@@ -1430,24 +1397,18 @@ async function loadEvents() {
 
 async function loadMyRegistrations(events) {
   myRegs.clear();
-  const counts = {};
   try {
     const checks = await Promise.all(
-      events.map(ev => getRegistrationsCached(ev.id)
+      events.map(ev => apiGet('getRegistrations', { eventId: ev.id })
         .then(regs => ({
-          eventId:    ev.id,
-          count:      regs.length,
+          eventId: ev.id,
           registered: regs.some(r => normTid(r.tid) === normTid(user.tid))
         }))
-        .catch(() => ({ eventId: ev.id, count: 0, registered: false }))
+        .catch(() => ({ eventId: ev.id, registered: false }))
       )
     );
-    checks.forEach(c => {
-      if (c.registered) myRegs.add(c.eventId);
-      counts[c.eventId] = c.count;
-    });
+    checks.forEach(c => { if (c.registered) myRegs.add(c.eventId); });
   } catch(_) {}
-  return counts;
 }
 
 function normTid(val) {
@@ -1482,11 +1443,10 @@ function renderEvents(events, counts = {}) {
   }
 
   container.innerHTML = events.map(rawEv => {
-    const ev      = normalizeEvent(rawEv);
-    const isReg   = myRegs.has(ev.id);
-    const canReg  = user.canRegister;
-    const isPast  = eventIsPast(ev.date, ev.meetTime);
-    const count   = counts[ev.id] || 0;
+    const ev     = normalizeEvent(rawEv);
+    const isReg  = myRegs.has(ev.id);
+    const canReg = user.canRegister;
+    const count  = counts[ev.id] || 0;
 
     // ── הערה: אין aria-label על ה-article ––
     // VoiceOver/iOS מנווט בין אלמנטים פנימיים ולא קורא את label המכיל.
@@ -1500,9 +1460,9 @@ function renderEvents(events, counts = {}) {
           <!-- שם הרכיבה — h2 כדי שVoiceOver יודיע "כותרת" -->
           <h2 class="event-title">${esc(ev.description)}</h2>
 
-          <p class="event-date"
-             aria-label="תאריך: ${esc(ev.date)}, שעת מפגש: ${esc(ev.meetTime)}">
-            <span aria-hidden="true">📅 ${esc(ev.date)} · 🕕 ${esc(ev.meetTime)}</span>
+          <p class="event-date">
+            <span aria-hidden="true">📅 </span><span class="sr-only">תאריך: </span>${esc(ev.date)}
+            <span aria-hidden="true"> · 🕕 </span><span class="sr-only">, שעת מפגש: </span>${esc(ev.meetTime)}
           </p>
         </div>
 
@@ -1519,21 +1479,25 @@ function renderEvents(events, counts = {}) {
         </div>
       </div>
 
-      <!-- פרטי אירוע — p+span עם sr-only labels לקריאה אמינה בכל קוראי המסך -->
-      <div class="event-meta">
-        <p class="meta-chip">
-          <span class="sr-only">נקודת מפגש: </span><span aria-hidden="true">📍 </span>${esc(ev.meetPoint)}
-        </p>
-        <p class="meta-chip">
-          <span class="sr-only">מרחק: </span><span aria-hidden="true">🚴 </span><strong>${esc(String(ev.km))}</strong> ק"מ
-        </p>
-        <p class="meta-chip">
-          <span class="sr-only">עלייה: </span><span aria-hidden="true">⛰️ </span><strong>${esc(String(ev.climb))}</strong> מ'
-        </p>
-        <p class="meta-chip">
-          <span class="sr-only">קפטן: </span><span aria-hidden="true">👑 </span>${esc(ev.captain)}
-        </p>
-      </div>
+      <!-- פרטי אירוע — dl/dt/dd לנגישות: קורא מסך יקרא "נקודת מפגש: X", "מרחק: Y ק"מ" וכו' -->
+      <dl class="event-meta">
+        <div class="meta-chip">
+          <dt><span aria-hidden="true">📍 </span><span class="sr-only">נקודת מפגש:</span></dt>
+          <dd>${esc(ev.meetPoint)}</dd>
+        </div>
+        <div class="meta-chip">
+          <dt><span class="sr-only">מרחק:</span></dt>
+          <dd><span aria-hidden="true">🚴 </span><strong>${esc(String(ev.km))}</strong> ק"מ</dd>
+        </div>
+        <div class="meta-chip">
+          <dt><span class="sr-only">עלייה:</span></dt>
+          <dd><span aria-hidden="true">⛰️ </span><strong>${esc(String(ev.climb))}</strong> מ' עלייה</dd>
+        </div>
+        <div class="meta-chip">
+          <dt><span aria-hidden="true">👑 </span><span class="sr-only">קפטן:</span></dt>
+          <dd>${esc(ev.captain)}</dd>
+        </div>
+      </dl>
 
       <div class="event-footer">
         <button class="btn btn-ghost"
@@ -1543,9 +1507,7 @@ function renderEvents(events, counts = {}) {
           <span aria-hidden="true">👥 </span>נרשמים${count > 0 ? ` (${count})` : ''}
         </button>
 
-        ${isPast
-          ? `<span style="font-size:0.8rem;color:var(--muted);font-style:italic" aria-label="האירוע הסתיים">האירוע הסתיים</span>`
-          : isReg
+        ${isReg
           ? `<button class="btn btn-cancel"
                      aria-label="בטל הרשמה לרכיבה ${esc(ev.description)}"
                      onclick="cancelReg('${esc(ev.id)}','${esc(ev.description)}',this)">
@@ -1563,7 +1525,6 @@ function renderEvents(events, counts = {}) {
       </div>
     </article>`;
   }).join('');
-  announce(`נטענו ${events.length} רכיבות קרובות`);
 }
 
 // ══════════════════════════════════════════
@@ -1620,12 +1581,12 @@ async function cancelReg(eventId, eventName, btn) {
   btn.textContent = '...';
   try {
     // שלב 1: בדוק אם יש שיבוץ (שותף / אופניים) לרוכב זה
-    const regs = await getRegistrationsCached(eventId).catch(() => []);
+    const regs = await apiGet('getRegistrations', { eventId }).catch(() => []);
     const myReg = regs.find(r => normTid(r.tid) === normTid(user.tid));
 
     if (myReg) {
-      // שלב 2א: אם קפטן עם סטוקר אמיתי — פרק את הצמד קודם
-      if (myReg.role === 'קפטן' && myReg.partnerTid && myReg.partnerTid !== 'solo') {
+      // שלב 2א: אם קפטן עם סטוקר — פרק את הצמד קודם
+      if (myReg.role === 'קפטן' && myReg.partnerTid) {
         await callAPI('unassignPartner', {
           eventId,
           captainTid:  user.tid,
@@ -1669,77 +1630,10 @@ let allHistory      = [];
 let filteredHistory = [];
 let currentPage     = 1;
 
-// מגזיר היסטוריית סטוקר מרישומי אירועי עבר
-// (סטוקרים משובצים מוטמעים בשורת הקפטן ולא מופיעים ב-getRideHistory הרגיל)
-async function _deriveStokerHistory(pastEvents) {
-  if (!pastEvents.length) return [];
-  const results = await Promise.allSettled(
-    pastEvents.map(e =>
-      getRegistrationsCached(e.id)
-        .then(regs => {
-          const cap = regs.find(r => r.partnerTid !== 'solo' && normTid(r.partnerTid) === normTid(user.tid));
-          if (!cap) return null;
-          return {
-            eventId:     e.id,
-            date:        e.date,
-            meetTime:    e.meetTime  || '',
-            description: e.description,
-            role:        'סטוקר',
-            partner:     cap.name   || '',
-            bike:        cap.bike   || '',
-            km:          e.km       || 0,
-            climb:       e.climb    || 0
-          };
-        })
-        .catch(() => null)
-    )
-  );
-  return results
-    .filter(r => r.status === 'fulfilled' && r.value)
-    .map(r => r.value);
-}
-
 async function loadHistory() {
   const container = document.getElementById('historyList');
   try {
-    // קבל: (1) היסטוריה כקפטן/סינגל, (2) ניסיון ישיר כסטוקר אם backend תומך,
-    //       (3) כל האירועים — getAllEvents מחזיר { upcoming, past, cancelled },
-    //           getEvents מחזיר מערך עתידי בלבד (fallback)
-    const [captainRaw, stokerDirect, allEventsRaw, upcomingRaw] = await Promise.all([
-      apiGet('getRideHistory', { tid: user.tid }),
-      apiGet('getRideHistory', { stokerTid: user.tid }).catch(() => []),
-      apiGet('getAllEvents').catch(() => null),
-      apiGet('getEvents').catch(() => [])
-    ]);
-
-    // העדפה: getAllEvents (כולל past) → fallback: getEvents (upcoming בלבד)
-    let allEventsList;
-    if (allEventsRaw && !Array.isArray(allEventsRaw)) {
-      allEventsList = [
-        ...(allEventsRaw.upcoming  || []),
-        ...(allEventsRaw.past      || []),
-        ...(allEventsRaw.cancelled || [])
-      ];
-    } else if (Array.isArray(allEventsRaw) && allEventsRaw.length) {
-      allEventsList = allEventsRaw;
-    } else {
-      allEventsList = Array.isArray(upcomingRaw) ? upcomingRaw : [];
-    }
-
-    // סנן לאירועים שכבר עברו לגזירת היסטוריית סטוקר
-    const pastEvents = allEventsList.filter(e => eventIsPast(e.date, e.meetTime));
-    const stokerFromPast = await _deriveStokerHistory(pastEvents);
-
-    // מיזוג ללא כפילויות
-    const seen = new Set();
-    const merged = [];
-    [...captainRaw, ...stokerDirect, ...stokerFromPast].forEach(h => {
-      const key = h.eventId || h.id || (h.date + '|' + h.description);
-      if (!seen.has(key)) { seen.add(key); merged.push(h); }
-    });
-
-    // רק אירועים שתאריך + שעתם כבר עברו
-    allHistory = merged.filter(h => eventIsPast(h.date, h.meetTime || h.time));
+    allHistory = await apiGet('getRideHistory', { tid: user.tid });
     container.setAttribute('aria-busy','false');
 
     if (!allHistory.length) {
@@ -1772,7 +1666,6 @@ function renderStats(history) {
   document.getElementById('stat-total').textContent = history.length;
   document.getElementById('stat-km').textContent    = totalKm.toLocaleString('he-IL') + ' ק"מ';
   document.getElementById('stat-climb').textContent = totalClimb.toLocaleString('he-IL') + ' מ\'';
-  announce(`נטענו ${history.length} רכיבות. סה"כ ${totalKm.toLocaleString('he-IL')} ק"מ`);
 
   const partners = {};
   history.forEach(h => {
@@ -1884,14 +1777,6 @@ function resetFilters() {
 function parseDate(str) {
   const [d,m,y] = (str||'').split('/');
   return new Date(`${y}-${m}-${d}`).getTime() || 0;
-}
-
-// Returns true if an event has already taken place (date+time in the past)
-function eventIsPast(dateStr, timeStr) {
-  const [d,m,y] = (dateStr||'').split('/');
-  if (!d || !m || !y) return false;
-  const time = timeStr ? timeStr.trim() : '23:59';
-  return new Date(`${y}-${m}-${d}T${time}:00`) <= new Date();
 }
 
 /* ─── Date View ─────────────────────────── */
@@ -2079,23 +1964,15 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
   modal.addEventListener('keydown', trapFocus);
 
   try {
-    const regs = await getRegistrationsCached(eventId);
+    const regs = await apiGet('getRegistrations', { eventId });
     if (!regs.length) {
       body.innerHTML = `<p style="text-align:center;color:var(--muted);padding:20px" role="status">אין נרשמים עדיין</p>`;
       return;
     }
 
-    const soloCaptains    = regs.filter(r => r.role === 'קפטן' && r.partnerTid === 'solo');
-    const allCaptains     = regs.filter(r => r.role === 'קפטן' && r.partnerTid !== 'solo');
+    const captains        = regs.filter(r => r.role === 'קפטן');
     const singles         = regs.filter(r => r.role === 'סינגל');
     const unpairedStokers = regs.filter(r => r.role === 'סטוקר');
-
-    // קפטנים שרשומים כ-partnerTid של קפטן אחר — הם "קפטן שני", לא יוצגו בנפרד
-    const rearCaptainTids = new Set(
-      allCaptains.map(c => c.partnerTid)
-        .filter(tid => tid && allCaptains.some(c => String(c.tid) === String(tid)))
-    );
-    const captains = allCaptains.filter(c => !rearCaptainTids.has(String(c.tid)));
 
     let html = `<p aria-hidden="true" style="margin-bottom:14px;font-size:0.85rem;color:var(--muted)">
       סה"כ ${regs.length} נרשמים
@@ -2108,16 +1985,11 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
                </div>`;
 
       html += captains.map(c => {
-        const partnerName = c.partner && c.partner !== '—' && c.partner !== '' && c.partner !== 'solo' ? c.partner : null;
-        const partnerIsCapt = partnerName && allCaptains.some(x => String(x.tid) === String(c.partnerTid));
+        const partnerName = c.partner && c.partner !== '—' && c.partner !== '' ? c.partner : null;
         const isMe = normTid(c.tid) === normTid(user.tid);
-        const partnerRoleLabel = partnerIsCapt ? 'קפטן שני' : 'סטוקר';
         const teamLabel = partnerName
-          ? `צוות טנדם: קפטן ${c.name}${isMe ? ' (אתה)' : ''}, ${partnerRoleLabel} ${partnerName}`
+          ? `צוות טנדם: קפטן ${c.name}${isMe ? ' (אתה)' : ''}, סטוקר ${partnerName}`
           : `קפטן ${c.name}${isMe ? ' (אתה)' : ''}, ממתין לסטוקר`;
-        const partnerBg     = partnerIsCapt ? 'rgba(124,92,252,0.06)' : 'rgba(45,212,160,0.04)';
-        const partnerAvatar = partnerIsCapt ? 'rgba(124,92,252,0.25)' : 'rgba(45,212,160,0.2)';
-        const partnerColor  = partnerIsCapt ? '#7c5cfc' : 'var(--green)';
 
         return `
         <div style="background:var(--surface2);border-radius:12px;margin-bottom:10px;
@@ -2142,16 +2014,16 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
             </div>
           </div>
           ${partnerName ? `
-          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:${partnerBg}">
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(45,212,160,0.04)">
             <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;
-                        background:${partnerAvatar};
+                        background:rgba(45,212,160,0.2);
                         display:flex;align-items:center;justify-content:center;
-                        font-weight:800;font-size:0.78rem;color:${partnerColor}" aria-hidden="true">
+                        font-weight:800;font-size:0.78rem;color:var(--green)" aria-hidden="true">
               ${esc(partnerName.trim().split(' ').map(w=>w[0]).slice(0,2).join(''))}
             </div>
             <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:0.9rem">${esc(partnerName)}</div>
-              <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">${partnerRoleLabel}</div>
+              <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">סטוקר</div>
             </div>
           </div>` : `
           <div style="padding:10px 14px;font-size:0.8rem;color:var(--muted);font-style:italic" aria-label="ממתין לשיבוץ סטוקר">
@@ -2193,26 +2065,25 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
       }).join('');
     }
 
-    const allSingles = [...singles, ...soloCaptains];
-    if (allSingles.length) {
+    if (singles.length) {
       html += `<div aria-hidden="true" style="font-size:0.78rem;font-weight:700;color:var(--muted);
                            text-transform:uppercase;letter-spacing:0.08em;
                            margin-top:${captains.length || unpairedStokers.length ? '14px' : '0'};margin-bottom:8px">
-                 סינגלים (${allSingles.length})
+                 רוכבי סינגל (${singles.length})
                </div>`;
-      html += allSingles.map(s => {
+
+      html += singles.map(s => {
         const isMe = normTid(s.tid) === normTid(user.tid);
-        const isCaptainSolo = s.role === 'קפטן';
-        const label = `${isCaptainSolo ? 'קפטן סינגל' : 'סינגל'}: ${s.name}${isMe ? ' (אתה)' : ''}${s.bike && s.bike !== '—' ? '. אופניים: ' + bikeLabel(s.bike) : ''}`;
         return `
         <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;
                     background:var(--surface2);border-radius:10px;margin-bottom:8px;
                     border:1px solid ${isMe ? 'var(--accent)' : 'var(--border)'}"
-             role="listitem" tabindex="0" aria-label="${esc(label)}">
+             role="listitem" tabindex="0"
+             aria-label="סינגל: ${esc(s.name)}${isMe ? ', זה אתה' : ''}${s.bike && s.bike !== '—' ? '. אופניים: ' + bikeLabel(s.bike) : ''}">
           <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;
-                      background:linear-gradient(135deg,#f97316,#fb923c);
+                      background:var(--surface);border:1px solid var(--border);
                       display:flex;align-items:center;justify-content:center;
-                      font-weight:800;font-size:0.78rem;color:#fff" aria-hidden="true">
+                      font-weight:800;font-size:0.78rem;color:var(--text)" aria-hidden="true">
             ${esc(s.name.trim().split(' ').map(w=>w[0]).slice(0,2).join(''))}
           </div>
           <div style="flex:1">
@@ -2220,7 +2091,7 @@ async function showEventDetails(eventId, eventName, triggerBtn) {
               ${esc(s.name)}
               ${isMe ? '<span style="font-size:0.7rem;background:rgba(79,124,255,0.2);color:var(--accent);padding:2px 7px;border-radius:20px;margin-right:4px;font-weight:700" aria-label="זה אתה">אתה</span>' : ''}
             </div>
-            <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">${isCaptainSolo ? 'קפטן סינגל' : 'סינגל'}${s.bike && s.bike !== '—' ? ` · ${esc(bikeLabel(s.bike))}` : ''}</div>
+            <div style="font-size:0.72rem;color:var(--muted)" aria-hidden="true">סינגל${s.bike && s.bike !== '—' ? ` · ${esc(bikeLabel(s.bike))}` : ''}</div>
           </div>
         </div>`;
       }).join('');
@@ -2327,60 +2198,6 @@ function logout() {
 }
 
 // ══════════════════════════════════════════
-// API HELPERS
-// ══════════════════════════════════════════
-async function apiGet(action, params = {}, _retry = true) {
-  const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 20000);
-  try {
-    const qs  = new URLSearchParams({ action, ...params }).toString();
-    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
-    return data.data;
-  } catch(err) {
-    if (err.name === 'AbortError') {
-      if (_retry) return apiGet(action, params, false);
-      throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
-    }
-    throw err;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-async function callAPI(action, body = {}, _retry = true) {
-  const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 20000);
-  try {
-    const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
-    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
-    return data.data;
-  } catch(err) {
-    if (err.name === 'AbortError') {
-      if (_retry) return callAPI(action, body, false);
-      throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
-    }
-    throw err;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-const _regCache = {};
-async function getRegistrationsCached(eventId, bustCache) {
-  const now = Date.now();
-  if (!bustCache && _regCache[eventId] && (now - _regCache[eventId].ts) < 60000) {
-    return _regCache[eventId].data;
-  }
-  const regs = await apiGet('getRegistrations', { eventId });
-  _regCache[eventId] = { data: regs, ts: now };
-  return regs;
-}
-
-// ══════════════════════════════════════════
 // TOAST & UTILS
 // ══════════════════════════════════════════
 function showToast(message, type = 'success') {
@@ -2396,31 +2213,6 @@ function showToast(message, type = 'success') {
 function esc(str) {
   return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-// ── PWA ──────────────────────────────────────────────
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
-}
-let _deferredInstallPrompt;
-window.addEventListener('beforeinstallprompt', e => {
-  if (localStorage.getItem('pwa-dismissed')) return;
-  e.preventDefault();
-  _deferredInstallPrompt = e;
-  document.getElementById('pwa-banner').style.display = 'flex';
-});
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('pwa-install-btn').addEventListener('click', async () => {
-    document.getElementById('pwa-banner').style.display = 'none';
-    if (!_deferredInstallPrompt) return;
-    _deferredInstallPrompt.prompt();
-    await _deferredInstallPrompt.userChoice;
-    _deferredInstallPrompt = null;
-  });
-  document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
-    document.getElementById('pwa-banner').style.display = 'none';
-    localStorage.setItem('pwa-dismissed', '1');
-  });
-});
 </script>
 </body>
 </html>
