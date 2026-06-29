@@ -1080,9 +1080,10 @@ body::before {
      aria-atomic="false"
      aria-label="הודעות מערכת"></div>
 
-<script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec";
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="shared/supabase-client.js"></script>
 
+<script>
 // ══════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════
@@ -2194,43 +2195,6 @@ function filterContacts(query) {
 function logout() {
   sessionStorage.removeItem('user');
   window.location.href = 'index.html';
-}
-
-// ══════════════════════════════════════════
-// API HELPERS
-// ══════════════════════════════════════════
-async function apiGet(action, params = {}) {
-  const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 20000);
-  try {
-    const qs  = new URLSearchParams({ action, ...params }).toString();
-    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
-    return data.data;
-  } catch(err) {
-    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
-    throw err;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-async function callAPI(action, body = {}) {
-  const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 20000);
-  try {
-    const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
-    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'שגיאת שרת לא ידועה');
-    return data.data;
-  } catch(err) {
-    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
-    throw err;
-  } finally {
-    clearTimeout(timeoutId);
-  }
 }
 
 // ══════════════════════════════════════════
