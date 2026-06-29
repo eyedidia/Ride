@@ -43,7 +43,7 @@ async function _route(action, data) {
 
   if (action === 'getAllRiders') {
     const { data: d, error } = await _sb.from('riders_view').select('*');
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     // המרת עמודות snake_case לcamelCase שהפרונטאנד מצפה לו
     return (d || []).map(r => ({
       tid: r.tid, name: r.name, phone: r.phone, email: r.email,
@@ -58,7 +58,7 @@ async function _route(action, data) {
 
   if (action === 'getBikes') {
     const { data: d, error } = await _sb.from('bikes').select('*');
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || [];
   }
 
@@ -66,7 +66,7 @@ async function _route(action, data) {
     let q = _sb.from('maintenance').select('*');
     if (data.bikeId) q = q.eq('bike_id', data.bikeId);
     const { data: d, error } = await q.order('date_in', { ascending: false });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return (d || []).map(m => ({
       id: m.id, bikeId: m.bike_id, bikeName: m.bike_name,
       fault: m.fault,
@@ -78,13 +78,13 @@ async function _route(action, data) {
 
   if (action === 'getPhoneBook') {
     const { data: d, error } = await _sb.from('riders').select('name,phone,city').order('name');
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || [];
   }
 
   if (action === 'getTodayBirthdays') {
     const { data: d, error } = await _sb.from('riders').select('name,phone,dob');
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     const now = new Date();
     const mm = now.getMonth() + 1;
     const dd = now.getDate();
@@ -107,7 +107,7 @@ async function _route(action, data) {
       p_ride_style: rideStyle  || 'סינגל',
       p_permission: permission || 'משתמש',
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -116,7 +116,7 @@ async function _route(action, data) {
       p_caller_tid: _getCallerTid(),
       p_tid:        data.tid,
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -129,7 +129,7 @@ async function _route(action, data) {
       p_frame:      frame || '',
       p_drive:      drive || '',
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -138,7 +138,7 @@ async function _route(action, data) {
       p_caller_tid: _getCallerTid(),
       p_bike_id:    data.bikeId,
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -150,7 +150,7 @@ async function _route(action, data) {
       p_tid:        tid,
       p_bike_id:    bikeId,
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -159,7 +159,7 @@ async function _route(action, data) {
       p_caller_tid: _getCallerTid(),
       p_event_id:   data.eventId,
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -169,7 +169,7 @@ async function _route(action, data) {
       p_tid:        data.tid,
       p_exam_date:  data.examDate,
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -183,7 +183,7 @@ async function _route(action, data) {
       p_gender: gender !== undefined ? gender : null,
       p_dob:    dob    !== undefined ? dob    : null,
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -192,7 +192,7 @@ async function _route(action, data) {
       p_tid:      data.tid,
       p_event_id: data.eventId,
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -200,32 +200,32 @@ async function _route(action, data) {
 
   if (action === 'getEvents') {
     const { data: d, error } = await _sb.rpc('get_events');
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || [];
   }
 
   if (action === 'getAllEvents') {
     const { data: d, error } = await _sb.rpc('get_all_events');
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { upcoming: [], past: [], cancelled: [] };
   }
 
   if (action === 'getRegistrations') {
     const { data: d, error } = await _sb.rpc('get_registrations', { p_event_id: data.eventId });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || [];
   }
 
   if (action === 'getMyRegistrations') {
     // Returns event_ids where tid is registered — single query instead of N per-event calls
     const { data: d, error } = await _sb.from('registrations').select('event_id').eq('tid', data.tid);
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return (d || []).map(r => r.event_id);
   }
 
   if (action === 'getEventCounts') {
     const { data: d, error } = await _sb.rpc('get_event_counts');
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || {};
   }
 
@@ -233,7 +233,7 @@ async function _route(action, data) {
     const p_tid = data.tid || data.stokerTid;
     if (!p_tid) return [];
     const { data: d, error } = await _sb.rpc('get_ride_history', { p_tid });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || [];
   }
 
@@ -250,7 +250,7 @@ async function _route(action, data) {
       p_meet_time:   meetTime  || '06:00',
       p_captain:     captain   || '',
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -263,7 +263,7 @@ async function _route(action, data) {
       p_actual_description: data.actualDescription  || null,
       p_attended_tids:      data.attendedTids,
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return { success: true };
   }
 
@@ -274,7 +274,7 @@ async function _route(action, data) {
       p_phone: normalizePhone(data.phone),
       p_name:  data.name,
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d;
   }
 
@@ -285,7 +285,7 @@ async function _route(action, data) {
       p_role:     data.role     || '',
       p_bike_id:  data.bikeId   || '',
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -296,7 +296,7 @@ async function _route(action, data) {
       p_captain_tid: data.captainTid,
       p_stoker_tid:  data.stokerTid || null,
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -307,7 +307,7 @@ async function _route(action, data) {
       p_captain_tid: data.captainTid,
       p_stoker_tid:  data.stokerTid || null,
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -317,7 +317,7 @@ async function _route(action, data) {
       p_bike_id:    data.bikeId,
       p_fault:      data.fault || 'לא צוין',
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -326,7 +326,7 @@ async function _route(action, data) {
       p_caller_tid: _getCallerTid(),
       p_bike_id:    data.bikeId,
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -343,7 +343,7 @@ async function _route(action, data) {
       p_permission: data.permission || 'משתמש',
       p_ride_style: data.rideStyle  || 'סינגל',
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -359,7 +359,7 @@ async function _route(action, data) {
       p_captain:     data.captain     || '',
       p_status:      data.status      || 'פעיל',
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -371,7 +371,7 @@ async function _route(action, data) {
       p_drive:      data.drive  || '',
       p_status:     data.status || 'תקין',
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d || { success: true };
   }
 
@@ -381,7 +381,7 @@ async function _route(action, data) {
     const { error } = await _sb.functions.invoke('notify', {
       body: { type: 'exam_reminder', payload: data },
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return { success: true };
   }
 
@@ -389,7 +389,7 @@ async function _route(action, data) {
     const { error } = await _sb.functions.invoke('notify', {
       body: { type: 'exam_no_email', payload: data },
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return { success: true };
   }
 
@@ -397,7 +397,7 @@ async function _route(action, data) {
     const { error } = await _sb.functions.invoke('notify', {
       body: { type: data.type, payload: data.payload },
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return { success: true };
   }
 
@@ -405,7 +405,7 @@ async function _route(action, data) {
 
   if (action === 'getSmtpSettings') {
     const { data: rows, error } = await _sb.rpc('get_smtp_settings', { p_code: data.code });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return rows?.[0] ?? null;
   }
 
@@ -419,7 +419,7 @@ async function _route(action, data) {
       p_pass:      data.pass,
       p_from_name: data.fromName,
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return { success: true };
   }
 
@@ -427,7 +427,7 @@ async function _route(action, data) {
     const { data: d, error } = await _sb.rpc('get_whatsapp_settings', {
       p_caller_tid: _getCallerTid(),
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return d?.[0] ?? null;
   }
 
@@ -439,7 +439,7 @@ async function _route(action, data) {
       p_group_chat_id: data.groupChatId,
       p_enabled:       data.enabled,
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return { success: true };
   }
 
@@ -447,7 +447,7 @@ async function _route(action, data) {
     const { error } = await _sb.functions.invoke('notify', {
       body: { type: 'whatsapp_group', payload: { message: data.message } },
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     return { success: true };
   }
 
