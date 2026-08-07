@@ -385,6 +385,10 @@ function buildSmtpTest(p: any, from: string, clubName: string): Mail {
     <h1 style="font-size:1.15rem;margin:0 0 16px;color:#111">✅ חיבור SMTP תקין!</h1>
     <p style="color:#444;line-height:1.6;margin:0 0 12px">שלום <strong>${esc(p.name || '')}</strong>,</p>
     <p style="color:#444;line-height:1.6;margin:0 0 12px">מייל הבדיקה התקבל בהצלחה.<br>הגדרות שליחת המיילים פועלות כראוי.</p>
+    <p style="color:#444;line-height:1.6;margin:0 0 12px">
+      <a href="https://eyedidia.github.io/Ride/rider.html" style="color:#4f7cff;font-weight:700;" target="_blank" rel="noopener noreferrer">היכנס לאפליקציה להרשמה לרכיבה!
+    </a>
+    </p>
   `, clubName);
   return { from, to: p.to, subject, text, html };
 }
