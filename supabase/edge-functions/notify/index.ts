@@ -363,16 +363,16 @@ function buildNewEvent(p: any, from: string, clubName: string): Mail[] {
   // deno-lint-ignore no-explicit-any
   return (p.riders as any[]).map(r => {
     const subject = `🚴 רכיבה חדשה: ${ev.description} — ${ev.date}`;
-    const text    = `שלום ${r.name},\n\nרכיבה חדשה נוספה לקבוצה:\n${ev.description}\nתאריך: ${ev.date}\nשעת מפגש: ${ev.meetTime || '06:00'}\nנקודת מפגש: ${ev.meetPoint || '—'}\nמרחק: ${ev.km} ק"מ | עלייה: ${ev.climb} מ'\n\nהיכנס לאפליקציה להרשמה לרכיבה: https://eyedidia.github.io/Ride/rider.html\n\n${clubName}`;
+    const text    = `שלום ${r.name},\n\nרכיבה חדשה נוספה לקבוצה:\n${ev.description}\nתאריך: ${ev.date}\nשעת מפגש: ${ev.meetTime || '06:00'}\nנקודת מפגש: ${ev.meetPoint || '—'}\nמרחק: ${ev.km} ק"מ | עלייה: ${ev.climb} מ'\n\nהיכנס לאפליקציה להרשמה לרכיבה: 'https://eyedidia.github.io/Ride/rider.html'\n\n${clubName}`;
     const html    = wrap(`
-      <h1 style="font-size:1.15rem;margin:0 0 16px;color:#111">🚴 רכיבה חדשה!</h1>
-      <p style="color:#444;line-height:1.6;margin:0 0 12px">שלום <strong>${esc(r.name)}</strong>, נוספה רכיבה חדשה לקבוצה:</p>
-      ${evBox(ev)}
-      <p style="color:#444;line-height:1.6;margin:0 0 12px">
-      <a href="https://eyedidia.github.io/Ride/rider.html" style="color:#4f7cff;font-weight:700;" target="_blank" rel="noopener noreferrer">היכנס לאפליקציה להרשמה לרכיבה!
-      </a>
-      </p>
-    `, clubName);
+                    <h1 style="font-size:1.15rem;margin:0 0 16px;color:#111">🚴 רכיבה חדשה!</h1>
+                    <p style="color:#444;line-height:1.6;margin:0 0 12px">שלום <strong>${esc(r.name)}</strong>, נוספה רכיבה חדשה לקבוצה:</p>
+                    ${evBox(ev)}
+                    <p style="color:#444;line-height:1.6;margin:0 0 12px">
+                      <a href="https://eyedidia.github.io/Ride/rider.html" style="color:#4f7cff;font-weight:700;" target="_blank" rel="noopener noreferrer">היכנס לאפליקציה להרשמה לרכיבה!
+                       </a>
+                    </p>
+                `, clubName);
     return { from, to: r.email, subject, text, html };
   });
 }
