@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>העברת נתונים מ-Google ל-Supabase</title>
+<style>
+:root {
+  --bg: #0b0e18; --surface: #13172a; --border: #252a45;
+  --accent: #4f7cff; --green: #2dd4a0; --red: #ff5a5a;
+  --orange: #ffb347; --text: #e8eaf6; --muted: #6b728f;
+  --font: 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px 16px 60px; }
+h1 { font-size: 1.4rem; font-weight: 800; margin-bottom: 6px; }
+.sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 24px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+.card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 12px; }
+label { font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 4px; }
+input { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 9px;
+        color: var(--text); font-family: var(--font); font-size: 0.9rem; padding: 10px 12px;
+        margin-bottom: 12px; direction: ltr; }
+input:focus { outline: none; border-color: var(--accent); }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 12px 24px;
+       border-radius: 9px; font-family: var(--font); font-size: 0.95rem; font-weight: 700;
+       cursor: pointer; border: none; transition: all 0.2s; min-height: 48px; }
+.btn-primary { background: var(--accent); color: #fff; width: 100%; justify-content: center; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.step { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0;
+        border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+.step:last-child { border-bottom: none; }
+.step-icon { flex-shrink: 0; font-size: 1.1rem; margin-top: 1px; }
+.step-label { flex: 1; color: var(--muted); }
+.step.done   .step-label { color: var(--green); }
+.step.error  .step-label { color: var(--red); }
+.step.active .step-label { color: var(--text); font-weight: 600; }
+.step-count { font-size: 0.78rem; color: var(--muted); }
+#log { background: #060810; border: 1px solid var(--border); border-radius: 9px;
+       padding: 14px; font-size: 0.78rem; font-family: monospace; direction: ltr;
+       max-height: 260px; overflow-y: auto; color: #aac4ff; white-space: pre-wrap; margin-top: 12px; }
+.summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+.stat { background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+        padding: 12px; text-align: center; }
+.stat-val { font-size: 1.6rem; font-weight: 800; color: var(--accent); }
+.stat-lbl { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<h1>🔄 העברת נתונים מ-Google ל-Supabase</h1>
+<p class="sub">כלי הגירה חד-פעמי — קורא את כל הנתונים מה-GAS API ומכניס לSupabase.</p>
+
+<div class="card">
+  <h2>הגדרות</h2>
+  <label>GAS API URL</label>
+  <input type="url" id="gasUrl"
+    value="https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec"
+    placeholder="https://script.google.com/macros/s/...">
+  <label>Supabase URL</label>
+  <input type="url" id="sbUrl" value="https://gritbcrdxpeycnxrlulp.supabase.co" readonly>
+  <label>Supabase Anon Key</label>
+  <input type="text" id="sbKey"
+    value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdyaXRiY3JkeHBleWNueHJsdWxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDI1NzgsImV4cCI6MjA5MzkxODU3OH0.PRk_DQeHF4vGy-0qZH2XFIUOoOQ_cekPOW_gWdmHXXc"
+    readonly>
+  <button class="btn btn-primary" id="runBtn" onclick="runMigration()">▶ התחל העברת נתונים</button>
+</div>
+
+<div class="card" id="progressCard" style="display:none">
+  <h2>התקדמות</h2>
+  <div id="steps"></div>
+  <div id="log"></div>
+  <div class="summary" id="summary" style="display:none"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+function gasDateToISO(ddmmyyyy) {
+  if (!ddmmyyyy || ddmmyyyy === '—') return null;
+  const parts = ddmmyyyy.split('/');
+  if (parts.length !== 3) return null;
+  const [d, m, y] = parts;
+  if (!d || !m || !y || y.length !== 4) return null;
+  return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+}
+
+function normPhone(phone) {
+  let p = String(phone || '').replace(/[\s\-\(\)]/g, '');
+  if (p.startsWith('+972')) p = '0' + p.slice(4);
+  else if (p.startsWith('972')) p = '0' + p.slice(3);
+  if (!p.startsWith('0')) p = '0' + p;
+  return p;
+}
+
+function normTid(val) {
+  // Google Sheets עלול להחזיר tid כ-float (12345.0) — מסיר את הסיומת
+  return String(val ?? '').trim().replace(/\.0+$/, '');
+}
+
+async function gasGet(url, action, extra = {}) {
+  const qs = new URLSearchParams({ action, ...extra }).toString();
+  const res = await fetch(`${url}?${qs}`);
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); }
+  catch { throw new Error(`GAS החזיר HTML עבור "${action}" — בדוק שה-URL פרוס כ"כל אחד" ללא התחברות`); }
+  if (Array.isArray(data)) return data;
+  if (data.success === false) throw new Error(data.error || `GAS error: ${action}`);
+  return data.data ?? data;
+}
+
+async function sbUpsert(sb, table, rows) {
+  if (!rows.length) return 0;
+  const BATCH = 200;
+  // riders משתמש ב-tid (UNIQUE) ולא ב-id (UUID אוטומטי) כמפתח התנגשות
+  const onConflict = table === 'riders' ? 'tid' : 'id';
+  let total = 0;
+  for (let i = 0; i < rows.length; i += BATCH) {
+    const { error } = await sb.from(table).upsert(rows.slice(i, i + BATCH), { onConflict, ignoreDuplicates: false });
+    if (error) throw new Error(`${table}: ${error.message}`);
+    total += rows.slice(i, i + BATCH).length;
+  }
+  return total;
+}
+
+const STEP_DEFS = [
+  { id: 'riders',        label: 'רוכבים' },
+  { id: 'bikes',         label: 'אופניים' },
+  { id: 'events',        label: 'אירועים' },
+  { id: 'registrations', label: 'הרשמות' },
+  { id: 'maintenance',   label: 'תחזוקה' },
+];
+
+let stepEls = {};
+
+function initSteps() {
+  const container = document.getElementById('steps');
+  container.innerHTML = '';
+  stepEls = {};
+  STEP_DEFS.forEach(s => {
+    const el = document.createElement('div');
+    el.className = 'step';
+    el.id = 'step-' + s.id;
+    el.innerHTML = `<span class="step-icon">⏳</span>
+      <span class="step-label">${s.label}</span>
+      <span class="step-count" id="cnt-${s.id}"></span>`;
+    container.appendChild(el);
+    stepEls[s.id] = el;
+  });
+}
+
+function setStep(id, state, count) {
+  const el = stepEls[id];
+  if (!el) return;
+  el.className = 'step ' + state;
+  const icons = { active: '⏳', done: '✅', error: '❌', skip: '⏭' };
+  el.querySelector('.step-icon').textContent = icons[state] || '⏳';
+  if (count !== undefined) document.getElementById('cnt-' + id).textContent = count + ' רשומות';
+}
+
+function log(msg) {
+  const el = document.getElementById('log');
+  el.textContent += msg + '\n';
+  el.scrollTop = el.scrollHeight;
+}
+
+async function runMigration() {
+  const gasUrl = document.getElementById('gasUrl').value.trim();
+  const sbUrl  = document.getElementById('sbUrl').value.trim();
+  const sbKey  = document.getElementById('sbKey').value.trim();
+  if (!gasUrl || !sbUrl || !sbKey) { alert('נא למלא את כל השדות'); return; }
+
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ מעביר נתונים...';
+  document.getElementById('progressCard').style.display = 'block';
+  document.getElementById('summary').style.display = 'none';
+  document.getElementById('log').textContent = '';
+  initSteps();
+
+  const sb = window.supabase.createClient(sbUrl, sbKey);
+  const totals = {};
+
+  try {
+    // 1. RIDERS
+    setStep('riders', 'active');
+    log('[riders] fetching from GAS...');
+    const gasRiders = await gasGet(gasUrl, 'getAllRiders');
+    log(`[riders] got ${gasRiders.length} riders`);
+    const sbRiders = gasRiders.map(r => ({
+      tid: normTid(r.tid), name: r.name || '', phone: normPhone(r.phone),
+      email: r.email || '', city: r.city || '', gender: r.gender || '',
+      permission: r.permission || 'משתמש', ride_style: r.rideStyle || 'סינגל',
+      dob: gasDateToISO(r.dob),
+      exam_date: gasDateToISO(r.examDate || r.exam_date || r['Exam Date'] || ''),
+    }));
+    totals.riders = await sbUpsert(sb, 'riders', sbRiders);
+    log(`[riders] upserted ${totals.riders}`);
+    setStep('riders', 'done', totals.riders);
+
+    // 2. BIKES
+    setStep('bikes', 'active');
+    log('[bikes] fetching from GAS...');
+    const gasBikes = await gasGet(gasUrl, 'getBikes');
+    log(`[bikes] got ${gasBikes.length} bikes`);
+    const sbBikes = gasBikes.map(b => ({
+      id: String(b.id), name: b.name || '', frame: b.frame || '',
+      drive: b.drive || '', status: b.status || 'תקין',
+    }));
+    totals.bikes = await sbUpsert(sb, 'bikes', sbBikes);
+    log(`[bikes] upserted ${totals.bikes}`);
+    setStep('bikes', 'done', totals.bikes);
+
+    // 3. EVENTS
+    setStep('events', 'active');
+    log('[events] fetching from GAS...');
+    let gasEvents = [];
+    try {
+      const all = await gasGet(gasUrl, 'getAllEvents');
+      gasEvents = [...(all.upcoming||[]), ...(all.past||[]), ...(all.cancelled||[])];
+    } catch { gasEvents = await gasGet(gasUrl, 'getEvents'); }
+    const seenEv = new Set();
+    gasEvents = gasEvents.filter(e => !seenEv.has(e.id) && seenEv.add(e.id));
+    log(`[events] got ${gasEvents.length} events`);
+    const sbEvents = gasEvents.map(e => ({
+      id: String(e.id), date: gasDateToISO(e.date), description: e.description || '',
+      km: Number(e.km)||0, climb: Number(e.climb)||0,
+      meet_point: e.meetPoint||'', meet_time: e.meetTime||'06:00',
+      captain: e.captain||'', status: e.status||'פעיל',
+    })).filter(e => e.date);
+    totals.events = await sbUpsert(sb, 'events', sbEvents);
+    log(`[events] upserted ${totals.events}`);
+    setStep('events', 'done', totals.events);
+
+    // 4. REGISTRATIONS
+    setStep('registrations', 'active');
+    log('[registrations] fetching per event...');
+    const allRegs = [];
+    for (const ev of sbEvents) {
+      try {
+        const regs = await gasGet(gasUrl, 'getRegistrations', { eventId: ev.id });
+        for (const r of (regs||[])) {
+          const tid = normTid(r.tid);
+          if (!tid) continue; // דלג על רשומות ללא tid
+          allRegs.push({
+            id:           `${ev.id}-${tid}`,
+            event_id:     ev.id,
+            tid:          tid,
+            role:         r.role         || '',
+            bike_id:      r.bike         || r.bikeId      || '',
+            partner_name: r.partner      || r.partnerName || '—',
+            partner_tid:  normTid(r.partnerTid || r.partner_tid || ''),
+          });
+        }
+        log(`[registrations] ${ev.id}: ${(regs||[]).length} regs`);
+      } catch(e) { log(`[registrations] ${ev.id}: ERROR — ${e.message}`); }
+    }
+    // upsert אחד-אחד כדי לזהות בדיוק אילו רשומות נכשלות (FK violation)
+    let regOk = 0, regFail = 0;
+    for (const reg of allRegs) {
+      const { error } = await sb.from('registrations').upsert([reg], { onConflict: 'id', ignoreDuplicates: false });
+      if (error) { log(`  ✗ ${reg.id}: ${error.message}`); regFail++; }
+      else regOk++;
+    }
+    totals.registrations = regOk;
+    if (regFail) log(`[registrations] ${regOk} הצליחו, ${regFail} נכשלו`);
+    log(`[registrations] upserted ${regOk} total`);
+    setStep('registrations', regFail ? 'error' : 'done', regOk);
+
+    // 5. MAINTENANCE
+    setStep('maintenance', 'active');
+    log('[maintenance] fetching from GAS...');
+    let gasMaint = null;
+    try {
+      gasMaint = await gasGet(gasUrl, 'getMaintenance', {});
+      log(`[maintenance] got ${gasMaint.length} records`);
+    } catch(e) {
+      log(`[maintenance] skipped (${e.message})`);
+      setStep('maintenance', 'skip', 0);
+      totals.maintenance = 0;
+    }
+    if (gasMaint) {
+      const sbMaint = gasMaint.map(m => ({
+        id: String(m.id || ('M' + Date.now() + Math.random().toString(36).slice(2,6))),
+        bike_id: String(m.bikeId||m.bike_id||''), bike_name: m.bikeName||m.bike_name||'',
+        fault: m.fault||'',
+        date_in:  gasDateToISO(m.dateIn||m.date_in)  || null,
+        date_out: gasDateToISO(m.dateOut||m.date_out) || null,
+        status: m.status||'בתיקון',
+      }));
+      totals.maintenance = await sbUpsert(sb, 'maintenance', sbMaint);
+      log(`[maintenance] upserted ${totals.maintenance}`);
+      setStep('maintenance', 'done', totals.maintenance);
+    }
+
+    log('\n✅ העברה הושלמה בהצלחה!');
+    showSummary(totals);
+
+  } catch(err) {
+    log(`\n❌ שגיאה: ${err.message}`);
+    const activeStep = STEP_DEFS.find(s => stepEls[s.id]?.className.includes('active'));
+    if (activeStep) setStep(activeStep.id, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '▶ הרץ שוב';
+  }
+}
+
+function showSummary(totals) {
+  const el = document.getElementById('summary');
+  el.style.display = 'grid';
+  const labels = { riders:'רוכבים', bikes:'אופניים', events:'אירועים', registrations:'הרשמות', maintenance:'תחזוקה' };
+  el.innerHTML = Object.entries(totals).map(([k,v]) =>
+    `<div class="stat"><div class="stat-val">${v}</div><div class="stat-lbl">${labels[k]||k}</div></div>`
+  ).join('');
+}
+</script>
+</body>
+</html>

@@ -373,9 +373,11 @@ input[type="date"] { color-scheme: dark; }
 
 </main>
 
-<script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxST_n3NGcPU99_PmDHLJO3W1Sb12rel6Sf_Y-ihzBFIGmmsYMOfrrxRZMLf-CMETcp/exec";
+<!-- Supabase CDN + client (מחליף GAS API) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="shared/supabase-client.js"></script>
 
+<script>
 // ── STATE ────────────────────────────────
 let USER = null;
 let RIDER_DATA = null;
@@ -384,7 +386,8 @@ let RIDER_DATA = null;
 document.addEventListener('DOMContentLoaded', async () => {
   const stored = sessionStorage.getItem('user');
   if (!stored) { window.location.replace('index.html'); return; }
-  USER = JSON.parse(stored);
+  try { USER = JSON.parse(stored); } catch { sessionStorage.clear(); window.location.replace('index.html'); return; }
+  if (!USER?.tid || !USER?.name) { sessionStorage.clear(); window.location.replace('index.html'); return; }
 
   try {
     // טוען נתונים עדכניים מהשרת
@@ -585,40 +588,7 @@ async function saveProfile() {
   }
 }
 
-// ── HELPERS ──────────────────────────────
-async function apiGet(action, params = {}) {
-  const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 8000);
-  try {
-    const qs  = new URLSearchParams({ action, ...params }).toString();
-    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
-    const d   = await res.json();
-    if (!d.success) throw new Error(d.error || 'שגיאת שרת לא ידועה');
-    return d.data;
-  } catch(err) {
-    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
-    throw err;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-async function callAPI(action, body = {}) {
-  const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 8000);
-  try {
-    const qs  = new URLSearchParams({ action, data: JSON.stringify(body) }).toString();
-    const res = await fetch(`${API_URL}?${qs}`, { signal: controller.signal });
-    const d   = await res.json();
-    if (!d.success) throw new Error(d.error || 'שגיאת שרת לא ידועה');
-    return d.data;
-  } catch(err) {
-    if (err.name === 'AbortError') throw new Error('הקישור לשרת עלה על הזמן המוקצב. נסה שוב.');
-    throw err;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
+// apiGet / callAPI — מוגדרים ב-shared/supabase-client.js
 
 function esc(str) {
   return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
