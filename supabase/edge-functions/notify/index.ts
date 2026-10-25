@@ -71,8 +71,9 @@ Deno.serve(async (req) => {
     }
     console.log('[notify] smtp host:', smtp.host, 'user:', smtp.smtp_user);
 
+    const APP_URL = 'https://eyedidia.github.io/Ride/rider.html';
     const fromAddr = `${smtp.from_name} <${smtp.smtp_user}>`;
-    const emails   = buildEmails(type, payload, fromAddr, smtp.from_name);
+    const emails   = buildEmails(type, payload, fromAddr, smtp.from_name, APP_URL);
 
     if (!emails.length) return json({ queued: 0 });
 
@@ -255,13 +256,17 @@ function wrap(content: string, clubName: string): string {
   .row{margin-bottom:6px;font-size:.9rem}
   .lbl{color:#888;font-size:.78rem;display:block}
   .foot{color:#aaa;font-size:.75rem;margin-top:24px;border-top:1px solid #eee;padding-top:12px}
+  .cta{display:inline-block;margin-top:12px;padding:10px 20px;background:#4f7cff;color:#fff;text-decoration:none;border-radius:6px;font-weight:700;font-size:.85rem}
 </style>
 </head>
 <body dir="rtl">
 <div class="card">
   <div class="logo">🚴 ${esc(clubName)}</div>
   ${content}
-  <div class="foot">הודעה זו נשלחה ממערכת ניהול קבוצת האופניים. אין להשיב למייל זה.</div>
+  <div class="foot">
+    <a href="https://eyedidia.github.io/Ride/rider.html" class="cta">← כניסה למערכת</a>
+    <p style="margin-top:16px;color:#bbb;font-size:.7rem">הודעה זו נשלחה ממערכת ניהול קבוצת האופניים. אין להשיב למייל זה.</p>
+  </div>
 </div>
 </body>
 </html>`;
@@ -270,16 +275,16 @@ function wrap(content: string, clubName: string): string {
 // ─── router ───────────────────────────────────────────────────
 
 // deno-lint-ignore no-explicit-any
-function buildEmails(type: string, p: any, from: string, clubName: string): Mail[] {
+function buildEmails(type: string, p: any, from: string, clubName: string, appUrl: string): Mail[] {
   switch (type) {
-    case 'exam_reminder':               return buildExamReminder(p, from, clubName);
-    case 'exam_no_email':               return [buildExamNoEmail(p, from, clubName)];
-    case 'event_registered':            return [buildEventRegistered(p, from, clubName)];
-    case 'event_registration_by_admin': return [buildEventRegByAdmin(p, from, clubName)];
-    case 'event_cancelled':             return buildEventCancelled(p, from, clubName);
-    case 'new_event':                   return buildNewEvent(p, from, clubName);
-    case 'smtp_test':                   return [buildSmtpTest(p, from, clubName)];
-    case 'birthday':                    return buildBirthday(p, from, clubName);
+    case 'exam_reminder':               return buildExamReminder(p, from, clubName, appUrl);
+    case 'exam_no_email':               return [buildExamNoEmail(p, from, clubName, appUrl)];
+    case 'event_registered':            return [buildEventRegistered(p, from, clubName, appUrl)];
+    case 'event_registration_by_admin': return [buildEventRegByAdmin(p, from, clubName, appUrl)];
+    case 'event_cancelled':             return buildEventCancelled(p, from, clubName, appUrl);
+    case 'new_event':                   return buildNewEvent(p, from, clubName, appUrl);
+    case 'smtp_test':                   return [buildSmtpTest(p, from, clubName, appUrl)];
+    case 'birthday':                    return buildBirthday(p, from, clubName, appUrl);
     default: throw new Error('סוג הודעה לא מוכר: ' + type);
   }
 }
@@ -287,13 +292,13 @@ function buildEmails(type: string, p: any, from: string, clubName: string): Mail
 // ─── templates ────────────────────────────────────────────────
 
 // deno-lint-ignore no-explicit-any
-function buildExamReminder(p: any, from: string, clubName: string): Mail[] {
+function buildExamReminder(p: any, from: string, clubName: string, appUrl: string): Mail[] {
   const adminEmails: string[] = p.adminEmails || [];
   // deno-lint-ignore no-explicit-any
   return (p.recipients as any[]).map(r => {
     const urgent = r.daysLeft <= 7 ? '🚨' : '⚠️';
     const subject = `${urgent} הבדיקה הארגומטרית שלך פוגת תוקף בעוד ${r.daysLeft} ימים`;
-    const text = `שלום ${r.name},\n\nהבדיקה הארגומטרית שלך פוגת תוקף בעוד ${r.daysLeft} ימים.\nאנא קבע תור לבדיקה בהקדם.\n\n${clubName}`;
+    const text = `שלום ${r.name},\n\nהבדיקה הארגומטרית שלך פוגת תוקף בעוד ${r.daysLeft} ימים.\nאנא קבע תור לבדיקה בהקדם.\n\nכניסה למערכת:\n${appUrl}\n\n${clubName}`;
     const html = wrap(`
       <h1>${urgent} תזכורת: בדיקה ארגומטרית</h1>
       <p>שלום <strong>${esc(r.name)}</strong>,</p>
@@ -307,13 +312,13 @@ function buildExamReminder(p: any, from: string, clubName: string): Mail[] {
 }
 
 // deno-lint-ignore no-explicit-any
-function buildExamNoEmail(p: any, from: string, clubName: string): Mail {
+function buildExamNoEmail(p: any, from: string, clubName: string, appUrl: string): Mail {
   // deno-lint-ignore no-explicit-any
   const lines    = (p.riders as any[]).map((r: any) => `• ${r.name} — ${r.daysLeft} ימים`).join('\n');
   // deno-lint-ignore no-explicit-any
   const htmlRows = (p.riders as any[]).map((r: any) => `<div class="row">• <strong>${esc(r.name)}</strong> — ${esc(r.daysLeft)} ימים</div>`).join('');
   const subject  = `ℹ️ ${p.riders.length} רוכבים ללא כתובת מייל לתזכורת בדיקה`;
-  const text     = `שלום,\n\nהרוכבים הבאים זקוקים לתזכורת בדיקה ארגומטרית אך אין להם כתובת מייל:\n\n${lines}\n\nאנא צור איתם קשר ישירות.\n\n${clubName}`;
+  const text     = `שלום,\n\nהרוכבים הבאים זקוקים לתזכורת בדיקה ארגומטרית אך אין להם כתובת מייל:\n\n${lines}\n\nאנא צור איתם קשר ישירות.\n\nכניסה למערכת:\n${appUrl}\n\n${clubName}`;
   const html     = wrap(`
     <h1>ℹ️ רוכבים ללא כתובת מייל</h1>
     <p>הרוכבים הבאים זקוקים לתזכורת בדיקה ארגומטרית, אך <strong>אין להם כתובת מייל</strong> במערכת:</p>
@@ -324,10 +329,10 @@ function buildExamNoEmail(p: any, from: string, clubName: string): Mail {
 }
 
 // deno-lint-ignore no-explicit-any
-function buildEventRegistered(p: any, from: string, clubName: string): Mail {
+function buildEventRegistered(p: any, from: string, clubName: string, appUrl: string): Mail {
   const ev = p.event;
   const subject = `✅ נרשמת לרכיבה: ${ev.description}`;
-  const text    = `שלום ${p.name},\n\nנרשמת בהצלחה לרכיבה:\n${ev.description}\nתאריך: ${ev.date}\nשעת מפגש: ${ev.meetTime || '06:00'}\nנקודת מפגש: ${ev.meetPoint || '—'}\nמרחק: ${ev.km} ק"מ | עלייה: ${ev.climb} מ'\n\n${clubName}`;
+  const text    = `שלום ${p.name},\n\nנרשמת בהצלחה לרכיבה:\n${ev.description}\nתאריך: ${ev.date}\nשעת מפגש: ${ev.meetTime || '06:00'}\nנקודת מפגש: ${ev.meetPoint || '—'}\nמרחק: ${ev.km} ק"מ | עלייה: ${ev.climb} מ'\n\nכניסה למערכת:\n${appUrl}\n\n${clubName}`;
   const html    = wrap(`
     <h1>✅ נרשמת לרכיבה!</h1>
     <p>שלום <strong>${esc(p.name)}</strong>, נרשמת בהצלחה לרכיבה הבאה:</p>
@@ -338,10 +343,10 @@ function buildEventRegistered(p: any, from: string, clubName: string): Mail {
 }
 
 // deno-lint-ignore no-explicit-any
-function buildEventRegByAdmin(p: any, from: string, clubName: string): Mail {
+function buildEventRegByAdmin(p: any, from: string, clubName: string, appUrl: string): Mail {
   const ev = p.event;
   const subject = `✅ נרשמת לרכיבה: ${ev.description}`;
-  const text    = `שלום ${p.name},\n\nהמנהל ${p.registeredBy} רשם אותך לרכיבה:\n${ev.description}\nתאריך: ${ev.date}\nשעת מפגש: ${ev.meetTime || '06:00'}\nנקודת מפגש: ${ev.meetPoint || '—'}\n\n${clubName}`;
+  const text    = `שלום ${p.name},\n\nהמנהל ${p.registeredBy} רשם אותך לרכיבה:\n${ev.description}\nתאריך: ${ev.date}\nשעת מפגש: ${ev.meetTime || '06:00'}\nנקודת מפגש: ${ev.meetPoint || '—'}\n\nכניסה למערכת:\n${appUrl}\n\n${clubName}`;
   const html    = wrap(`
     <h1>✅ נרשמת לרכיבה!</h1>
     <p>שלום <strong>${esc(p.name)}</strong>,<br>המנהל <strong>${esc(p.registeredBy)}</strong> רשם אותך לרכיבה הבאה:</p>
@@ -352,12 +357,12 @@ function buildEventRegByAdmin(p: any, from: string, clubName: string): Mail {
 }
 
 // deno-lint-ignore no-explicit-any
-function buildEventCancelled(p: any, from: string, clubName: string): Mail[] {
+function buildEventCancelled(p: any, from: string, clubName: string, appUrl: string): Mail[] {
   const ev = p.event;
   // deno-lint-ignore no-explicit-any
   return (p.riders as any[]).map(r => {
     const subject = `❌ הרכיבה "${ev.description}" בוטלה`;
-    const text    = `שלום ${r.name},\n\nלצערנו הרכיבה "${ev.description}" (${ev.date}) בוטלה.\n\nנתראה ברכיבה הבאה!\n\n${clubName}`;
+    const text    = `שלום ${r.name},\n\nלצערנו הרכיבה "${ev.description}" (${ev.date}) בוטלה.\n\nכניסה למערכת:\n${appUrl}\n\nנתראה ברכיבה הבאה!\n\n${clubName}`;
     const html    = wrap(`
       <h1>❌ הרכיבה בוטלה</h1>
       <p>שלום <strong>${esc(r.name)}</strong>,</p>
@@ -369,26 +374,26 @@ function buildEventCancelled(p: any, from: string, clubName: string): Mail[] {
 }
 
 // deno-lint-ignore no-explicit-any
-function buildNewEvent(p: any, from: string, clubName: string): Mail[] {
+function buildNewEvent(p: any, from: string, clubName: string, appUrl: string): Mail[] {
   const ev = p.event;
   // deno-lint-ignore no-explicit-any
   return (p.riders as any[]).map(r => {
     const subject = `🚴 רכיבה חדשה: ${ev.description} — ${ev.date}`;
-    const text    = `שלום ${r.name},\n\nרכיבה חדשה נוספה לקבוצה:\n${ev.description}\nתאריך: ${ev.date}\nשעת מפגש: ${ev.meetTime || '06:00'}\nנקודת מפגש: ${ev.meetPoint || '—'}\nמרחק: ${ev.km} ק"מ | עלייה: ${ev.climb} מ'\n\nהיכנס לאפליקציה להרשמה לרכיבה: https://eyedidia.github.io/Ride/rider.html\n\n${clubName}`;
+    const text    = `שלום ${r.name},\n\nרכיבה חדשה נוספה לקבוצה:\n${ev.description}\nתאריך: ${ev.date}\nשעת מפגש: ${ev.meetTime || '06:00'}\nנקודת מפגש: ${ev.meetPoint || '—'}\nמרחק: ${ev.km} ק"מ | עלייה: ${ev.climb} מ'\n\nהיכנס לאפליקציה להרשמה לרכיבה:\n${appUrl}\n\n${clubName}`;
     const html    = wrap(`
       <h1>🚴 רכיבה חדשה!</h1>
       <p>שלום <strong>${esc(r.name)}</strong>, נוספה רכיבה חדשה לקבוצה:</p>
       ${evBox(ev)}
-      <p><a href="https://eyedidia.github.io/Ride/rider.html" style="color:#4f7cff;font-weight:700;">היכנס לאפליקציה להרשמה לרכיבה!</a></p>
+      <p><a href="${esc(appUrl)}" style="color:#4f7cff;font-weight:700;">היכנס לאפליקציה להרשמה לרכיבה!</a></p>
     `, clubName);
     return { from, to: r.email, subject, text, html };
   });
 }
 
 // deno-lint-ignore no-explicit-any
-function buildSmtpTest(p: any, from: string, clubName: string): Mail {
+function buildSmtpTest(p: any, from: string, clubName: string, appUrl: string): Mail {
   const subject = '✅ בדיקת חיבור SMTP — קבוצת האופניים';
-  const text    = `שלום ${p.name || ''},\n\nחיבור ה-SMTP פועל תקין!\nהגדרות שליחת המיילים של קבוצת האופניים מוגדרות בהצלחה.\n\n${clubName}`;
+  const text    = `שלום ${p.name || ''},\n\nחיבור ה-SMTP פועל תקין!\nהגדרות שליחת המיילים של קבוצת האופניים מוגדרות בהצלחה.\n\nכניסה למערכת:\n${appUrl}\n\n${clubName}`;
   const html    = wrap(`
     <h1>✅ חיבור SMTP תקין!</h1>
     <p>שלום <strong>${esc(p.name || '')}</strong>,</p>
@@ -398,11 +403,11 @@ function buildSmtpTest(p: any, from: string, clubName: string): Mail {
 }
 
 // deno-lint-ignore no-explicit-any
-function buildBirthday(p: any, from: string, clubName: string): Mail[] {
+function buildBirthday(p: any, from: string, clubName: string, appUrl: string): Mail[] {
   // deno-lint-ignore no-explicit-any
   return (p.riders as any[]).map(r => {
     const subject = `🎂 יום הולדת שמח, ${r.name}!`;
-    const text    = `שלום ${r.name},\n\nכל חברי קבוצת האופניים מאחלים לך יום הולדת שמח! 🚴🎉\nשנה טובה, בריאות, וכמה שיותר רכיבות מדהימות!\n\n${clubName}`;
+    const text    = `שלום ${r.name},\n\nכל חברי קבוצת האופניים מאחלים לך יום הולדת שמח! 🚴🎉\nשנה טובה, בריאות, וכמה שיותר רכיבות מדהימות!\n\nכניסה למערכת:\n${appUrl}\n\n${clubName}`;
     const html    = wrap(`
       <h1>🎂 יום הולדת שמח!</h1>
       <p>שלום <strong>${esc(r.name)}</strong>,</p>
