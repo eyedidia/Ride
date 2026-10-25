@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="28" fill="#0b0e18"/>
+  <!-- Rear wheel -->
+  <circle cx="50" cy="122" r="42" fill="none" stroke="#4f7cff" stroke-width="7"/>
+  <!-- Front wheel -->
+  <circle cx="142" cy="122" r="42" fill="none" stroke="#4f7cff" stroke-width="7"/>
+  <!-- Rear spokes -->
+  <line x1="50" y1="122" x2="50" y2="80"   stroke="#4f7cff" stroke-width="2.5"/>
+  <line x1="50" y1="122" x2="14" y2="100"  stroke="#4f7cff" stroke-width="2.5"/>
+  <line x1="50" y1="122" x2="14" y2="144"  stroke="#4f7cff" stroke-width="2.5"/>
+  <line x1="50" y1="122" x2="50" y2="164"  stroke="#4f7cff" stroke-width="2.5"/>
+  <line x1="50" y1="122" x2="86" y2="144"  stroke="#4f7cff" stroke-width="2.5"/>
+  <line x1="50" y1="122" x2="86" y2="100"  stroke="#4f7cff" stroke-width="2.5"/>
+  <!-- Front spokes -->
+  <line x1="142" y1="122" x2="142" y2="80"  stroke="#4f7cff" stroke-width="2.5"/>
+  <line x1="142" y1="122" x2="106" y2="100" stroke="#4f7cff" stroke-width="2.5"/>
+  <line x1="142" y1="122" x2="106" y2="144" stroke="#4f7cff" stroke-width="2.5"/>
+  <line x1="142" y1="122" x2="142" y2="164" stroke="#4f7cff" stroke-width="2.5"/>
+  <line x1="142" y1="122" x2="178" y2="144" stroke="#4f7cff" stroke-width="2.5"/>
+  <line x1="142" y1="122" x2="178" y2="100" stroke="#4f7cff" stroke-width="2.5"/>
+  <!-- Frame: chain stays (BB → rear axle) -->
+  <line x1="88" y1="122" x2="50" y2="122"  stroke="#4f7cff" stroke-width="5.5"/>
+  <!-- Frame: seat stays (seat → rear axle) -->
+  <line x1="80" y1="66" x2="50" y2="122"   stroke="#4f7cff" stroke-width="4.5"/>
+  <!-- Frame: seat tube (BB → seat) -->
+  <line x1="88" y1="122" x2="80" y2="66"   stroke="#4f7cff" stroke-width="5.5"/>
+  <!-- Frame: top tube (seat → head) -->
+  <line x1="80" y1="66" x2="130" y2="70"   stroke="#4f7cff" stroke-width="5.5"/>
+  <!-- Frame: down tube (head → BB) -->
+  <line x1="130" y1="70" x2="88" y2="122"  stroke="#4f7cff" stroke-width="5.5"/>
+  <!-- Frame: fork (head → front axle) -->
+  <line x1="130" y1="70" x2="142" y2="122" stroke="#4f7cff" stroke-width="4.5"/>
+  <!-- Hubs -->
+  <circle cx="50"  cy="122" r="5" fill="#4f7cff"/>
+  <circle cx="142" cy="122" r="5" fill="#4f7cff"/>
+  <circle cx="88"  cy="122" r="5" fill="#4f7cff"/>
+  <!-- Saddle -->
+  <line x1="68" y1="59" x2="92" y2="59" stroke="#4f7cff" stroke-width="5" stroke-linecap="round"/>
+  <!-- Handlebars -->
+  <line x1="120" y1="62" x2="136" y2="58" stroke="#4f7cff" stroke-width="5" stroke-linecap="round"/>
+</svg>
